@@ -1,0 +1,104 @@
+---
+- name: Setup control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Become block
+      become: true
+      block:
+        - name: Create ansible-automation-platform repo
+          ansible.builtin.copy:
+            content: |
+              [ansible-automation-platform]
+              name = Red Hat Ansible Automation Platform
+              baseurl = file:///var/ansible-automation-platform/el8_repos/
+              enabled = 1
+              gpgcheck = 1
+              gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+            dest: /etc/yum.repos.d/ansible-automation-platform.repo
+            mode: "0644"
+
+        - name: Remove setup bundle
+          ansible.builtin.file:
+            path: /var/ansible-automation-platform-setup-bundle-2.4-6-x86_64.tar.gz
+            state: absent
+
+        - name: Stop register warning
+          ansible.builtin.replace:
+            path: /etc/yum/pluginconf.d/subscription-manager.conf
+            regexp: 'enabled.*$'
+            replace: 'enabled = 0'
+
+    - name: Create directory
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0755"
+      loop:
+        - /home/{{ USER }}/ansible-files
+        - /home/{{ USER }}/.logs
+
+    - name: Create ansible.cfg
+      ansible.builtin.copy:
+        content: |
+          [defaults]
+          inventory = /home/{{ USER }}/ansible-files/inventory
+          host_key_checking = False
+        dest: /home/{{ USER }}/.ansible.cfg
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create .gitconfig
+      ansible.builtin.copy:
+        content: |
+          [user]
+            email = "{{ USER }}@example.com"
+            name = Red Hat
+        dest: /home/{{ USER }}/.gitconfig
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0664"
+
+    - name: Create ansible-navigator.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          ansible-navigator:
+            ansible:
+              inventory:
+                entries:
+                - /home/{{ USER }}/ansible-files/inventory
+            execution-environment:
+              container-engine: podman
+              enabled: true
+              image: quay.io/acme_corp/first_playbook_ee:latest
+              pull:
+                policy: missing
+            logging:
+              level: debug
+              file: /home/{{ USER }}/.logs/ansible-navigator.log
+            mode: stdout
+            playbook-artifact:
+              save-as: /home/{{ USER }}/.logs/{playbook_name}-artifact-{time_stamp}.json
+        dest: "{{ item }}"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+      loop:
+        - /home/{{ USER }}/.ansible-navigator.yml
+        - /home/{{ USER }}/ansible-files/ansible-navigator.yml
+
+- name: Setup nodes
+  hosts: nodes
+  become: true
+  tasks:
+    - name: Install packages
+      ansible.builtin.replace:
+        path: /etc/yum/pluginconf.d/subscription-manager.conf
+        regexp: 'enabled.*$'
+        replace: 'enabled = 0'

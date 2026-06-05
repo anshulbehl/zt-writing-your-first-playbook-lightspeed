@@ -1,0 +1,152 @@
+:sectnums:
+
+= 1.1 - Creating your first Playbook
+
+Playbooks in Ansible are essentially scripts written in YAML, a text markup language (if you know HTML, that's another markup language!). They are used to define the tasks and configurations that Ansible will apply to your servers.
+
+In this challenge, you'll use Ansible to conduct basic system setup tasks on a Red Hat Enterprise Linux server. You will become familiar with Ansible fundamentals, like what is a playbook, how to create one and how to use modules like *dnf* and *user*.
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Creation of the system_setup.yml file
+[%collapsible]
+=====
+[NOTE]
+====
+In the *VSCode Editor* tab
+
+* We are going to create a playbook named *system_setup.yml* to perform, you guessed it, a basic system setup:
+** Install security updates for the kernel.
+** Create a new user.
+====
+
+. This will work as our starting point. We will be adding tasks in the upcoming exercises.
++
+.. Within the **VSCode Editor** tab, you should be in the *ansible-files* directory.
+.. Right-click below the *ansible-navigator.yml* file, in a blank space click "New File"
+.. Name the file *system_setup.yml*.
+=====
+======
+
+======
+.☑️ Task 2 - Defining the system_setup.yml playbook
+[%collapsible]
+=====
+. The following content is how a playbook starts:
++
+NOTE: This code block is for reference only. You will create the playbook in the following step.
++
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: node1
+  become: true
+  tasks:
+----
++
+[IMPORTANT]
+====
+A couple of things to keep in mind when creating Ansible YAML files:
+
+* Start with three dashes *(---)* to indicate this is a playbook
+
+* Indentation is mandatory: Use spaces, not tabs, for indentation.
+
+* In YAML, we need to use 2 spaces per level of indentation. Notice how the *hosts* line begins with 2 spaces.
+====
+
+
+.One of Ansible's strengths is the ease to read and understand the flow of a playbook.
+[NOTE]
+====
+What are the above lines doing?
+
+* *name*: A descriptive name is given for the play (the group of tasks) via *name:* . This is optional but recommended.
+* *hosts*: The servers or devices to run the playbook against is defined via *hosts:* . This can be a single host or group from the inventory file.
+* *become*: We enable user privilege escalation (sudo) with *become: true* .
+* *tasks*: We start the tasks block for this play.
+====
+
+=====
+======
+
+
+======
+.☑️ Task 3 - Adding tasks to the system_setup.yml playbook
+[%collapsible]
+=====
+NOTE: Now that we know how a playbook file starts, let's look at the plays. Let's add a couple of tasks to update all installed packages on our *node1* host and to create a user. We will take advantage of the *ansible.builtin.dnf* module to apply all security-related updates to installed packages.
+
+. Modify the *system_setup.yml* file to add the 2 tasks, as shown below:
++
+WARNING: Pay attention to indentation and the spaces
+
++
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: node1
+  become: true
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: myuser
+        state: present
+        create_home: true
+----
+
+
+.Once we've done our play declarations, we start off with a *tasks* declaration to incorporate what specific tasks we'd like Ansible to automate within this play.
+[NOTE]
+====
+* The modules in use are:
++
+** *ansible.builtin.dnf*: This module is used for package management with DNF (Dandified YUM), the *yum* replacement on newer RHEL and other Fedora or CentOS-based systems. If managing RHEL 7 for example, you could use the *ansible.builtin.yum* module instead.
+** *ansible.builtin.user*: This module is used to manage user accounts in the system.
+
+* A task is named (*name*) and a module (*ansible.builtin.dnf* and *ansible.builtin.user*) are called for the task.
+
+* Parameters for the modules are added:
++
+** *name*: to identify the package or user name
+** *state*: to define the wanted state (*present*, *absent*, *latest*)
+** *security: true*: this one is *dnf* specific, to define that updates should be security only
+** *create_home*: this one is *user* specific, requests the module to create a home for the user
+====
+
+=====
+======
+
+
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-playbook-directory-structure&assignees=miteshget[Writing your first playbook repository^].
+=====
+======

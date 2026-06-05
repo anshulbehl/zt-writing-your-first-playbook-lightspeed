@@ -1,0 +1,49 @@
+- name: Controller Validation
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Get stats of roles dir
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/roles/apache
+      register: r_dir
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.9 - The apache does not exist in the specified directory."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: not r_dir.stat.exists
+      delegate_to: localhost
+
+    - name: Fail if the role does not exist
+      ansible.builtin.fail:
+        msg: "Role apache doesn't exist"
+      when: not r_dir.stat.exists
+
+- name: Node alidation
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check page
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}
+        return_content: true
+        status_code: 200
+      register: r_curl
+      ignore_errors: true
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.9 - {{ inventory_hostname }} web page is not accessible"
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: "'Welcome to node' not in r_curl.content"
+      delegate_to: localhost
+
+    - name: Check whether page is accessible
+      ansible.builtin.fail:
+        msg: "{{ inventory_hostname }} is not accessible"
+      when: "'Welcome to node' not in r_curl.content"

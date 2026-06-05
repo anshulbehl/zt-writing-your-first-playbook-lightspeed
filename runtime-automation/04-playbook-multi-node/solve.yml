@@ -1,0 +1,45 @@
+---
+- name: Solve control node
+  hosts: controller
+  vars:
+    USER: rhel
+  tasks:
+    - name: Create hosts
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Basic System Setup
+            hosts: web
+            become: true
+            tasks:
+              - name: Install security updates for the kernel
+                ansible.builtin.dnf:
+                  name: 'kernel'
+                  state: latest
+                  security: true
+
+              - name: Create a new user
+                ansible.builtin.user:
+                  name: myuser
+                  state: present
+                  create_home: true
+        dest: /home/{{ USER }}/ansible-files/system_setup.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+- name: Basic System Setup
+  hosts: web
+  become: true
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: myuser
+        state: present
+        create_home: true

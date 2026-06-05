@@ -1,0 +1,44 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Create loop_usr.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Create multiple users with a loop
+            hosts: node1
+            become: true
+
+            tasks:
+              - name: Create a new user
+                ansible.builtin.user:
+                  name: "{% raw %}{{ item }}{% endraw %}"
+                  state: present
+                  create_home: true
+                loop:
+                  - alice
+                  - bob
+                  - carol
+        dest: /home/{{ USER }}/ansible-files/loop_users.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+- name: Basic System Setup
+  hosts: node1
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Create a new users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        create_home: true
+      loop:
+        - alice
+        - bob
+        - carol

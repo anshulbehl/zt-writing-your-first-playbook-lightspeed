@@ -1,0 +1,76 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Update inventory
+      ansible.builtin.copy:
+        content: |
+          [web]
+          node1
+          node2
+
+          [database]
+          node3
+        dest: /home/{{ USER }}/ansible-files/inventory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create hosts
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Basic System Setup
+            hosts: all
+            become: true
+            vars:
+              user_name: 'padawan'
+              package_name: httpd
+            tasks:
+              - name: Install security updates for the kernel
+                ansible.builtin.dnf:
+                  name: 'kernel'
+                  state: latest
+                  security: true
+                  update_only: true
+                when: inventory_hostname in groups['web']
+
+              - name: Create a new user
+                ansible.builtin.user:
+                  name: "{% raw %}{{ user_name }}{% endraw %}"
+                  state: present
+                  create_home: true
+
+              - name: Install Apache on web servers
+                ansible.builtin.dnf:
+                  name: "{% raw %}{{ package_name }}{% endraw %}"
+                  state: present
+                when: inventory_hostname in groups['web']
+        dest: /home/{{ USER }}/ansible-files/system_setup.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+- name: Basic System Setup
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install httpd
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+- name: Add user padawan to hosts
+  hosts: web:database
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Create a new user
+      ansible.builtin.user:
+        name: 'padawan'
+        state: present
+        create_home: true

@@ -1,6 +1,20 @@
 ---
 # By default egress traffic is not allowed, define below the ports allowed.
+# Platform defaults already allow:
+#   - Ingress: 80, 443, 8080, 7171, 8081, 9000 from internet
+#   - Ingress: 22 (SSH) from showroom pod only (for setup-automation)
+#   - Egress: DNS (5353), VM-to-VM SSH (22), IronRDP (7171, 8081, 9000)
+#
+# This file adds additional rules needed for this lab.
+
 egress:
   - ports:
       - protocol: TCP
         port: 443
+      - protocol: TCP
+        port: 80
+
+ingress:
+  - ports:
+      - protocol: TCP
+        port: 8080

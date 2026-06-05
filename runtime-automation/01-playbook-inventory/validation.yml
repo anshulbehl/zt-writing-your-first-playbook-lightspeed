@@ -1,0 +1,24 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Get stats of hosts file
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/inventory
+      register: r_hosts
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "The 'inventory' file does not exist."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: not r_hosts.stat.exists
+      delegate_to: localhost
+
+    - name: Fail if the host file does not exist
+      ansible.builtin.fail:
+        msg: "Hosts file doesn't exist"
+      when: not r_hosts.stat.exists

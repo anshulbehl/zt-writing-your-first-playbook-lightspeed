@@ -1,0 +1,21 @@
+- name: Basic System Setup
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.5 - FAIL: httpd package is not installed. Something is wrong."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: "'httpd' not in ansible_facts.packages"
+      delegate_to: localhost
+
+    - name: Check whether a package called foobar is installed
+      ansible.builtin.fail:
+        msg: "httpd is not installed"
+      when: "'httpd' not in ansible_facts.packages"

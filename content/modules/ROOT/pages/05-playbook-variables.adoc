@@ -1,0 +1,132 @@
+:sectnums:
+= 1.4 - Variables
+
+Variables in Ansible are powerful tools for making your playbooks flexible and reusable. They allow you to store and reuse values, making your playbooks more dynamic and adaptable.
+
+The creation and usage of variables involve a specific syntax:
+
+. *Defining Variables:* Variables are defined in the *vars* section of a playbook or in separate files for larger projects.
+
+. *Variable Naming:* Variable names should be descriptive and adhere to rules such as:
++
+.. Starting with a letter or underscore.
+.. Containing only letters, numbers, and underscores.
+
+. *Using Variables:* Variables are referenced in tasks using the double curly braces in quotes *"{{ variable_name }}"*. This syntax tells Ansible to replace it with the variable's value at runtime.
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Creation of variables
+[%collapsible]
+=====
+NOTE: In the **VSCode Editor** tab.
+
+. Update the *system_setup.yml* playbook to include and use a variable by adding a *vars:* section with a *user_name:* var and a *padawan* key value. Look for the changes in the playbook below:
++
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: web
+  become: true
+  vars:
+    user_name: 'padawan'
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        state: present
+        create_home: true
+----
+
+NOTE: In the playbook above you can notice we have defined a variable (*user_name*) and set a new user name (*padawan*). We later refer to this variable during the **Create a new user** task by using *"{{ user_name }}"*.
+
+=====
+======
+
+
+======
+.☑️ Task 2 - Run the modified playbook
+[%collapsible]
+=====
+NOTE: Switch to the **Control** top tab.
+
+
+[source,shell]
+----
+cd /home/rhel/ansible-files
+----
+
+[source,shell]
+----
+ansible-navigator run system_setup.yml
+----
+=====
+======
+
+
+======
+.☑️ Task 3 - Verify the new user exists in both nodes
+[%collapsible]
+=====
+. Once the Ansible Playbook successfully completes, run the following steps to check manually both servers.
++
+*For node1:*
++
+[source,shell]
+----
+ssh node1 id padawan
+----
++
+.Output should be similar to this:
+[source,text]
+----
+uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
+----
++
+*For node2:*
++
+[source,shell]
+----
+ssh node2 id padawan
+----
++
+.Output should be similar to this:
+[source,text]
+----
+uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
+----
+=====
+======
+
+
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+05-playbook-variables&assignees=miteshget[Writing your first playbook repository^].
+=====
+======

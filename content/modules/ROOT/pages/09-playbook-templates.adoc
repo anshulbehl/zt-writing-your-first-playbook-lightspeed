@@ -1,0 +1,230 @@
+:sectnums:
+= 1.8 - Templates
+
+In this challenge, you will create a Jinja2 template. Ansible uses Jinja2 templating to modify files before they are distributed to managed hosts. Jinja2 is one of the most used template engines for Python (http://jinja.pocoo.org/). You'll learn how to craft templates that incorporate host-specific data, enabling the creation of tailored configuration files for each managed host.
+
+In the following example, let's create a template for the Message of the Day (MOTD) that includes dynamic host information.
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Create a templates directory
+[%collapsible]
+=====
+NOTE: In the *VSCode Editor* tab
+
+. In the *ansible-files* directory, create the *templates* subdirectory (right-click and select 'New Folder' in VSCode) to store our new template files.
+=====
+======
+
+
+======
+.☑️ Task 2 - Create the motd.j2 jinja file
+[%collapsible]
+=====
+
+. Template files end with a *.j2* file extension and mix static content with dynamic placeholders enclosed in curly braces *{{ }}*. Within the *ansible-files/templates* directory, create the file *motd.j2* with the following content:
++
+NOTE: You can right-click over the *templates* directory in VSCode and use "New File".
++
+[source,jinja2]
+----
+Welcome to {{ ansible_hostname }}.
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+Architecture: {{ ansible_architecture }}
+----
+
+
+NOTE: The template file contains the basic text that will later be copied over to the hosts. It contains variables that will be replaced on the target machines individually. It will dynamically display the hostname, OS distribution, version, and architecture of each managed host.
+=====
+======
+
+
+======
+.☑️ Task 3 - Update the system_setup.yml playbook to include the motd
+[%collapsible]
+=====
+NOTE: In the **VSCode Editor** tab
+
+. Open the *system_setup.yml* playbook and modify it to include the following task right before the *handlers* section:
++
+WARNING: We are only showing the task to add. Pay attention to the indentation and maintain the same format as the other tasks, leave a blank line above and a blank line below the task!
++
+[source,yaml]
+----
+    - name: Update MOTD from Jinja2 Template
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd
+----
+
++
+IMPORTANT: If you run into issues adding the task, you will find the full *system_setup.yml* playbook at the end of this sidebar. Look for the **💡 Solution playbook** section.
+=====
+======
+
+
+======
+.☑️ Task 4 - Run the playbook
+[%collapsible]
+=====
+NOTE: In the **Control** tab
+
+. Run the *system_setup.yml* playbook again:
++
+[source,shell]
+----
+cd /home/rhel/ansible-files
+----
+
++
+[source,shell]
+----
+ansible-navigator run system_setup.yml
+----
+=====
+======
+
+
+======
+.☑️ Task 5 - Verify message of the day
+[%collapsible]
+=====
+. Login to *node1* via SSH and check the message of the day content.
++
+[source,shell]
+----
+ssh node1
+----
++
+NOTE: You should see a message similar to the one below (RHEL version might vary!)
++
+[source,ini]
+----
+Welcome to node1.
+OS: RedHat 8.7
+Architecture: x86_64
+----
+
+. You can now exit *node1* and test the same in *node2* to see the difference:
++
+[source,shell]
+----
+exit
+----
+
++
+[source,shell]
+----
+ssh node2
+----
+
+. You can now exit *node2*.
++
+[source,shell]
+----
+exit
+----
+=====
+======
+
+
+======
+.💡 Solution playbook
+[%collapsible]
+=====
+[source,yaml]
+----
+- name: Basic System Setup
+  hosts: all
+  become: true
+  vars:
+    user_name: 'padawan'
+    package_name: httpd
+    apache_service_name: httpd
+  tasks:
+
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+        update_only: true
+      when: inventory_hostname in groups['web']
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        state: present
+        create_home: true
+
+    - name: Install Apache on web servers
+      ansible.builtin.dnf:
+        name: "{{ package_name }}"
+        state: present
+      when: inventory_hostname in groups['web']
+
+    - name: Ensure Apache is running and enabled
+      ansible.builtin.service:
+        name: "{{ apache_service_name }}"
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['web']
+
+    - name: Install firewalld
+      ansible.builtin.dnf:
+        name: firewalld
+        state: present
+      when: inventory_hostname in groups['web']
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['web']
+
+    - name: Allow HTTP traffic on web servers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      when: inventory_hostname in groups['web']
+      notify: Reload Firewall
+
+    - name: Update MOTD from Jinja2 Template
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd
+
+  handlers:
+    - name: Reload Firewall
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded
+----
+=====
+======
+
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge.
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+09-playbook-templates&assignees=miteshget[Writing your first playbook repository^].
+=====
+======

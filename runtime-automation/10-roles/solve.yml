@@ -1,0 +1,186 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Create template dir
+      ansible.builtin.file:
+        path: /home/{{ USER }}/ansible-files/roles
+        state: absent
+
+    - name: Create template dir
+      ansible.builtin.file:
+        path: /home/{{ USER }}/ansible-files/roles
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0755"
+
+    - name: Create hosts
+      ansible.builtin.command:
+        cmd: ansible-galaxy init --offline /home/{{ USER }}/ansible-files/roles/apache
+
+    - name: Create vars/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          # vars file for roles/apache
+          apache_package_name: httpd
+          apache_service_name: httpd
+        dest: /home/{{ USER }}/ansible-files/roles/apache/vars/main.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create tasks/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          {% raw %}
+          # tasks file for ansible-files/roles/apache
+          - name: Install Apache web server
+            ansible.builtin.package:
+              name: "{{ apache_package_name }}"
+              state: present
+
+          - name: Ensure Apache is running and enabled
+            ansible.builtin.service:
+              name: "{{ apache_service_name }}"
+              state: started
+              enabled: true
+
+          - name: Install firewalld
+            ansible.builtin.dnf:
+              name: firewalld
+              state: present
+
+          - name: Ensure firewalld is running
+            ansible.builtin.service:
+              name: firewalld
+              state: started
+              enabled: true
+
+          - name: Allow HTTP traffic on web servers
+            ansible.posix.firewalld:
+              service: http
+              permanent: true
+              state: enabled
+            when: inventory_hostname in groups['web']
+            notify: Reload Firewall
+
+          - name: Deploy custom index.html
+            ansible.builtin.template:
+              src: index.html.j2
+              dest: /var/www/html/index.html
+          {% endraw %}
+        dest: /home/{{ USER }}/ansible-files/roles/apache/tasks/main.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create handlers/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          # handlers file for ansible-files/roles/apache
+          - name: Reload Firewall
+            ansible.builtin.service:
+              name: firewalld
+              state: reloaded
+        dest: /home/{{ USER }}/ansible-files/roles/apache/handlers/main.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create templates/index.html.j2
+      ansible.builtin.copy:
+        content: |
+          {% raw %}
+          <html>
+          <head>
+          <title>Welcome to {{ ansible_hostname }}</title>
+          </head>
+          <body>
+          <h1>Hello from {{ ansible_hostname }}</h1>
+          </body>
+          </html>
+          {% endraw %}
+        dest: /home/{{ USER }}/ansible-files/roles/apache/templates/index.html.j2
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create deploy_apache.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Setup Apache Web Servers
+            hosts: web
+            become: true
+            roles:
+              - apache
+        dest: /home/{{ USER }}/ansible-files/deploy_apache.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+
+- name: Basic System Setup
+  hosts: web
+  become: true
+  gather_facts: true
+  vars:
+    apache_package_name: httpd
+    apache_service_name: httpd
+  tasks:
+    - name: Install Apache web server
+      ansible.builtin.package:
+        name: "{{ apache_package_name }}"
+        state: present
+
+    - name: Ensure Apache is running and enabled
+      ansible.builtin.service:
+        name: "{{ apache_service_name }}"
+        state: started
+        enabled: true
+
+    - name: Install firewalld
+      ansible.builtin.dnf:
+        name: firewalld
+        state: present
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Allow HTTP traffic on web servers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      when: inventory_hostname in groups['web']
+      notify: Reload Firewall
+
+    - name: Deploy custom index.html
+      ansible.builtin.copy:
+        content: |
+          <html>
+          <head>
+          <title>Welcome to {{ ansible_hostname }}</title>
+          </head>
+          <body>
+          <h1>Hello from {{ ansible_hostname }}</h1>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        mode: "0644"
+
+  handlers:
+    - name: Reload Firewall
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded

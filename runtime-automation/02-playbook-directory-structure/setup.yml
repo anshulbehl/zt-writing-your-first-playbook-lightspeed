@@ -1,0 +1,24 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Create hosts
+      ansible.builtin.copy:
+        content: |
+          [web]
+          node1
+          node2
+        dest: /home/{{ USER }}/ansible-files/inventory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+- name: Setup nodes
+  hosts: nodes
+  tasks:
+    - name: Print msg
+      ansible.builtin.debug:
+        msg: "Setup has completed"

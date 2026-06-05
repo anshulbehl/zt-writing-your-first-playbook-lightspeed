@@ -1,0 +1,173 @@
+:sectnums:
+= 1.0 - The basics & creating an inventory
+
+== Understanding The Lab Environment
+=====
+.Laboratory tips!
+[%collapsible]
+====
+Before we begin, some basic tips to improve your lab experience:
+
+. The instructions sidebar to the left can be resized in case you need extra space for the main panel. You can try this now!
+
+. In the left sidebar, you will find the different sections. In each chapter, there will be an introduction to the challenge and the related tasks below. The sections can be collapsed and expanded by clicking on them.
++
+image::collasped.png[Collasped, 90%, align="center"]
+
+. When we refer to the **VSCode Editor** or **Control** tabs, we mean the ones at the top bar. **VSCode Editor** will show the **Visual Studio Code** screen where you can edit the files, and the **Control** one will show a command line interface (CLI) or **Terminal** to run the playbooks and checks.
++
+image::tabs.png[Tabs,90%, align="center"]
+
+. Each "code box" for playbooks and commands has a copy & paste feature, where if you click on the box, the content will be copied to the clipboard. You can paste this into the VSCode Editor if you run into problems typing.
+
+. When you finish with a challenge (or chapter), you need to click the image:next.png[Next, 50] button to move to the next. This will review the steps.
+
+. You have the option to image:solve.png[Solve, 55] a challenge or chapter, keep in mind this will auto-solve the exercises.
+====
+=====
+
+
+=====
+.The basics
+[%collapsible]
+====
+Welcome to the writing your first Ansible playbook lab!
+
+If you are new to Ansible Automation Platform, in this hands-on laboratory we will guide you on what is an Ansible playbook and how to write one to start your automation journey!
+
+In this first challenge, you will learn about the Ansible command-line tool called *ansible-navigator* and you will also create an *inventory* file.
+====
+=====
+
+== Understanding The Ansible Navigator & Inventory
+=====
+.What is Ansible Navigator?
+[%collapsible]
+====
+Ansible navigator is a command-line (CLI) based tool for creating, reviewing, and troubleshooting Ansible content. This includes inventories, playbooks, and collections. In the following challenges you will use the *ansible-navigator* command to run the Ansible playbooks you create.
+====
+=====
+
+=====
+.What is an inventory?
+[%collapsible]
+====
+An *inventory* file is a text file that specifies the nodes (remote devices) that will be managed by the control machine (from where we run the automation).
+
+The inventory may include a list of hostnames or IP addresses associated with the managed nodes, depending on the need. The inventory file allows for nodes to be organized into groups by declaring a host group name within square brackets, for ex. *[group]*.
+====
+=====
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Creation of an Inventory file
+[%collapsible]
+=====
+[IMPORTANT]
+====
+In the **VSCode Editor** screen, the directory opened by default in the left panel is ansible-files. This directory will contain our inventory file and future playbooks.
+
+Currently, the only file residing in the *ansible-files* directory is *ansible-navigator.yml*. This file contains all the settings to properly run this lab. Feel free to look at the file, but **please don't make any changes to it**, as we won't cover those settings this time.
+====
+
+. Right click in a blank space below the existing files and create a new file named *inventory*.
++
+image::vscode_inventory.png[Inventory, 90%, align="center"]
+
++
+NOTE: The *inventory* filename should have no extension and remember to save!
+
+
+. In the *inventory* file, input the following content:
++
+[source,text]
+----
+[web]
+node1
+node2
+----
+=====
+======
+
+======
+.☑️ Task 2 - How to use Ansible Navigator?
+[%collapsible]
+=====
+
+NOTE: Switch to the *Control* top tab for the Terminal
+
+
+IMPORTANT: *ansible-navigator* comes with an interactive mode by default that allows you to explore the different options through a Terminal UI, but for this lab, we will set the mode of *ansible-navigator* to *stdout*, the standard output. We have configured this as the default in the *ansible-navigator.yml* settings file.
+
+. Verify you are in the *ansible-files* directory
++
+[source,shell]
+----
+cd /home/rhel/ansible-files
+----
++
+No output is expected for this command.
+
+. Run the following commands to get a listing of what is available within our recently created *inventory*:
++
+[source,shell]
+----
+ansible-navigator inventory --list
+----
++
+.Output should look like this:
++
+[source,json]
+----
+{
+    "_meta": {
+        "hostvars": {}
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "web"
+        ]
+    },
+    "web": {
+        "hosts": [
+            "node1",
+            "node2"
+        ]
+    }
+}
+----
+
++
+NOTE: If the *--list* is too verbose, the option of *--graph* can be used to provide a more condensed version of *--list*.
+ansible-navigator inventory --graph
+
+
+IMPORTANT: In the following challenges you will familiarize yourself with the *ansible-navigator run* command that allows us to run Ansible playbooks.
+=====
+======
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+01-playbook-inventory&assignees=miteshget[Writing your first playbook repository^].
+
+=====
+======

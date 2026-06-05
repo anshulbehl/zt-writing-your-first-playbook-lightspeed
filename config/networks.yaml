@@ -1,4 +1,4 @@
 ---
-# Default network exists by default, specify here always.
+# Default network configuration
+# Using default pod network for VM communication
 - name: default
-- name: secondary

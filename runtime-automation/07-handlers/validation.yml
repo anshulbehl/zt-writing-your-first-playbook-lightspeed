@@ -1,0 +1,34 @@
+- name: Basic System Setup
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: Check whether a package called foobar is installed
+      ansible.builtin.fail:
+        msg: "firewalld is not installed"
+      when: "'firewalld' not in ansible_facts.packages"
+
+    - name: Check page
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}
+        return_content: true
+        status_code: [200, 403]
+      register: r_curl
+      ignore_errors: true
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.6 - FAIL: Web is not accessible. Something is wrong."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: "'Test Page for the HTTP Server on Red Hat Enterprise Linux' not in r_curl.content"
+      delegate_to: localhost
+
+    - name: Check whether page is accessible
+      ansible.builtin.fail:
+        msg: "{{ inventory_hostname }} is not accessible"
+      when: "'Test Page for the HTTP Server on Red Hat Enterprise Linux' not in r_curl.content"

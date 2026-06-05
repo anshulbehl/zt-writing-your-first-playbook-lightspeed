@@ -1,0 +1,23 @@
+---
+- name: Solve control node
+  hosts: controller
+  vars:
+    USER: rhel
+  tasks:
+    - name: Get stats of system_setup.yml file
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/system_setup.yml
+      register: r_system
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.1: The 'system_setup.yml' file does not exist in the specified directory."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: not r_system.stat.exists
+      delegate_to: localhost
+
+    - name: Fail if the host file does not exist
+      ansible.builtin.fail:
+        msg: "system file doesn't exist"
+      when: not r_system.stat.exists

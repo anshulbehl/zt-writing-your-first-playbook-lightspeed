@@ -1,0 +1,23 @@
+- name: Basic System Setup
+  hosts: web
+  become: true
+  tasks:
+
+    - name: Check user existence
+      ansible.builtin.command:
+        cmd: id padawan
+      ignore_errors: true
+      register: user_check
+
+    - name: Write fail logs
+      ansible.builtin.copy:
+        content: "Challenge 1.4 - FAIL: padawan does not exist. Something is wrong."
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      when: user_check.rc != 0
+      delegate_to: localhost
+
+    - name: Fail if user does not exist
+      ansible.builtin.fail:
+        msg: "User padawan doesn't exists."
+      when: user_check.rc != 0

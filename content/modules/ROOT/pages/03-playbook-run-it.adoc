@@ -1,0 +1,116 @@
+:sectnums:
+= 1.2 - Run the playbook!
+
+In this challenge, you will execute your Ansible Playbook from the control node using the *ansible-navigator* CLI tool.
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Run the system_setup.yml Ansible Playbook
+[%collapsible]
+=====
+. Within the *Control Terminal* tab, change into the *ansible-files* directory:
++
+[source,shell]
+----
+cd /home/rhel/ansible-files
+----
+
+
+. Run the playbook using *ansible-navigator*:
++
+[source,shell]
+----
+ansible-navigator run system_setup.yml
+----
+
+
+IMPORTANT: The playbook task may take a minute or two to complete as it will download the container image and upgrade system packages in the managed node.
+
+
+
+NOTE: *-i hosts* option is not required as the inventory was configured in the *ansible-navigator.yml* settings file.
+
+
+.The output should not report any errors but provide an overview of the tasks executed and a "PLAY RECAP" summarizing what has been done.
+[image]
+image::navigator-output.png[Output, 90%, align="center"]
+
+NOTE: There is a built-in task labeled *Gathering Facts* that runs automatically at the beginning of each Ansible play. It collects information about the managed nodes. Upcoming challenges will cover this in more detail.
+=====
+======
+
+
+======
+.☑️ Task 2 - Verify the user has been created
+[%collapsible]
+=====
+. Within the *Control Terminal* tab, SSH into *node1* and verify the user exists manually:
+
++
+[source,shell]
+----
+ssh node1 id myuser
+----
+=====
+======
+
+
+======
+.☑️ Task 3 - Idempotency at work
+[%collapsible]
+=====
+NOTE: Idempotency. An operation is idempotent if the result of performing it once is exactly the same as the result of performing it repeatedly without any intervening actions. Not all Ansible modules and playbooks are idempotent.
+
+. Run the Ansible Playbook a second time and compare the output to the original.
++
+[source,shell]
+----
+ansible-navigator run system_setup.yml
+----
+
+
+[NOTE]
+====
+* You will notice the tasks change from *changed* to *ok* including the colors changing from *yellow* to *green*. 
+
+* Additionally, the *"PLAY RECAP"* summary at the end makes it easy to spot the changes made by Ansible.
+====
+
+.You should see something like this:
+[image]
+image::idem-output.png[Output, 90%, align="center"]
+
+[NOTE]
+====
+Why does this happen?
+
+* The Ansible Playbook can be run numerous times but only does it make a change the first time due to this being the only time that *node1* does not have the *myuser* user. Once the user is created, Ansible recognizes this and gives a status of *ok* letting us know that it's already there.
+====
+=====
+======
+
+
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+03-playbook-run-it&assignees=miteshget[Writing your first playbook repository^].
+=====
+======

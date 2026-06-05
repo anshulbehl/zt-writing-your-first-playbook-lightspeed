@@ -1,0 +1,107 @@
+---
+- name: Solve control node
+  hosts: controller
+  gather_facts: false
+  vars:
+    USER: rhel
+  tasks:
+    - name: Create hosts
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Basic System Setup
+            hosts: all
+            become: true
+            vars:
+              user_name: 'padawan'
+              package_name: httpd
+              apache_service_name: httpd
+            tasks:
+              - name: Install security updates for the kernel
+                ansible.builtin.dnf:
+                  name: 'kernel'
+                  state: latest
+                  security: true
+                  update_only: true
+                when: inventory_hostname in groups['web']
+
+              - name: Create a new user
+                ansible.builtin.user:
+                  name: "{% raw %}{{ user_name }}{% endraw %}"
+                  state: present
+                  create_home: true
+
+              - name: Install Apache on web servers
+                ansible.builtin.dnf:
+                  name: "{% raw %}{{ package_name }}{% endraw %}"
+                  state: present
+                when: inventory_hostname in groups['web']
+
+              - name: Ensure Apache is running and enabled
+                ansible.builtin.service:
+                  name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+                  state: started
+                  enabled: true
+                when: inventory_hostname in groups['web']
+
+              - name: Install firewalld
+                ansible.builtin.dnf:
+                  name: firewalld
+                  state: present
+                when: inventory_hostname in groups['web']
+
+              - name: Ensure firewalld is running
+                ansible.builtin.service:
+                  name: firewalld
+                  state: started
+                  enabled: true
+                when: inventory_hostname in groups['web']
+
+              - name: Allow HTTP traffic on web servers
+                ansible.posix.firewalld:
+                  service: http
+                  permanent: true
+                  state: enabled
+                when: inventory_hostname in groups['web']
+                notify: Reload Firewall
+
+            handlers:
+              - name: Reload Firewall
+                ansible.builtin.service:
+                  name: firewalld
+                  state: reloaded
+        dest: /home/{{ USER }}/ansible-files/system_setup.yml
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+
+- name: Basic System Setup
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install firewalld
+      ansible.builtin.dnf:
+        name: firewalld
+        state: present
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - httpd
+        - firewalld
+
+    - name: Allow HTTP traffic on web servers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+
+    - name: Reload Firewall
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded

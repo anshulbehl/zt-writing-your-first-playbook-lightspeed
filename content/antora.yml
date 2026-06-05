@@ -1,4 +1,9 @@
 ---
-
 name: modules
 version: master
+
+asciidoc:
+  attributes:
+    lab_name: "Writing your first playbook"
+    release-version: master
+    page-pagination: true

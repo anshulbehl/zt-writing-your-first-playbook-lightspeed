@@ -1,0 +1,188 @@
+:sectnums:
+= 1.5 - Conditionals
+
+In the following challenges, we will cover the application of conditionals, handlers, and loops in Ansible playbooks. You'll learn to control task execution with conditionals, manage service responses with handlers, and efficiently tackle repetitive tasks using loops.
+
+Let's start with conditionals. Conditionals in Ansible control whether a task should run based on certain conditions. Let's add to the *system_setup.yml* playbook the ability to install the Apache HTTP Server (httpd) only on hosts that belong to the web group in our inventory.
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Update the inventory file
+[%collapsible]
+=====
+
+NOTE: In the **VSCode Editor** tab.
+
+
+. Within the *ansible-files* directory, open the *inventory* file and check the inventory has the following groups and hosts. If it doesn't, correct it!
++
+[source,ini]
+----
+[web]
+node1
+node2
+
+[database]
+node3
+----
+=====
+======
+
+
+======
+.☑️ Task 2 - Update our system_setup.yml playbook
+[%collapsible]
+=====
+
+[IMPORTANT]
+====
+We will modify our previous playbook to limit tasks to specific hosts within the *[web]* group.
+For this, we will use the *hosts: all* setting in our playbook to target all nodes, but we will be adding a condition with *when:* to some tasks.
+====
+
+. Update your *system_setup.yml* playbook with the changes below, paying attention to the *hosts:* and *when:* lines.
++
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: all
+  become: true
+  vars:
+    user_name: 'padawan'
+    package_name: httpd
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+        update_only: true
+      when: inventory_hostname in groups['web']
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        state: present
+        create_home: true
+
+    - name: Install Apache on web servers
+      ansible.builtin.dnf:
+        name: "{{ package_name }}"
+        state: present
+      when: inventory_hostname in groups['web']
+----
+
+
++
+NOTE: Notice an Ansible fact variable labeled *inventory_hostname* that is used within the *when* conditional to specify the specific groups that the task should run on. Users are being created in **all** hosts, while the update and Apache install are only done in the **[web]** group.
+=====
+======
+
+======
+.☑️ Task 3 - Run the playbook
+[%collapsible]
+=====
+NOTE: In the *Control* tab
+
+
+. Run the playbook with *ansible-navigator* again:
++
+[source,shell]
+----
+cd /home/rhel/ansible-files
+----
+
++
+[source,shell]
+----
+ansible-navigator run system_setup.yml
+----
+
++
+IMPORTANT: Did you notice the *skipping* as you ran the playbook?
+This is due to the conditional *when* statement targeting the specific hosts for the tasks even though the *hosts:* label within the *inventory* inventory file is set to *all*.
+=====
+======
+
+
+======
+.☑️ Task 4 - Verify
+[%collapsible]
+=====
+. Once the Ansible Playbook successfully completes, run the following steps to check manually:
+
+. For *node1* (which belongs to the *[web]* group), verify both the user *padawan* and the package *httpd* exist:
+
++
+[source,shell]
+----
+ssh node1 id padawan
+----
++
+.Output should be similar to this:
+[source,text]
+----
+uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
+----
++
+[source,shell]
+----
+ssh node1 rpm -q httpd
+----
++
+.Output should be similar to this:
+[source,text]
+----
+httpd-2.4.37-56.module+el8.8.0+18556+a66138c1.4.x86_64
+----
+
+. For *node3* (which belongs to the *[database]* group), verify that the user *padawan* exists, but the *httpd* package is missing:
++
+[source,shell]
+----
+ssh node3 id padawan
+----
++
+.Output should be similar to this:
+[source,text]
+----
+uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
+----
++
+[source,shell]
+----
+ssh node3 rpm -q httpd
+----
++
+.Output should be similar to this:
+[source,text]
+----
+package httpd is not installed
+----
+=====
+======
+
+
+== Embracing the Next Challenge
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+
+* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
+
+* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-playbook-conditionals&assignees=miteshget[Writing your first playbook repository^].
+=====
+======
