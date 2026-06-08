@@ -1,32 +1,52 @@
 :sectnums:
 = 1.8 - Templates
 
-In this challenge, you will create a Jinja2 template. Ansible uses Jinja2 templating to modify files before they are distributed to managed hosts. Jinja2 is one of the most used template engines for Python (http://jinja.pocoo.org/). You'll learn how to craft templates that incorporate host-specific data, enabling the creation of tailored configuration files for each managed host.
+Jinja2 templates let you generate *dynamic configuration files* that are customized for each managed node at runtime. Instead of copying a static file, Ansible fills in variables like hostname, IP address, or OS version before placing the file on the target.
 
-In the following example, let's create a template for the Message of the Day (MOTD) that includes dynamic host information.
+In this challenge, you will use Ansible Lightspeed to generate a Jinja2 template for `/etc/motd` (the message of the day) and the playbook task that deploys it.
+
+=====
+.How templates work in Ansible
+[%collapsible]
+====
+* Template files use the `.j2` extension and contain a mix of static text and `{{ variable }}` placeholders.
+* The `ansible.builtin.template` module renders the template on the control node (substituting variables with facts gathered from each target host) and copies the result to the managed node.
+* Because Ansible facts are host-specific, the same template produces a different file on each managed node.
+====
+=====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Create a templates directory
+.☑️ Task 1 - Generate the Jinja2 template with Lightspeed
 [%collapsible]
 =====
-NOTE: In the *VSCode Editor* tab
+[NOTE]
+====
+Switch to the *VS Code* tab.
+====
 
-. In the *ansible-files* directory, create the *templates* subdirectory (right-click and select 'New Folder' in VSCode) to store our new template files.
-=====
-======
-
-
-======
-.☑️ Task 2 - Create the motd.j2 jinja file
-[%collapsible]
-=====
-
-. Template files end with a *.j2* file extension and mix static content with dynamic placeholders enclosed in curly braces *{{ }}*. Within the *ansible-files/templates* directory, create the file *motd.j2* with the following content:
+. In the *ansible-files* directory, right-click and create a new folder named *templates*.
+. Inside *templates*, right-click and create a new file named *motd.j2*.
+. The file is a `.j2` template, not a playbook — but you can still ask Lightspeed to help. Type the following in the file:
 +
-NOTE: You can right-click over the *templates* directory in VSCode and use "New File".
+[source,jinja2]
+----
+Welcome to {{ ansible_hostname }}.
+----
+. Let Lightspeed suggest additional lines. Place your cursor at the end of the line, press Enter, and continue typing:
 +
+[source,text]
+----
+OS:
+----
++
+Watch for Lightspeed to suggest the OS fact variable. Press Tab to accept, then continue with a new line for Architecture.
+
+[TIP]
+====
+*Expected completed motd.j2:*
+
 [source,jinja2]
 ----
 Welcome to {{ ansible_hostname }}.
@@ -34,50 +54,65 @@ OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
 Architecture: {{ ansible_architecture }}
 ----
 
+`ansible_hostname`, `ansible_distribution`, `ansible_distribution_version`, and `ansible_architecture` are all *Ansible facts* — they are populated automatically by the *Gathering Facts* task at the start of every play.
+====
 
-NOTE: The template file contains the basic text that will later be copied over to the hosts. It contains variables that will be replaced on the target machines individually. It will dynamically display the hostname, OS distribution, version, and architecture of each managed host.
+. Save the file.
 =====
 ======
 
 
 ======
-.☑️ Task 3 - Update the system_setup.yml playbook to include the motd
+.☑️ Task 2 - Use Lightspeed to add the template task to the playbook
 [%collapsible]
 =====
-NOTE: In the **VSCode Editor** tab
+[NOTE]
+====
+Switch to the *VS Code* tab and open *system_setup.yml*.
+====
 
-. Open the *system_setup.yml* playbook and modify it to include the following task right before the *handlers* section:
-+
-WARNING: We are only showing the task to add. Pay attention to the indentation and maintain the same format as the other tasks, leave a blank line above and a blank line below the task!
+. Before the `handlers:` section, add a new task. Type:
 +
 [source,yaml]
 ----
-    - name: Update MOTD from Jinja2 Template
+    - name: Deploy MOTD from Jinja2 template to all nodes
+----
+. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+
+[TIP]
+====
+*Expected Lightspeed output:*
+
+[source,yaml]
+----
+    - name: Deploy MOTD from Jinja2 template to all nodes
       ansible.builtin.template:
         src: templates/motd.j2
         dest: /etc/motd
 ----
 
-+
-IMPORTANT: If you run into issues adding the task, you will find the full *system_setup.yml* playbook at the end of this sidebar. Look for the **💡 Solution playbook** section.
+Lightspeed recognizes "Jinja2 template" in the task name, picks the correct module, and resolves the source path relative to the playbook directory.
+====
+
+. Save the file.
 =====
 ======
 
 
 ======
-.☑️ Task 4 - Run the playbook
+.☑️ Task 3 - Run the playbook
 [%collapsible]
 =====
-NOTE: In the **Control** tab
+[NOTE]
+====
+Switch to the *Control* tab.
+====
 
-. Run the *system_setup.yml* playbook again:
-+
 [source,shell]
 ----
 cd /home/rhel/ansible-files
 ----
 
-+
 [source,shell]
 ----
 ansible-navigator run system_setup.yml
@@ -87,122 +122,45 @@ ansible-navigator run system_setup.yml
 
 
 ======
-.☑️ Task 5 - Verify message of the day
+.☑️ Task 4 - Verify the MOTD on each node
 [%collapsible]
 =====
-. Login to *node1* via SSH and check the message of the day content.
+. SSH into *node1* and check the MOTD:
 +
 [source,shell]
 ----
 ssh node1
 ----
 +
-NOTE: You should see a message similar to the one below (RHEL version might vary!)
-+
-[source,ini]
+.You should see something like (version numbers will vary):
+[source,text]
 ----
 Welcome to node1.
-OS: RedHat 8.7
+OS: RedHat 9.2
 Architecture: x86_64
 ----
-
-. You can now exit *node1* and test the same in *node2* to see the difference:
+. Exit and try *node2* — notice the hostname is different:
 +
 [source,shell]
 ----
 exit
 ----
-
 +
 [source,shell]
 ----
 ssh node2
 ----
-
-. You can now exit *node2*.
+. Exit node2:
 +
 [source,shell]
 ----
 exit
 ----
-=====
-======
 
-
-======
-.💡 Solution playbook
-[%collapsible]
-=====
-[source,yaml]
-----
-- name: Basic System Setup
-  hosts: all
-  become: true
-  vars:
-    user_name: 'padawan'
-    package_name: httpd
-    apache_service_name: httpd
-  tasks:
-
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-        update_only: true
-      when: inventory_hostname in groups['web']
-
-    - name: Create a new user
-      ansible.builtin.user:
-        name: "{{ user_name }}"
-        state: present
-        create_home: true
-
-    - name: Install Apache on web servers
-      ansible.builtin.dnf:
-        name: "{{ package_name }}"
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Ensure Apache is running and enabled
-      ansible.builtin.service:
-        name: "{{ apache_service_name }}"
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-
-    - name: Install firewalld
-      ansible.builtin.dnf:
-        name: firewalld
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Ensure firewalld is running
-      ansible.builtin.service:
-        name: firewalld
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-
-    - name: Allow HTTP traffic on web servers
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-      when: inventory_hostname in groups['web']
-      notify: Reload Firewall
-
-    - name: Update MOTD from Jinja2 Template
-      ansible.builtin.template:
-        src: templates/motd.j2
-        dest: /etc/motd
-
-  handlers:
-    - name: Reload Firewall
-      ansible.builtin.service:
-        name: firewalld
-        state: reloaded
-----
+[NOTE]
+====
+The same `motd.j2` template produced a *unique file* on each node because Ansible substituted the host-specific facts at runtime. This is the power of templating.
+====
 =====
 ======
 
@@ -212,11 +170,10 @@ exit
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge.
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -225,6 +182,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+09-playbook-templates&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+09-playbook-templates[Writing your first playbook repository^].
 =====
 ======

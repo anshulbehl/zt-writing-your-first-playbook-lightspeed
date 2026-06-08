@@ -1,19 +1,44 @@
 :sectnums:
-= 1.7 - Loops in Ansible
+= 1.7 - Loops
 
-Loops in Ansible allow you to perform a task multiple times with different values. This feature is particularly useful for tasks like creating multiple user accounts in our given example.
+Loops let Ansible repeat a task multiple times with different values — for example, creating several users in a single task instead of writing one task per user. In this challenge, you will use Ansible Lightspeed to generate a new playbook that creates three users using a loop.
 
-In this challenge, you will create a simple loop that generates three new users on *node1*, instead of a single one.
+=====
+.How loops work in Ansible
+[%collapsible]
+====
+The `loop:` keyword provides a list of items. The special variable `{{ item }}` is replaced with each list value in turn. Instead of three separate user tasks, you write one task with a loop:
+
+[source,yaml]
+----
+  tasks:
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - alice
+        - bob
+        - carol
+----
+
+Ansible runs this task three times — once for each name in the list.
+====
+=====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Create a new playbook
+.☑️ Task 1 - Create loop_users.yml with Lightspeed
 [%collapsible]
 =====
-NOTE: In the *VSCode Editor* tab
+[NOTE]
+====
+Switch to the *VS Code* tab.
+====
 
-. Create the file *loop_users.yml*, This can be done by simply right clicking and selecting 'New File', with the following content:
+. In the *ansible-files* directory, right-click and create a new file named *loop_users.yml*.
+. Add the play header:
 +
 [source,yaml]
 ----
@@ -21,9 +46,24 @@ NOTE: In the *VSCode Editor* tab
 - name: Create multiple users with a loop
   hosts: node1
   become: true
-
   tasks:
-    - name: Create a new user
+----
+
+. Now type the following task name and let Lightspeed generate the loop:
++
+[source,yaml]
+----
+    - name: Create users alice bob and carol using a loop
+----
+. Press *Enter*, then *Tab* to accept the suggestion.
+
+[TIP]
+====
+*Expected Lightspeed output:*
+
+[source,yaml]
+----
+    - name: Create users alice bob and carol using a loop
       ansible.builtin.user:
         name: "{{ item }}"
         state: present
@@ -34,34 +74,28 @@ NOTE: In the *VSCode Editor* tab
         - carol
 ----
 
-[NOTE]
-====
-. The playbook takes advantage of the *ansible.builtin.user* module to create users on the *node1* host.
-
-. Notice the *name: "{{ item }}"*? This is a special variable named *{{ item }}*. This variable *item* gets replaced with the values found under the *loop:* statement.
-
-. What changed from our original task creating a single user?
-+
-* Loop Directive: The *loop* keyword is used to iterate over a list of items. In this case, the list contains the names of users we want to create: alice, bob, and carol.
-* User Creation with Loop: Instead of creating a single user, the modified task now iterates over each item in the loop list. The *{{ item }}* placeholder is dynamically replaced with each username in the list on each iteration, so the *ansible.builtin.user* module creates each user in turn.
+Lightspeed extracts the names from your task description and builds the `loop:` list. The `{{ item }}` placeholder is the key pattern — it is replaced by each list entry at runtime.
 ====
 
+. Save the file.
 =====
 ======
+
 
 ======
 .☑️ Task 2 - Run the loop_users.yml playbook
 [%collapsible]
 =====
-NOTE: In the *Control* tab
+[NOTE]
+====
+Switch to the *Control* tab.
+====
 
-. Change directory to *ansible-files* and run the *loop_users.yml* playbook.
-+
 [source,shell]
 ----
 cd /home/rhel/ansible-files
 ----
-+
+
 [source,shell]
 ----
 ansible-navigator run loop_users.yml
@@ -69,16 +103,30 @@ ansible-navigator run loop_users.yml
 
 [NOTE]
 ====
-Understand the playbook and the output:
-
-* The names are not provided to the *ansible.builtin.user* module directly. Instead, there is only a variable called *{{ item }}* for the parameter name.
-* The *loop* keyword lists the actual user names *[alice, bob, carol]*. Those replace the *{{ item }}* during the actual execution of the playbook.
-* During execution the task is only listed once, but there are three changes listed underneath it.
+Watch the output. The task appears *once* in the play output, but Ansible runs it *three times* — once for each item. You will see three sub-results listed under the single task name.
 ====
-
 =====
 ======
 
+
+======
+.☑️ Task 3 - Verify all three users were created
+[%collapsible]
+=====
+[source,shell]
+----
+ssh node1 id alice && ssh node1 id bob && ssh node1 id carol
+----
++
+.Each user should show output like:
+[source,text]
+----
+uid=1004(alice) gid=1004(alice) groups=1004(alice)
+uid=1005(bob) gid=1005(bob) groups=1005(bob)
+uid=1006(carol) gid=1006(carol) groups=1006(carol)
+----
+=====
+======
 
 
 == Embracing the Next Challenge
@@ -86,11 +134,10 @@ Understand the playbook and the output:
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -99,6 +146,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+08-playbook-loops&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+08-playbook-loops[Writing your first playbook repository^].
 =====
 ======

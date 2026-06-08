@@ -1,6 +1,6 @@
 ---
 site:
-  title: "Writing you first playbook"
+  title: "Writing Your First Playbook with Ansible Lightspeed"
   url: https://demo.redhat.com/course-template
   start_page: modules::01-playbook-inventory.adoc
 

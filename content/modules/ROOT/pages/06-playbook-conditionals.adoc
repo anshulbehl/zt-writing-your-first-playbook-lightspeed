@@ -1,108 +1,114 @@
 :sectnums:
 = 1.5 - Conditionals
 
-In the following challenges, we will cover the application of conditionals, handlers, and loops in Ansible playbooks. You'll learn to control task execution with conditionals, manage service responses with handlers, and efficiently tackle repetitive tasks using loops.
+Conditionals let you control *which tasks run on which hosts*. In this challenge, you will use Ansible Lightspeed to add an Apache installation task that only runs on web servers — not on the database server.
 
-Let's start with conditionals. Conditionals in Ansible control whether a task should run based on certain conditions. Let's add to the *system_setup.yml* playbook the ability to install the Apache HTTP Server (httpd) only on hosts that belong to the web group in our inventory.
+=====
+.How conditionals work in Ansible
+[%collapsible]
+====
+The `when:` keyword makes a task conditional. Ansible evaluates the expression and only runs the task if it is true. A common pattern is checking inventory group membership:
+
+[source,yaml]
+----
+when: inventory_hostname in groups['web']
+----
+
+`inventory_hostname` is an Ansible *fact* — a variable that Ansible fills in automatically with the current host's name. Combined with `groups['web']`, this condition is true only for hosts in the *[web]* group.
+====
+=====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Update the inventory file
+.☑️ Task 1 - Prompt Lightspeed to target all nodes
 [%collapsible]
 =====
-
-NOTE: In the **VSCode Editor** tab.
-
-
-. Within the *ansible-files* directory, open the *inventory* file and check the inventory has the following groups and hosts. If it doesn't, correct it!
-+
-[source,ini]
-----
-[web]
-node1
-node2
-
-[database]
-node3
-----
-=====
-======
-
-
-======
-.☑️ Task 2 - Update our system_setup.yml playbook
-[%collapsible]
-=====
-
-[IMPORTANT]
+[NOTE]
 ====
-We will modify our previous playbook to limit tasks to specific hosts within the *[web]* group.
-For this, we will use the *hosts: all* setting in our playbook to target all nodes, but we will be adding a condition with *when:* to some tasks.
+Switch to the *VS Code* tab and open *system_setup.yml*.
 ====
 
-. Update your *system_setup.yml* playbook with the changes below, paying attention to the *hosts:* and *when:* lines.
+. Update `hosts:` to target all inventory hosts. Change the line to:
 +
 [source,yaml]
 ----
----
-- name: Basic System Setup
   hosts: all
-  become: true
-  vars:
-    user_name: 'padawan'
+----
++
+. Add a `package_name` variable to the `vars:` section. After `user_name: 'padawan'`, type:
++
+[source,yaml]
+----
     package_name: httpd
-  tasks:
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-        update_only: true
-      when: inventory_hostname in groups['web']
+----
+=====
+======
 
-    - name: Create a new user
-      ansible.builtin.user:
-        name: "{{ user_name }}"
-        state: present
-        create_home: true
 
-    - name: Install Apache on web servers
+======
+.☑️ Task 2 - Use Lightspeed to add a conditional Apache install task
+[%collapsible]
+=====
+. After the user creation task, press Enter and type the following task name:
++
+[source,yaml]
+----
+    - name: Install Apache on web servers only
+----
+. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+
+[TIP]
+====
+*Expected Lightspeed output:*
+
+[source,yaml]
+----
+    - name: Install Apache on web servers only
       ansible.builtin.dnf:
         name: "{{ package_name }}"
         state: present
       when: inventory_hostname in groups['web']
 ----
 
+Because `package_name` is already defined in `vars:` and Lightspeed sees the task name mentions "web servers only", it generates both the DNF task and the `when:` conditional automatically.
+====
 
+. Also update the kernel update task — it should only run on web servers too. Find that task and ask Lightspeed to add the conditional. Select the task, right-click → *Ansible Lightspeed → Explain*, then manually add:
 +
-NOTE: Notice an Ansible fact variable labeled *inventory_hostname* that is used within the *when* conditional to specify the specific groups that the task should run on. Users are being created in **all** hosts, while the update and Apache install are only done in the **[web]** group.
+[source,yaml]
+----
+      when: inventory_hostname in groups['web']
+----
++
+. Save the file.
 =====
 ======
+
 
 ======
 .☑️ Task 3 - Run the playbook
 [%collapsible]
 =====
-NOTE: In the *Control* tab
+[NOTE]
+====
+Switch to the *Control* tab.
+====
 
-
-. Run the playbook with *ansible-navigator* again:
-+
 [source,shell]
 ----
 cd /home/rhel/ansible-files
 ----
 
-+
 [source,shell]
 ----
 ansible-navigator run system_setup.yml
 ----
 
-+
-IMPORTANT: Did you notice the *skipping* as you ran the playbook?
-This is due to the conditional *when* statement targeting the specific hosts for the tasks even though the *hosts:* label within the *inventory* inventory file is set to *all*.
+[NOTE]
+====
+Watch for *skipping* messages in the output. When a task's `when:` condition is false, Ansible logs `skipping` for that host instead of running the task. This is how you confirm the conditional is working.
+====
 =====
 ======
 
@@ -111,44 +117,23 @@ This is due to the conditional *when* statement targeting the specific hosts for
 .☑️ Task 4 - Verify
 [%collapsible]
 =====
-. Once the Ansible Playbook successfully completes, run the following steps to check manually:
-
-. For *node1* (which belongs to the *[web]* group), verify both the user *padawan* and the package *httpd* exist:
-
+. On *node1* (web group) — both *padawan* and *httpd* should exist:
 +
 [source,shell]
 ----
 ssh node1 id padawan
 ----
 +
-.Output should be similar to this:
-[source,text]
-----
-uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
-----
-+
 [source,shell]
 ----
 ssh node1 rpm -q httpd
 ----
-+
-.Output should be similar to this:
-[source,text]
-----
-httpd-2.4.37-56.module+el8.8.0+18556+a66138c1.4.x86_64
-----
 
-. For *node3* (which belongs to the *[database]* group), verify that the user *padawan* exists, but the *httpd* package is missing:
+. On *node3* (database group) — *padawan* exists, *httpd* does not:
 +
 [source,shell]
 ----
 ssh node3 id padawan
-----
-+
-.Output should be similar to this:
-[source,text]
-----
-uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
 ----
 +
 [source,shell]
@@ -156,7 +141,7 @@ uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
 ssh node3 rpm -q httpd
 ----
 +
-.Output should be similar to this:
+.Expected output for node3 httpd check:
 [source,text]
 ----
 package httpd is not installed
@@ -170,11 +155,10 @@ package httpd is not installed
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -183,6 +167,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-playbook-conditionals&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-playbook-conditionals[Writing your first playbook repository^].
 =====
 ======

@@ -1,64 +1,61 @@
 :sectnums:
 = 1.4 - Variables
 
-Variables in Ansible are powerful tools for making your playbooks flexible and reusable. They allow you to store and reuse values, making your playbooks more dynamic and adaptable.
+Variables make playbooks flexible and reusable. Instead of hardcoding values like usernames directly inside tasks, you define them once and reference them everywhere. In this challenge, you will use Ansible Lightspeed to refactor *system_setup.yml* to use a variable for the username, and change the user to *padawan*.
 
-The creation and usage of variables involve a specific syntax:
-
-. *Defining Variables:* Variables are defined in the *vars* section of a playbook or in separate files for larger projects.
-
-. *Variable Naming:* Variable names should be descriptive and adhere to rules such as:
-+
-.. Starting with a letter or underscore.
-.. Containing only letters, numbers, and underscores.
-
-. *Using Variables:* Variables are referenced in tasks using the double curly braces in quotes *"{{ variable_name }}"*. This syntax tells Ansible to replace it with the variable's value at runtime.
-
+=====
+.How variables work in Ansible
+[%collapsible]
+====
+* Variables are defined in a `vars:` section at the play level (or in separate files for larger projects).
+* Variable names must start with a letter or underscore and contain only letters, numbers, and underscores.
+* Variables are referenced in tasks using double curly braces in quotes: `"{{ variable_name }}"` — Ansible replaces this with the variable's value at runtime.
+====
+=====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Creation of variables
+.☑️ Task 1 - Prompt Lightspeed to add a variable
 [%collapsible]
 =====
-NOTE: In the **VSCode Editor** tab.
+[NOTE]
+====
+Switch to the *VS Code* tab and open *system_setup.yml*.
+====
 
-. Update the *system_setup.yml* playbook to include and use a variable by adding a *vars:* section with a *user_name:* var and a *padawan* key value. Look for the changes in the playbook below:
+. Add a `vars:` section to the play. Position your cursor after the `become: true` line and before `tasks:`, and type:
 +
 [source,yaml]
 ----
----
-- name: Basic System Setup
-  hosts: web
-  become: true
   vars:
-    user_name: 'padawan'
-  tasks:
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-
-    - name: Create a new user
-      ansible.builtin.user:
-        name: "{{ user_name }}"
-        state: present
-        create_home: true
 ----
+. On the next line, type the variable name as a comment-style hint for Lightspeed:
++
+[source,yaml]
+----
+    user_name: 'padawan'
+----
++
+[TIP]
+====
+Lightspeed is context-aware. Once `user_name` is defined in `vars:`, it will automatically suggest `"{{ user_name }}"` in any task where a user name parameter is needed.
+====
 
-NOTE: In the playbook above you can notice we have defined a variable (*user_name*) and set a new user name (*padawan*). We later refer to this variable during the **Create a new user** task by using *"{{ user_name }}"*.
-
+. Now find the *Create a new user* task. Change the `name:` parameter value. Start deleting `myuser` and type `"{{` — watch Lightspeed suggest `"{{ user_name }}"` to complete it.
+. Press *Tab* to accept.
 =====
 ======
 
 
 ======
-.☑️ Task 2 - Run the modified playbook
+.☑️ Task 2 - Run the updated playbook
 [%collapsible]
 =====
-NOTE: Switch to the **Control** top tab.
-
+[NOTE]
+====
+Switch to the *Control* tab.
+====
 
 [source,shell]
 ----
@@ -74,39 +71,59 @@ ansible-navigator run system_setup.yml
 
 
 ======
-.☑️ Task 3 - Verify the new user exists in both nodes
+.☑️ Task 3 - Verify the new user exists
 [%collapsible]
 =====
-. Once the Ansible Playbook successfully completes, run the following steps to check manually both servers.
-+
-*For node1:*
+. Check *node1*:
 +
 [source,shell]
 ----
 ssh node1 id padawan
 ----
 +
-.Output should be similar to this:
-[source,text]
-----
-uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
-----
-+
-*For node2:*
+. Check *node2*:
 +
 [source,shell]
 ----
 ssh node2 id padawan
 ----
 +
-.Output should be similar to this:
+.Both should return:
 [source,text]
 ----
 uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
 ----
+
+[NOTE]
+====
+Your updated *system_setup.yml* should look like this:
+
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: web
+  become: true
+  vars:
+    user_name: 'padawan'
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+
+    - name: Create a new user named myuser
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        state: present
+        create_home: true
+----
+
+Now if you ever need to change the username, you update it in one place — the `vars:` section — and it applies everywhere the variable is used in the playbook.
+====
 =====
 ======
-
 
 
 == Embracing the Next Challenge
@@ -114,11 +131,10 @@ uid=1003(padawan) gid=1003(padawan) groups=1003(padawan)
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -127,6 +143,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+05-playbook-variables&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+05-playbook-variables[Writing your first playbook repository^].
 =====
 ======

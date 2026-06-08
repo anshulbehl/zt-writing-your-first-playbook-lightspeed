@@ -1,42 +1,51 @@
 :sectnums:
+= 1.1 - Generating Your First Playbook with Lightspeed
 
-= 1.1 - Creating your first Playbook
+Playbooks in Ansible are scripts written in YAML that define what tasks to run on your managed nodes. Instead of writing every line by hand, you will use *Ansible Lightspeed* to generate your first playbook from plain-English task descriptions.
 
-Playbooks in Ansible are essentially scripts written in YAML, a text markup language (if you know HTML, that's another markup language!). They are used to define the tasks and configurations that Ansible will apply to your servers.
+In this challenge, you will generate a playbook called *system_setup.yml* that installs kernel security updates and creates a new user on a managed node.
 
-In this challenge, you'll use Ansible to conduct basic system setup tasks on a Red Hat Enterprise Linux server. You will become familiar with Ansible fundamentals, like what is a playbook, how to create one and how to use modules like *dnf* and *user*.
+== How Lightspeed Inline Generation Works
+
+=====
+.Lightspeed inline task generation
+[%collapsible]
+====
+When you open an Ansible YAML file and write a task `name:` field, Lightspeed reads your description and *suggests the module and all its parameters* on the next line. Here is the workflow:
+
+. Open or create an Ansible `.yml` file.
+. Under the `tasks:` block, type a task name:
++
+[source,yaml]
+----
+    - name: Install security updates for the kernel
+----
+. Press *Enter* to go to the next line. Lightspeed analyzes your description and shows a ghost-text suggestion.
+. Press *Tab* to accept the suggestion. Lightspeed fills in the module and parameters for you.
+. Review what was generated — make sure it matches your intent before moving on.
+
+[TIP]
+====
+The better your task name, the better Lightspeed's suggestion. Be specific: instead of "install package", write "install the httpd web server package".
+====
+====
+=====
 
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Creation of the system_setup.yml file
+.☑️ Task 1 - Create the system_setup.yml file
 [%collapsible]
 =====
 [NOTE]
 ====
-In the *VSCode Editor* tab
-
-* We are going to create a playbook named *system_setup.yml* to perform, you guessed it, a basic system setup:
-** Install security updates for the kernel.
-** Create a new user.
+Switch to the *VS Code* tab.
 ====
 
-. This will work as our starting point. We will be adding tasks in the upcoming exercises.
-+
-.. Within the **VSCode Editor** tab, you should be in the *ansible-files* directory.
-.. Right-click below the *ansible-navigator.yml* file, in a blank space click "New File"
-.. Name the file *system_setup.yml*.
-=====
-======
-
-======
-.☑️ Task 2 - Defining the system_setup.yml playbook
-[%collapsible]
-=====
-. The following content is how a playbook starts:
-+
-NOTE: This code block is for reference only. You will create the playbook in the following step.
+. In the VS Code file explorer, right-click in a blank space within the *ansible-files* directory and select *New File*.
+. Name the file *system_setup.yml* and press Enter.
+. Add the following play header to the file. This tells Ansible to run on *node1* with elevated privileges:
 +
 [source,yaml]
 ----
@@ -49,42 +58,106 @@ NOTE: This code block is for reference only. You will create the playbook in the
 +
 [IMPORTANT]
 ====
-A couple of things to keep in mind when creating Ansible YAML files:
-
-* Start with three dashes *(---)* to indicate this is a playbook
-
-* Indentation is mandatory: Use spaces, not tabs, for indentation.
-
-* In YAML, we need to use 2 spaces per level of indentation. Notice how the *hosts* line begins with 2 spaces.
+YAML is whitespace-sensitive. Use 2 spaces per indentation level — never tabs.
 ====
-
-
-.One of Ansible's strengths is the ease to read and understand the flow of a playbook.
-[NOTE]
-====
-What are the above lines doing?
-
-* *name*: A descriptive name is given for the play (the group of tasks) via *name:* . This is optional but recommended.
-* *hosts*: The servers or devices to run the playbook against is defined via *hosts:* . This can be a single host or group from the inventory file.
-* *become*: We enable user privilege escalation (sudo) with *become: true* .
-* *tasks*: We start the tasks block for this play.
-====
-
 =====
 ======
 
 
 ======
-.☑️ Task 3 - Adding tasks to the system_setup.yml playbook
+.☑️ Task 2 - Use Lightspeed to generate the kernel update task
 [%collapsible]
 =====
-NOTE: Now that we know how a playbook file starts, let's look at the plays. Let's add a couple of tasks to update all installed packages on our *node1* host and to create a user. We will take advantage of the *ansible.builtin.dnf* module to apply all security-related updates to installed packages.
+[NOTE]
+====
+Still in *VS Code*, editing *system_setup.yml*.
+====
 
-. Modify the *system_setup.yml* file to add the 2 tasks, as shown below:
+. Position your cursor after the `tasks:` line and press Enter to start a new line.
+. Type the following task name exactly (Lightspeed uses it as the prompt):
 +
-WARNING: Pay attention to indentation and the spaces
+[source,yaml]
+----
+    - name: Install security updates for the kernel
+----
+. Press *Enter* to move to the next line. Watch for the ghost-text suggestion from Lightspeed.
+. Press *Tab* to accept it.
 
+[TIP]
+====
+*Expected Lightspeed output* — you should see something like:
+
+[source,yaml]
+----
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+----
+
+Lightspeed uses the *ansible.builtin.dnf* module (the fully qualified collection name for DNF package management) and sets `security: true` to limit updates to security patches only.
+====
+=====
+======
+
+
+======
+.☑️ Task 3 - Use Lightspeed to generate the user creation task
+[%collapsible]
+=====
+. After the kernel update task, press Enter twice to add a blank line, then type:
 +
+[source,yaml]
+----
+    - name: Create a new user named myuser
+----
+. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+
+[TIP]
+====
+*Expected Lightspeed output:*
+
+[source,yaml]
+----
+    - name: Create a new user named myuser
+      ansible.builtin.user:
+        name: myuser
+        state: present
+        create_home: true
+----
+
+Lightspeed picks the *ansible.builtin.user* module and sets sensible defaults: `state: present` ensures the user exists and `create_home: true` creates their home directory.
+====
+
+. Save the file with *Ctrl+S*.
+=====
+======
+
+
+======
+.☑️ Task 4 - Ask Lightspeed to explain the playbook
+[%collapsible]
+=====
+Now that you have a complete playbook, let Lightspeed walk you through it.
+
+. Select *all the content* in *system_setup.yml* (Ctrl+A).
+. Right-click and choose:
++
+[source,text]
+----
+Ansible Lightspeed → Explain
+----
+. Read through Lightspeed's explanation. Pay attention to:
++
+* Why `become: true` is needed
+* What `ansible.builtin.dnf` does differently from the bare `dnf` command
+* What `state: present` means for idempotency
+
+[NOTE]
+====
+Your complete *system_setup.yml* should look like this:
+
 [source,yaml]
 ----
 ---
@@ -98,35 +171,15 @@ WARNING: Pay attention to indentation and the spaces
         state: latest
         security: true
 
-    - name: Create a new user
+    - name: Create a new user named myuser
       ansible.builtin.user:
         name: myuser
         state: present
         create_home: true
 ----
-
-
-.Once we've done our play declarations, we start off with a *tasks* declaration to incorporate what specific tasks we'd like Ansible to automate within this play.
-[NOTE]
 ====
-* The modules in use are:
-+
-** *ansible.builtin.dnf*: This module is used for package management with DNF (Dandified YUM), the *yum* replacement on newer RHEL and other Fedora or CentOS-based systems. If managing RHEL 7 for example, you could use the *ansible.builtin.yum* module instead.
-** *ansible.builtin.user*: This module is used to manage user accounts in the system.
-
-* A task is named (*name*) and a module (*ansible.builtin.dnf* and *ansible.builtin.user*) are called for the task.
-
-* Parameters for the modules are added:
-+
-** *name*: to identify the package or user name
-** *state*: to define the wanted state (*present*, *absent*, *latest*)
-** *security: true*: this one is *dnf* specific, to define that updates should be security only
-** *create_home*: this one is *user* specific, requests the module to create a home for the user
-====
-
 =====
 ======
-
 
 
 == Embracing the Next Challenge
@@ -134,11 +187,10 @@ WARNING: Pay attention to indentation and the spaces
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -147,6 +199,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-playbook-directory-structure&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-playbook-directory-structure[Writing your first playbook repository^].
 =====
 ======

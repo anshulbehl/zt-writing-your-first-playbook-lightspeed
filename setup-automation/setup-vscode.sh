@@ -1,23 +1,21 @@
 #!/bin/bash
 
 # Setup script for vscode VM
-# The devtools-ansible image already has code-server pre-installed
-# This script configures and starts code-server
+# Configures code-server, installs LiteLLM proxy for Ansible Lightspeed,
+# and configures the redhat.ansible VS Code extension to point at the proxy.
 
 set -e
 
-# Create ansible-files directory accessible to rhel user
+# ─── code-server ─────────────────────────────────────────────────────────────
 mkdir -p /home/rhel/ansible-files
 chown -R rhel:rhel /home/rhel/ansible-files
 
-# Stop code-server if already running
 systemctl stop code-server || true
 
-# Backup existing config if present
 [ -f /home/rhel/.config/code-server/config.yaml ] && \
-  mv /home/rhel/.config/code-server/config.yaml /home/rhel/.config/code-server/config.bk.yaml || true
+  mv /home/rhel/.config/code-server/config.yaml \
+     /home/rhel/.config/code-server/config.bk.yaml || true
 
-# Create code-server configuration
 mkdir -p /home/rhel/.config/code-server
 cat > /home/rhel/.config/code-server/config.yaml << 'EOF'
 bind-addr: 0.0.0.0:8080
@@ -26,8 +24,74 @@ cert: false
 EOF
 chown -R rhel:rhel /home/rhel/.config/code-server
 
-# Start code-server service
+# ─── LiteLLM proxy ───────────────────────────────────────────────────────────
+pip3 install --quiet 'litellm[proxy]'
+
+mkdir -p /etc/litellm
+
+# Hidden system prompt injects lab context into every Lightspeed request.
+# Set __MODEL_BACKEND__ to the resolved model identifier before deployment
+# (e.g. "openai/gpt-4o", "watsonx/ibm/granite-13b-chat-v2", etc.).
+cat > /etc/litellm/config.yaml << 'EOF'
+model_list:
+  - model_name: ansible-lightspeed
+    litellm_params:
+      model: __MODEL_BACKEND__
+      api_base: https://c.ai.ansible.redhat.com
+
+litellm_settings:
+  system_prompt: |
+    You are Ansible Lightspeed, an expert Ansible automation assistant.
+    Lab environment context:
+    - Student working directory: /home/rhel/ansible-files
+    - Managed nodes: node1, node2, node3 (RHEL 9, SSH user: rhel)
+    - Inventory groups: web=[node1, node2], database=[node3]
+    - All modules must use fully qualified collection names (ansible.builtin.*, ansible.posix.*)
+    - Playbooks are executed with ansible-navigator, not ansible-playbook
+    - Execution environment: quay.io/acme_corp/first_playbook_ee:latest
+    Respond with clean, idiomatic Ansible YAML only unless the student explicitly asks for an explanation.
+EOF
+
+cat > /etc/systemd/system/litellm.service << 'EOF'
+[Unit]
+Description=LiteLLM Proxy for Ansible Lightspeed
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/litellm --config /etc/litellm/config.yaml --port 4000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable litellm
+systemctl start litellm
+
+# ─── VS Code extension settings ──────────────────────────────────────────────
+# Points the redhat.ansible extension's Lightspeed feature at the local proxy.
+mkdir -p /home/rhel/.local/share/code-server/User
+
+cat > /home/rhel/.local/share/code-server/User/settings.json << 'EOF'
+{
+  "ansible.lightspeed.enabled": true,
+  "ansible.lightspeed.URL": "http://localhost:4000",
+  "ansible.lightspeed.suggestions.enabled": true,
+  "ansible.validation.enabled": true,
+  "ansible.ansible.path": "ansible",
+  "editor.fontSize": 14,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000
+}
+EOF
+chown -R rhel:rhel /home/rhel/.local
+
 systemctl start code-server
 systemctl enable code-server
 
-echo "VSCode VM setup complete"
+echo "VSCode VM setup complete — LiteLLM proxy listening on localhost:4000"

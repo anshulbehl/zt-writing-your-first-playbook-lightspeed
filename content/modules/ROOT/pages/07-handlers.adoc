@@ -1,176 +1,148 @@
 :sectnums:
-= 1.6 Handlers
+= 1.6 - Handlers
 
-Handlers are used for tasks that should only run when notified by another task. Typically, they are used to restart services after a configuration change.
+Handlers are tasks that only run *when notified by another task*. They are ideal for service restarts that should happen only when something actually changes — for example, reloading a firewall after its rules are updated.
 
-Let's say we want to ensure the firewall is configured correctly on all web servers and then reload the firewall service to apply any new settings. We'll define a handler that reloads the firewall service and is notified by a task that ensures the desired firewall rules are in place:
+In this challenge, you will use Ansible Lightspeed to add Apache service management, firewall configuration, and a handler that reloads the firewall only when needed.
+
+=====
+.How handlers work
+[%collapsible]
+====
+* A task uses `notify: <handler name>` to trigger a handler if it makes a change.
+* Handlers are defined in a `handlers:` block at the same level as `tasks:`.
+* A handler only runs *once per play*, even if it is notified by multiple tasks.
+* If no notifying task reports a change, the handler never runs — keeping things idempotent.
+====
+=====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Extend the system_setup.yml playbook to add the firewall tasks
+.☑️ Task 1 - Add service and firewall tasks with Lightspeed
 [%collapsible]
 =====
-NOTE: In the *VSCode Editor* tab
-
-. Edit the *system_setup.yml* playbook. Add the tasks shown below to the end of the existing playbook. Remember to check the indentation!
-+
-[source,yaml]
-----
-    - name: Ensure Apache is running and enabled
-      ansible.builtin.service:
-        name: "{{ apache_service_name }}"
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-
-    - name: Install firewalld
-      ansible.builtin.dnf:
-        name: firewalld
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Ensure firewalld is running
-      ansible.builtin.service:
-        name: firewalld
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-----
-
-. Add the following firewalld task with parameter *notify* at the end of *system_setup.yml* playbook. Remember to check the indentation!
-+
-[source,yaml]
-----
-    - name: Allow HTTP traffic on web servers
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-      when: inventory_hostname in groups['web']
-      notify: Reload Firewall
-----
-
-. Add the *handler* at the end of *system_setup.yml* playbook as given below. Remember to check the indentation!
-+
-[source,yaml]
-----
-  handlers:
-    - name: Reload Firewall
-      ansible.builtin.service:
-        name: firewalld
-        state: reloaded
-----
-
-. At the top of the playbook, add the variable *apache_service_name: httpd* under the *vars:* list, below *package_name: httpd*:
-+
-[source,yaml]
-----
-  vars:
-    user_name: 'padawan'
-    package_name: httpd
-    apache_service_name: httpd
-----
-
-[IMPORTANT]
-====
-.💡 The *system_setup.yml* Playbook output should look like this:
-[source,yaml]
-----
----
-- name: Basic System Setup
-  hosts: all
-  become: true
-  vars:
-    user_name: 'padawan'
-    package_name: httpd
-    apache_service_name: httpd
-  tasks:
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-        update_only: true
-      when: inventory_hostname in groups['web']
-
-    - name: Create a new user
-      ansible.builtin.user:
-        name: "{{ user_name }}"
-        state: present
-        create_home: true
-
-    - name: Install Apache on web servers
-      ansible.builtin.dnf:
-        name: "{{ package_name }}"
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Ensure Apache is running and enabled
-      ansible.builtin.service:
-        name: "{{ apache_service_name }}"
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-
-    - name: Install firewalld
-      ansible.builtin.dnf:
-        name: firewalld
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Ensure firewalld is running
-      ansible.builtin.service:
-        name: firewalld
-        state: started
-        enabled: true
-      when: inventory_hostname in groups['web']
-
-    - name: Allow HTTP traffic on web servers
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-      when: inventory_hostname in groups['web']
-      notify: Reload Firewall
-
-  handlers:
-    - name: Reload Firewall
-      ansible.builtin.service:
-        name: firewalld
-        state: reloaded
-----
-====
-
 [NOTE]
 ====
-Understanding the playbook:
-* The *notify* section calls the handler only if the "Allow HTTP traffic on web servers" task makes any changes in one of the hosts. That way the service is only reloaded if needed - and not each time the playbook is run.
-
-* The *handlers* section defines a task that is only run on notification. And the *name* field is used to call it from a task.
+Switch to the *VS Code* tab and open *system_setup.yml*.
 ====
 
-WARNING: Notice how the *name* of the *handlers* is used within the *notify* section of the "Allow HTTP traffic on web servers" configuration task. This ensures that the proper handler is executed as there can be multiple handlers within an Ansible playbook.
+. First, add a new variable to the `vars:` section. After `package_name: httpd`, type:
++
+[source,yaml]
+----
+    apache_service_name: httpd
+----
+
+. At the end of the existing tasks (before any `handlers:` section), use Lightspeed to generate each of the following tasks. Type the task name, press Enter, then Tab to accept:
++
+[source,yaml]
+----
+    - name: Ensure Apache is running and enabled on web servers
+----
++
+[TIP]
+====
+*Expected:*
+[source,yaml]
+----
+    - name: Ensure Apache is running and enabled on web servers
+      ansible.builtin.service:
+        name: "{{ apache_service_name }}"
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['web']
+----
+====
+
+. Continue generating the next tasks:
++
+[source,yaml]
+----
+    - name: Install firewalld on web servers
+----
++
+[source,yaml]
+----
+    - name: Ensure firewalld is running on web servers
+----
++
+[source,yaml]
+----
+    - name: Allow HTTP traffic on web servers
+----
++
+[TIP]
+====
+For the *Allow HTTP traffic* task, Lightspeed should generate a `notify:` line pointing to a handler. The expected output:
+
+[source,yaml]
+----
+    - name: Allow HTTP traffic on web servers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      when: inventory_hostname in groups['web']
+      notify: Reload Firewall
+----
+====
 =====
 ======
 
 
 ======
-.☑️ Task 2 - Run the system_setup.yml playbook
+.☑️ Task 2 - Generate the handler with Lightspeed
 [%collapsible]
 =====
-
-NOTE: In the **Control** tab
-
-
-. Change directory to *ansible-files* and run the playbook:
+. After the last task, add a blank line and type:
 +
+[source,yaml]
+----
+  handlers:
+----
+. On the next line, type the handler name:
++
+[source,yaml]
+----
+    - name: Reload Firewall
+----
+. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+
+[TIP]
+====
+*Expected handler output:*
+[source,yaml]
+----
+  handlers:
+    - name: Reload Firewall
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded
+----
+
+The handler name *must match exactly* the string used in `notify:`. Lightspeed generates the correct module automatically.
+====
+
+. Save the file.
+=====
+======
+
+
+======
+.☑️ Task 3 - Run the playbook
+[%collapsible]
+=====
+[NOTE]
+====
+Switch to the *Control* tab.
+====
+
 [source,shell]
 ----
 cd /home/rhel/ansible-files
 ----
 
-+
 [source,shell]
 ----
 ansible-navigator run system_setup.yml
@@ -180,13 +152,10 @@ ansible-navigator run system_setup.yml
 
 
 ======
-.☑️ Task 3 - Run the system_setup.yml playbook again to test the handler
+.☑️ Task 4 - Run again to see the handler stay quiet
 [%collapsible]
 =====
-NOTE: In the **Control** tab
-
-
-. Run the playbook again.
+. Run the playbook a second time:
 +
 [source,shell]
 ----
@@ -195,47 +164,32 @@ ansible-navigator run system_setup.yml
 
 [NOTE]
 ====
-Notice anything with the output?
-
-* Nothing was changed, thus the playbook ran and you will notice the PLAY RECAP does not show any *changed* lines. The firewall was not restarted as there were no changes.
+Because the firewall rule already exists, the *Allow HTTP traffic* task reports `ok` (no change) and does *not* notify the handler. The *Reload Firewall* handler never runs — the `PLAY RECAP` shows `changed=0`. This is handlers and idempotency working together.
 ====
-
 =====
 ======
 
 
 ======
-.☑️ Task 4 - Verify Apache listening on port 80
+.☑️ Task 5 - Verify Apache is serving on port 80
 [%collapsible]
 =====
-
-// NOTE: Check the new **Node1 Web** tab at the top, next to the **Control** tab.
-
-
-// . You should see the following webpage after the playbook has run (give it a few seconds or click the small arrow inside the tab next to the **Node1 Web** title if you are seeing another message):
-// +
-// image::image.png[]
-
-// +
-NOTE: You can check in the CLI using the **Control** tab.
-
-. For the CLI check, as the output would be too long, we are using *grep* to get just a few lines:
+. Check node1 is responding on HTTP:
 +
 [source,shell]
 ----
 curl http://node1 | grep "HTTP Server"
 ----
 
-. Now let's try with *node3*, the server in the *[database]* group:
+. Confirm node3 (database group) is NOT serving HTTP:
 +
 [source,shell]
 ----
-curl http://node3 
+curl http://node3
 ----
 +
-[NOTE]
-.The output should look like this:
-[source,textinfo]
+.Expected output:
+[source,text]
 ----
 curl: (7) Failed to connect to node3 port 80: Connection refused
 ----
@@ -248,11 +202,10 @@ curl: (7) Failed to connect to node3 port 80: Connection refused
 .✅ Next Challenge
 [%collapsible]
 =====
-Once you've completed the task, press the image:next.png[Next, 50] button at the bottom to proceed to the next challenge. 
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
 
-* The image:next.png[Next, 50] button will validate your steps and move you to the next challenge or chapter. If any steps are missing, an error will be produced, allowing you to recheck your steps before clicking the Next button again to continue.
-
-* You also have the option to automatically solve a challenge or chapter by clicking the image:solve.png[Solve, 55] button, which will complete the exercises for you.
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
 =====
 ======
 
@@ -261,6 +214,6 @@ Once you've completed the task, press the image:next.png[Next, 50] button at the
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, Please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+07-handlers&assignees=miteshget[Writing your first playbook repository^].
+If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+07-handlers[Writing your first playbook repository^].
 =====
 ======

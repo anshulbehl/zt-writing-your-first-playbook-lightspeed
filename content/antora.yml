@@ -4,6 +4,6 @@ version: master
 
 asciidoc:
   attributes:
-    lab_name: "Writing your first playbook"
+    lab_name: "Writing Your First Playbook with Ansible Lightspeed"
     release-version: master
     page-pagination: true
