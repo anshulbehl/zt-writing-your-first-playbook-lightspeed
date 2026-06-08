@@ -1,20 +1,20 @@
 :sectnums:
 = 1.9 - Roles
 
-Roles are a way to *package and reuse* Ansible automation. Instead of building one large playbook with everything in it, a role separates tasks, variables, handlers, templates, and files into a structured directory tree that can be shared and reused across projects.
+Roles are how Ansible automation is *packaged and shared*. Instead of one large playbook with everything in it, a role separates tasks, variables, handlers, and templates into a structured directory tree that can be reused across projects and shared through Ansible Galaxy.
 
-In this final challenge, you will use Ansible Lightspeed to generate the tasks, handler, and a Jinja2 template for an *apache* role, then call that role from a new deployment playbook.
+In this final challenge, you will use Ansible Lightspeed to generate the tasks, handler, and a Jinja2 template for an *apache* role, then call that role from a simple deployment playbook.
 
 =====
 .How roles are structured
 [%collapsible]
 ====
-A role lives in a directory under `roles/`. Each subdirectory has a specific purpose:
+A role lives in a subdirectory under `roles/`. Each folder has a specific purpose:
 
 [source,text]
 ----
 roles/apache/
-├── tasks/main.yml       ← the tasks that the role runs
+├── tasks/main.yml       ← the tasks the role runs
 ├── handlers/main.yml    ← handlers triggered by role tasks
 ├── templates/           ← Jinja2 template files
 ├── vars/main.yml        ← role-specific variables
@@ -22,7 +22,7 @@ roles/apache/
 └── meta/main.yml        ← role metadata
 ----
 
-A playbook calls a role simply by listing it under `roles:`:
+A playbook calls a role simply by listing it under `roles:` — no task imports required:
 
 [source,yaml]
 ----
@@ -35,7 +35,7 @@ A playbook calls a role simply by listing it under `roles:`:
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Initialize the apache role
+.☑️ Task 1 - Initialize the apache role with ansible-galaxy
 [%collapsible]
 =====
 [NOTE]
@@ -43,26 +43,26 @@ A playbook calls a role simply by listing it under `roles:`:
 Switch to the *Control* tab.
 ====
 
-. Create the `roles` directory and initialize the `apache` role using *ansible-galaxy*:
+. Create the `roles` directory and initialize the `apache` role:
 +
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 mkdir roles
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 ansible-galaxy init --offline roles/apache
 ----
 
-. Verify the structure was created:
+. Verify the scaffold was created:
 +
-[source,shell]
+[source,role="execute"]
 ----
 tree roles
 ----
@@ -79,8 +79,18 @@ tree roles
 Switch to the *VS Code* tab and open *ansible-files/roles/apache/vars/main.yml*.
 ====
 
-. Replace the file contents with:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
+----
+Generate role variables for an Apache role with apache_package_name set to httpd and apache_service_name set to httpd
+----
+. Review the generated content. Press `Ctrl+S` to save it over *roles/apache/vars/main.yml*.
+
+[TIP]
+====
+*Expected output:*
+
 [source,yaml]
 ----
 ---
@@ -88,6 +98,7 @@ Switch to the *VS Code* tab and open *ansible-files/roles/apache/vars/main.yml*.
 apache_package_name: httpd
 apache_service_name: httpd
 ----
+====
 =====
 ======
 
@@ -96,49 +107,23 @@ apache_service_name: httpd
 .☑️ Task 3 - Generate role tasks with Lightspeed
 [%collapsible]
 =====
-[NOTE]
-====
-Open *ansible-files/roles/apache/tasks/main.yml*.
-====
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
++
+----
+Generate Ansible role tasks for an Apache web server role that installs the apache_package_name package, starts and enables the apache_service_name service, installs and starts firewalld, and allows HTTP traffic through the firewall on web servers with a notify to reload firewalld
+----
+. Review the generated content. Verify that:
 
-. Clear the existing content and start building the task list. Type each task name below and press Tab to accept Lightspeed's suggestion after each one:
-+
-[source,yaml]
-----
----
-# tasks file for ansible-files/roles/apache
-----
-+
-[source,yaml]
-----
-- name: Install Apache web server
-----
-+
-[source,yaml]
-----
-- name: Ensure Apache is running and enabled
-----
-+
-[source,yaml]
-----
-- name: Install firewalld
-----
-+
-[source,yaml]
-----
-- name: Ensure firewalld is running and enabled
-----
-+
-[source,yaml]
-----
-- name: Allow HTTP traffic on web servers
-----
+* The tasks use `{{ apache_package_name }}` and `{{ apache_service_name }}` (not hardcoded values)
+* The firewalld task includes `notify: Reload Firewall`
+* All tasks use fully qualified module names
+
+. Press `Ctrl+S` and save over *roles/apache/tasks/main.yml*.
 
 [TIP]
 ====
-For the last task, Lightspeed should generate the `ansible.posix.firewalld` module with `notify: Reload Firewall` — the same pattern you used in the handlers module.
-
-*Expected tasks/main.yml:*
+*Expected output:*
 
 [source,yaml]
 ----
@@ -175,44 +160,36 @@ For the last task, Lightspeed should generate the `ansible.posix.firewalld` modu
   notify: Reload Firewall
 ----
 ====
-
-. Save the file.
 =====
 ======
 
 
 ======
-.☑️ Task 4 - Generate the handler with Lightspeed
+.☑️ Task 4 - Generate the role handler with Lightspeed
 [%collapsible]
 =====
-[NOTE]
-====
-Open *ansible-files/roles/apache/handlers/main.yml*.
-====
-
-. Replace the file contents with the handler name, then let Lightspeed generate the rest:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
+----
+Generate an Ansible role handler named Reload Firewall that reloads the firewalld service
+----
+. Review the output and save over *roles/apache/handlers/main.yml*.
+
+[TIP]
+====
+*Expected output:*
+
 [source,yaml]
 ----
 ---
 # handlers file for ansible-files/roles/apache
-- name: Reload Firewall
-----
-. Press *Enter*, then *Tab* to accept.
-
-[TIP]
-====
-Lightspeed generates:
-[source,yaml]
-----
 - name: Reload Firewall
   ansible.builtin.service:
     name: firewalld
     state: reloaded
 ----
 ====
-
-. Save the file.
 =====
 ======
 
@@ -221,13 +198,18 @@ Lightspeed generates:
 .☑️ Task 5 - Generate the index.html Jinja2 template with Lightspeed
 [%collapsible]
 =====
-[NOTE]
-====
-Create a new file at *ansible-files/roles/apache/templates/index.html.j2*.
-====
-
-. Type the following and let Lightspeed suggest completions as you go:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
+----
+Generate an HTML Jinja2 template for Apache index.html that displays a welcome message with the ansible_hostname fact in the title and body
+----
+. Review the generated HTML template. Save it as *index.html.j2* inside *roles/apache/templates/*.
+
+[TIP]
+====
+*Expected output:*
+
 [source,html]
 ----
 <html>
@@ -239,30 +221,15 @@ Create a new file at *ansible-files/roles/apache/templates/index.html.j2*.
 </body>
 </html>
 ----
+====
 
-. Save the file.
-
-. Next, open *tasks/main.yml* and add a final task at the end to deploy this template. Type:
+. Now generate the task that deploys this template. Open the generation panel again and enter:
 +
-[source,yaml]
 ----
-- name: Deploy custom index.html from template
+Generate an Ansible task that deploys the index.html.j2 template to /var/www/html/index.html
 ----
-. Press *Enter*, then *Tab* to accept.
 
-[TIP]
-====
-*Expected:*
-[source,yaml]
-----
-- name: Deploy custom index.html from template
-  ansible.builtin.template:
-    src: index.html.j2
-    dest: /var/www/html/index.html
-----
-====
-
-. Save the file.
+. Add the generated task to the bottom of *roles/apache/tasks/main.yml* and save.
 =====
 ======
 
@@ -271,40 +238,30 @@ Create a new file at *ansible-files/roles/apache/templates/index.html.j2*.
 .☑️ Task 6 - Generate deploy_apache.yml with Lightspeed
 [%collapsible]
 =====
-[NOTE]
-====
-In *ansible-files*, create a new file named *deploy_apache.yml*.
-====
-
-. Type the play header, then use Lightspeed to complete it:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
-[source,yaml]
 ----
----
-- name: Setup Apache Web Servers using the apache role
-  hosts: web
-  become: true
-  roles:
+Write a playbook targeting the web group that deploys the apache role
 ----
-. Press *Enter* after `roles:`, then *Tab* to let Lightspeed suggest the role name.
+. Review the generated playbook. Verify that `roles: [apache]` is listed under the play.
 
 [TIP]
 ====
 *Expected output:*
+
 [source,yaml]
 ----
 ---
-- name: Setup Apache Web Servers using the apache role
+- name: Setup Apache Web Servers
   hosts: web
   become: true
   roles:
     - apache
 ----
-
-Lightspeed recognizes the roles directory and the apache role you created, and completes the list automatically.
 ====
 
-. Save the file.
+. Press `Ctrl+S` and save as *deploy_apache.yml* in the *ansible-files* directory.
 =====
 ======
 
@@ -318,7 +275,7 @@ Lightspeed recognizes the roles directory and the apache role you created, and c
 Switch to the *Control* tab.
 ====
 
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run deploy_apache.yml
 ----
@@ -332,30 +289,29 @@ ansible-navigator run deploy_apache.yml
 =====
 . Check Apache status and the custom page on *node1*:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 "systemctl status httpd"
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 curl http://node1
 ----
-+
+
 . Check *node2*:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node2 "systemctl status httpd"
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 curl http://node2
 ----
 +
-.The curl output should show your custom index page:
-[source,html]
+.Expected curl output
 ----
 <html>
 <head>
@@ -370,11 +326,21 @@ curl http://node2
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How Ansible roles organize tasks, handlers, templates, and variables into a reusable structure
+* How to initialize a role scaffold with `ansible-galaxy init`
+* How to use Lightspeed to generate each component of a role independently (tasks, handlers, templates)
+* How a deployment playbook calls a role with just a `roles:` declaration
+
+
 == Congratulations!
 
 You have completed *Writing Your First Playbook with Ansible Lightspeed*!
 
-Over the course of this lab, you used Ansible Lightspeed to generate and refine automation for every concept: playbooks, variables, conditionals, handlers, loops, templates, and roles — without writing a single line of YAML from scratch.
+Over these ten modules, you used Ansible Lightspeed to generate automation for every core concept — playbooks, variables, conditionals, handlers, loops, templates, and roles. Each playbook was generated from a plain-English prompt, reviewed, saved, and run against real managed nodes.
 
 ======
 .✅ Click End
@@ -382,7 +348,7 @@ Over the course of this lab, you used Ansible Lightspeed to generate and refine 
 =====
 Press the image:end.png[End, 50] button to complete the lab.
 
-* The image:end.png[End, 50] button will validate your final steps. If anything is missing, an error will appear so you can fix it before finishing.
+* The image:end.png[End, 50] button validates your final steps. If anything is missing, an error will appear so you can fix it before finishing.
 * You can also click image:solve.png[Solve, 55] to auto-complete any remaining steps.
 =====
 ======
@@ -392,6 +358,6 @@ Press the image:end.png[End, 50] button to complete the lab.
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+10-roles[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+10-roles[Writing your first playbook repository^].
 =====
 ======

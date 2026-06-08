@@ -1,62 +1,48 @@
 :sectnums:
 = 1.5 - Conditionals
 
-Conditionals let you control *which tasks run on which hosts*. In this challenge, you will use Ansible Lightspeed to add an Apache installation task that only runs on web servers — not on the database server.
+Conditionals let you control *which tasks run on which hosts*. Using the `when:` keyword, Ansible evaluates an expression at runtime and skips the task if the condition is false. This is how you manage different server roles with a single playbook.
+
+In this challenge, you will prompt Lightspeed to generate a playbook that installs Apache only on web servers — not on the database server.
 
 =====
 .How conditionals work in Ansible
 [%collapsible]
 ====
-The `when:` keyword makes a task conditional. Ansible evaluates the expression and only runs the task if it is true. A common pattern is checking inventory group membership:
+The most common pattern in this lab is checking inventory group membership:
 
 [source,yaml]
 ----
 when: inventory_hostname in groups['web']
 ----
 
-`inventory_hostname` is an Ansible *fact* — a variable that Ansible fills in automatically with the current host's name. Combined with `groups['web']`, this condition is true only for hosts in the *[web]* group.
+`inventory_hostname` is an Ansible *fact* — a variable automatically set to the current host's name. Combined with `groups['web']`, this condition is true only for hosts in the `[web]` inventory group. When it evaluates to false, Ansible logs `skipping` instead of running the task.
 ====
 =====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Prompt Lightspeed to target all nodes
+.☑️ Task 1 - Generate a playbook with conditionals
 [%collapsible]
 =====
 [NOTE]
 ====
-Switch to the *VS Code* tab and open *system_setup.yml*.
+Switch to the *VS Code* tab.
 ====
 
-. Update `hosts:` to target all inventory hosts. Change the line to:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
-[source,yaml]
 ----
-  hosts: all
+Write a playbook targeting all hosts that creates a user named padawan using a variable called user_name, installs kernel security updates only on web servers, and installs httpd only on web servers using a variable called package_name
 ----
-+
-. Add a `package_name` variable to the `vars:` section. After `user_name: 'padawan'`, type:
-+
-[source,yaml]
-----
-    package_name: httpd
-----
-=====
-======
+. Review the generated playbook in the new editor tab. Verify that:
 
-
-======
-.☑️ Task 2 - Use Lightspeed to add a conditional Apache install task
-[%collapsible]
-=====
-. After the user creation task, press Enter and type the following task name:
-+
-[source,yaml]
-----
-    - name: Install Apache on web servers only
-----
-. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+* `hosts: all` targets every host in the inventory
+* A `vars:` section defines both `user_name: 'padawan'` and `package_name: httpd`
+* The kernel update and httpd install tasks each have `when: inventory_hostname in groups['web']`
+* The user creation task has no `when:` — it runs on all hosts
 
 [TIP]
 ====
@@ -64,30 +50,43 @@ Switch to the *VS Code* tab and open *system_setup.yml*.
 
 [source,yaml]
 ----
-    - name: Install Apache on web servers only
+---
+- name: Basic System Setup
+  hosts: all
+  become: true
+  vars:
+    user_name: 'padawan'
+    package_name: httpd
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+        update_only: true
+      when: inventory_hostname in groups['web']
+
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        state: present
+        create_home: true
+
+    - name: Install Apache on web servers
       ansible.builtin.dnf:
         name: "{{ package_name }}"
         state: present
       when: inventory_hostname in groups['web']
 ----
-
-Because `package_name` is already defined in `vars:` and Lightspeed sees the task name mentions "web servers only", it generates both the DNF task and the `when:` conditional automatically.
 ====
 
-. Also update the kernel update task — it should only run on web servers too. Find that task and ask Lightspeed to add the conditional. Select the task, right-click → *Ansible Lightspeed → Explain*, then manually add:
-+
-[source,yaml]
-----
-      when: inventory_hostname in groups['web']
-----
-+
-. Save the file.
+. Press `Ctrl+S` and save over *system_setup.yml* in the *ansible-files* directory.
 =====
 ======
 
 
 ======
-.☑️ Task 3 - Run the playbook
+.☑️ Task 2 - Run the playbook
 [%collapsible]
 =====
 [NOTE]
@@ -95,54 +94,53 @@ Because `package_name` is already defined in `vars:` and Lightspeed sees the tas
 Switch to the *Control* tab.
 ====
 
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run system_setup.yml
 ----
 
 [NOTE]
 ====
-Watch for *skipping* messages in the output. When a task's `when:` condition is false, Ansible logs `skipping` for that host instead of running the task. This is how you confirm the conditional is working.
+Watch the output for *skipping* messages. When a task's `when:` condition is false (node3 is not in the web group), Ansible logs `skipping` instead of running the task. This is your confirmation that the conditional is working correctly.
 ====
 =====
 ======
 
 
 ======
-.☑️ Task 4 - Verify
+.☑️ Task 3 - Verify web vs database behavior
 [%collapsible]
 =====
-. On *node1* (web group) — both *padawan* and *httpd* should exist:
+. On *node1* (web group) — both `padawan` and `httpd` should be present:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 id padawan
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 rpm -q httpd
 ----
 
-. On *node3* (database group) — *padawan* exists, *httpd* does not:
+. On *node3* (database group) — `padawan` exists, `httpd` does not:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node3 id padawan
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node3 rpm -q httpd
 ----
 +
-.Expected output for node3 httpd check:
-[source,text]
+.Expected output for the node3 httpd check
 ----
 package httpd is not installed
 ----
@@ -150,7 +148,18 @@ package httpd is not installed
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How `when:` conditionals control per-host task execution
+* How `inventory_hostname` and `groups['web']` are used to target specific inventory groups
+* Why `hosts: all` combined with `when:` is more powerful than separate plays per group
+* How to verify conditional behavior by observing `skipping` in the playbook output
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -167,6 +176,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-playbook-conditionals[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-playbook-conditionals[Writing your first playbook repository^].
 =====
 ======

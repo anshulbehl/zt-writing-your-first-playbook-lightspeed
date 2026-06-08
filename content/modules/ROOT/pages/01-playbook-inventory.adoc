@@ -2,6 +2,7 @@
 = 1.0 - Meet Ansible Lightspeed
 
 == Understanding the Lab Environment
+
 =====
 .Laboratory tips!
 [%collapsible]
@@ -12,15 +13,15 @@ Before we begin, a few tips to improve your lab experience:
 
 . In the left sidebar you will find the different sections. Each chapter has an introduction and related tasks below. Sections can be collapsed and expanded by clicking on them.
 +
-image::collasped.png[Collasped, 90%, align="center"]
+image::collasped.png[Collasped section in the sidebar,link=self,window=blank,width=700,title="Collapsing sidebar sections"]
 
 . When we refer to the *VS Code* or *Control* tabs, we mean the tabs at the top of the screen. *VS Code* is where you write and generate playbooks. *Control* is a terminal for running commands.
 +
-image::tabs.png[Tabs,90%, align="center"]
+image::tabs.png[VS Code and Control tabs at the top of the screen,link=self,window=blank,width=700,title="Lab navigation tabs"]
 
-. Each code box has a copy-to-clipboard feature. Click the box to copy its content.
+. Each code box has a copy-to-clipboard and execute feature — click the icon on the right side of the box to run the command directly in the terminal.
 
-. Use the image:next.png[Next, 50] button to move to the next challenge after completing your tasks. It will validate your work first.
+. Use the image:next.png[Next, 50] button to move to the next challenge after completing all tasks. It validates your work before proceeding.
 
 . Use the image:solve.png[Solve, 55] button to auto-complete a challenge if you get stuck.
 ====
@@ -31,15 +32,17 @@ image::tabs.png[Tabs,90%, align="center"]
 .What is Ansible Lightspeed?
 [%collapsible]
 ====
-*Ansible Lightspeed* is an AI-powered coding assistant built into the *Red Hat Ansible* VS Code extension. It helps you write Ansible automation faster and more accurately by generating playbook tasks from plain-English descriptions.
+*Ansible Lightspeed* is an AI-powered coding assistant built into the *Red Hat Ansible* VS Code extension. It generates complete, ready-to-run Ansible playbooks from plain-English descriptions — no YAML knowledge required to get started.
 
-Here is what Lightspeed can do for you:
+Here is what Lightspeed can do in this lab:
 
-* *Inline task generation* — type a task name, press Enter, and Lightspeed suggests the module and all its parameters.
-* *Explain* — select any block of YAML, right-click, and ask Lightspeed to explain what it does.
-* *Content source tracing* — Lightspeed tells you which Ansible Galaxy content informed its suggestion, so you know it is grounded in real automation patterns.
+* *Playbook generation* — describe what you want in plain English, and Lightspeed produces a complete playbook in a new editor tab that you can save and run immediately.
 
-In this lab, you will use Lightspeed to generate every playbook. Your job is to write good prompts, review what the AI produces, and run the result.
+* *Explain* — select any block of YAML, right-click, and ask Lightspeed to explain what it does in plain English.
+
+* *Content source tracing* — Lightspeed cites which Ansible Galaxy content informed its suggestion, so every generated task is grounded in real-world automation patterns.
+
+In this lab, *you will use Lightspeed to generate every playbook*. Your job is to write clear prompts, review what Lightspeed produces, save the result, and run it.
 ====
 =====
 
@@ -55,20 +58,20 @@ In this lab, you will use Lightspeed to generate every playbook. Your job is to 
 Switch to the *VS Code* tab at the top of the screen.
 ====
 
-. Look at the bottom status bar of VS Code. You should see the Ansible Lightspeed icon — it looks like a small lightning bolt or the Ansible logo. A green indicator means Lightspeed is connected and ready.
+. Look at the bottom *status bar* of VS Code. You should see the Ansible Lightspeed icon — a small AI or lightning indicator. Green means connected and ready.
 
-. Open the *Command Palette* with `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) and type:
+. Open the *Command Palette* with `Ctrl+Shift+P` and type:
 +
-[source,text]
+[source,role="execute"]
 ----
 Ansible: Connect to Lightspeed
 ----
-+
-Select the option and confirm that the connection succeeds. You should see a notification in the bottom-right corner of VS Code confirming the connection.
+
+Select the option and confirm the connection succeeds. A notification in the bottom-right corner of VS Code confirms it.
 
 [TIP]
 ====
-Lightspeed is pre-configured in this lab to use a local proxy. You do not need to log in or provide any credentials.
+Lightspeed is pre-configured in this lab to use a local AI proxy. You do not need to log in or provide any credentials.
 ====
 =====
 ======
@@ -83,13 +86,13 @@ Lightspeed is pre-configured in this lab to use a local proxy. You do not need t
 Switch to the *VS Code* tab.
 ====
 
-Your lab environment already has an inventory file ready. An *inventory* file tells Ansible which nodes to manage. It organizes hosts into groups so you can target specific systems with your playbooks.
+Your lab environment already has an inventory file ready. An *inventory* tells Ansible which nodes to manage and organizes them into groups so you can target specific systems.
 
-. In the VS Code file explorer on the left, open the *ansible-files* directory. You will find a file named *inventory*. Click it to open it.
+. In the VS Code file explorer on the left, open the *ansible-files* directory and click the *inventory* file to open it.
 +
-image::vscode_inventory.png[Inventory, 90%, align="center"]
+image::vscode_inventory.png[Inventory file open in VS Code editor,link=self,window=blank,width=700,title="Pre-created inventory file"]
 
-. The file contains the following:
+. The file contains:
 +
 [source,ini]
 ----
@@ -105,20 +108,19 @@ web
 database
 ----
 
-. Now let Lightspeed explain it for you. *Select all the text* in the inventory file (Ctrl+A), then *right-click* and choose:
+. Let Lightspeed explain it. *Select all the text* in the file (`Ctrl+A`), then *right-click* and choose:
 +
-[source,text]
 ----
 Ansible Lightspeed → Explain
 ----
-+
-Read through Lightspeed's explanation. It will describe what each group does and why organizing hosts into groups is powerful for automation.
+
+Read through Lightspeed's explanation. Notice how it describes the group structure and why grouping hosts matters for targeted automation.
 =====
 ======
 
 
 ======
-.☑️ Task 3 - Use ansible-navigator to inspect the inventory
+.☑️ Task 3 - Inspect the inventory with ansible-navigator
 [%collapsible]
 =====
 [NOTE]
@@ -128,58 +130,57 @@ Switch to the *Control* tab.
 
 . Change into the *ansible-files* directory:
 +
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 
-. Run the following command to list all hosts and groups in the inventory:
+. List all hosts and groups:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator inventory --list
 ----
 +
-.The output should look similar to this:
-[source,json]
+.Expected output
 ----
 {
-    "_meta": {
-        "hostvars": {}
-    },
+    "_meta": { "hostvars": {} },
     "all": {
-        "children": [
-            "ungrouped",
-            "web",
-            "database",
-            "nodes"
-        ]
+        "children": ["ungrouped", "web", "database", "nodes"]
     },
-    "database": {
-        "hosts": ["node3"]
-    },
-    "web": {
-        "hosts": ["node1", "node2"]
-    }
+    "database": { "hosts": ["node3"] },
+    "web": { "hosts": ["node1", "node2"] }
 }
 ----
 
-. You can also view a condensed graph of the inventory:
+. View a condensed graph of the inventory:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator inventory --graph
 ----
 
 [NOTE]
 ====
-*ansible-navigator* is the command-line tool you will use throughout this lab to run your Ansible playbooks. It launches an Execution Environment (a container) that includes all the collections and dependencies you need.
+*ansible-navigator* runs playbooks inside a container called an *Execution Environment* (EE). The EE includes all the Ansible collections and dependencies needed for this lab — you do not need to install anything manually.
 ====
 =====
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* What Ansible Lightspeed is and how it fits into the VS Code workflow
+* How an Ansible inventory organizes managed nodes into groups
+* How to use `ansible-navigator inventory` to inspect inventory structure
+* How to use Lightspeed's Explain feature to understand existing automation
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -196,6 +197,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+01-playbook-inventory[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+01-playbook-inventory[Writing your first playbook repository^].
 =====
 ======

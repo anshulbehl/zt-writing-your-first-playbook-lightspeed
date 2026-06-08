@@ -1,12 +1,12 @@
 :sectnums:
 = 1.2 - Run the Playbook!
 
-In this challenge, you will run the Lightspeed-generated playbook using *ansible-navigator*, verify that the user was created on the managed node, and discover one of Ansible's most important concepts: *idempotency*.
+In this challenge, you will run the Lightspeed-generated playbook using *ansible-navigator*, verify that the user was created, and discover one of Ansible's most important concepts: *idempotency*.
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Run the system_setup.yml playbook
+.☑️ Task 1 - Run system_setup.yml
 [%collapsible]
 =====
 [NOTE]
@@ -16,27 +16,30 @@ Switch to the *Control* tab.
 
 . Change into the *ansible-files* directory:
 +
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 
-. Run the playbook with *ansible-navigator*:
+. Run the playbook:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run system_setup.yml
 ----
-+
-IMPORTANT: The first run may take a minute or two. ansible-navigator pulls the execution environment container image and runs the kernel update task on *node1*.
 
-. Watch the output. You should see a *PLAY RECAP* at the end summarizing the changes made:
+[IMPORTANT]
+====
+The first run may take a minute or two. ansible-navigator pulls the Execution Environment container image and then runs the kernel update task on *node1*. Subsequent runs are much faster.
+====
+
+. Watch the output. The *PLAY RECAP* at the end summarizes changes made across all tasks:
 +
-image::navigator-output.png[Output, 90%, align="center"]
+image::navigator-output.png[ansible-navigator run output showing task results and PLAY RECAP,link=self,window=blank,width=700,title="Playbook run output"]
 
 [NOTE]
 ====
-The first task you see in the output is always *Gathering Facts*. Ansible automatically collects system information (OS version, IP addresses, installed packages, etc.) from the managed node at the start of each play. Lightspeed uses this fact data when generating its suggestions.
+The first task in every run is *Gathering Facts*. Ansible automatically collects system information from each managed node — hostname, OS version, IP addresses, installed packages — before running any tasks. Lightspeed uses this fact data to generate context-aware suggestions.
 ====
 =====
 ======
@@ -46,15 +49,14 @@ The first task you see in the output is always *Gathering Facts*. Ansible automa
 .☑️ Task 2 - Verify the user was created
 [%collapsible]
 =====
-. SSH into *node1* and verify the user *myuser* exists:
+. SSH into *node1* and confirm *myuser* exists:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 id myuser
 ----
 +
-.You should see output similar to:
-[source,text]
+.Expected output
 ----
 uid=1002(myuser) gid=1002(myuser) groups=1002(myuser)
 ----
@@ -70,32 +72,43 @@ uid=1002(myuser) gid=1002(myuser) groups=1002(myuser)
 .What is idempotency?
 [%collapsible]
 ====
-*Idempotency* means that running an operation once produces the same result as running it many times. An idempotent playbook only makes changes when something actually needs changing — if the desired state already exists, Ansible skips the task instead of re-applying it.
+*Idempotency* means that running an operation once produces the same result as running it many times. An idempotent Ansible task only makes a change when the desired state does not already exist. If the state is already correct, the task reports `ok` and does nothing.
 
-This is one of Ansible's most powerful properties: you can safely run a playbook repeatedly and it will never break a system that is already in the correct state.
+This is what separates Ansible from shell scripts: you can safely run a playbook repeatedly and it will never break a system that is already configured correctly.
 ====
 =====
 
 . Run the playbook a second time:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run system_setup.yml
 ----
 
 . Compare the output to the first run. Notice:
-+
-* Task status changed from *changed* (yellow) to *ok* (green)
-* The *PLAY RECAP* shows `changed=0` — Ansible confirmed everything was already in place and made no changes
-+
-image::idem-output.png[Output, 90%, align="center"]
 
-. Now ask Lightspeed to explain *why* this playbook is idempotent. In the *VS Code* tab, select the full playbook content, right-click, and choose *Ansible Lightspeed → Explain*. Ask a follow-up: "Why is this playbook idempotent?"
+* Task status changed from *changed* (yellow) to *ok* (green)
+* The *PLAY RECAP* shows `changed=0` — Ansible confirmed everything was already in place
++
+image::idem-output.png[Second run showing ok status and changed=0 in PLAY RECAP,link=self,window=blank,width=700,title="Idempotent second run"]
+
+. Switch to the *VS Code* tab, open *system_setup.yml*, select all the content, and use *Ansible Lightspeed → Explain*. Ask: "Why is this playbook idempotent?" and read the explanation.
 =====
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How to run an Ansible playbook with `ansible-navigator run`
+* What Gathering Facts does and why Ansible runs it automatically
+* What idempotency means and why it matters for safe automation
+* How to read a PLAY RECAP to understand what changed on each run
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -112,6 +125,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+03-playbook-run-it[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+03-playbook-run-it[Writing your first playbook repository^].
 =====
 ======

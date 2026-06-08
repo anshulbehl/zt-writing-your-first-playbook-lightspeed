@@ -1,36 +1,59 @@
 :sectnums:
 = 1.3 - From One to Many
 
-The real power of automation is managing *many systems at once*. In this challenge, you will use Ansible Lightspeed to update your playbook to target the *web* group — both *node1* and *node2* — instead of just a single host.
+The real power of automation is managing *many systems at once*. In this challenge, you will use Ansible Lightspeed to regenerate the playbook so it targets the entire *web* group — both *node1* and *node2* — instead of a single host.
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Ask Lightspeed to target the web group
+.☑️ Task 1 - Generate an updated playbook targeting the web group
 [%collapsible]
 =====
 [NOTE]
 ====
-Switch to the *VS Code* tab and open *system_setup.yml*.
+Switch to the *VS Code* tab.
 ====
 
-. Lightspeed can refactor existing playbooks. Place your cursor on the `hosts: node1` line and select that line.
-. Right-click and choose *Ansible Lightspeed → Explain* to confirm Lightspeed understands the current state of the file.
-. Now manually update the `hosts:` line to target the *web* inventory group:
+. Open the Lightspeed generation panel from the Activity Bar or Command Palette.
+. Enter the following prompt:
 +
+----
+Write a playbook targeting the web group that installs security updates for the kernel and creates a user named myuser with a home directory
+----
+. Review the generated playbook in the new editor tab. Verify that:
+
+* `hosts:` is set to `web` (not `node1`)
+* `become: true` is present
+* Both tasks from the previous module are included
+
+[TIP]
+====
+*Expected Lightspeed output:*
+
 [source,yaml]
 ----
+---
 - name: Basic System Setup
   hosts: web
   become: true
+  tasks:
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: 'kernel'
+        state: latest
+        security: true
+
+    - name: Create a new user named myuser
+      ansible.builtin.user:
+        name: myuser
+        state: present
+        create_home: true
 ----
-+
-[TIP]
-====
-You can also place your cursor right after `hosts: ` and delete `node1`, then start typing. Lightspeed may offer a completion suggesting group names from the inventory — try it!
+
+By changing the prompt from "targeting node1" to "targeting the web group", Lightspeed generates `hosts: web`. This single change makes the playbook run against every host in the `[web]` inventory group — currently node1 and node2, but automatically any future web hosts you add.
 ====
 
-. Save the file with *Ctrl+S*.
+. Press `Ctrl+S` and save over the existing *system_setup.yml* in the *ansible-files* directory.
 =====
 ======
 
@@ -44,19 +67,20 @@ You can also place your cursor right after `hosts: ` and delete `node1`, then st
 Switch to the *Control* tab.
 ====
 
-. Run the playbook again:
-+
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
-+
-[source,shell]
+
+[source,role="execute"]
 ----
 ansible-navigator run system_setup.yml
 ----
-+
-WARNING: This run may take a minute or two — *node2* is being configured for the first time, so it needs to download metadata and run the kernel update task.
+
+[WARNING]
+====
+This run may take a minute or two — *node2* is being configured for the first time, so it needs to download metadata and run the kernel update task.
+====
 =====
 ======
 
@@ -67,33 +91,43 @@ WARNING: This run may take a minute or two — *node2* is being configured for t
 =====
 . Check *node1*:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 id myuser
 ----
 
 . Check *node2*:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node2 id myuser
 ----
 +
-.Both should return output similar to:
-[source,text]
+.Expected output (both nodes)
 ----
 uid=1002(myuser) gid=1002(myuser) groups=1002(myuser)
 ----
 
 [NOTE]
 ====
-By simply changing `hosts: node1` to `hosts: web`, the playbook now runs on every host in the *[web]* group. If you later add more web servers to the inventory, you do not need to change the playbook — it will automatically include the new hosts.
+If you add more web servers to the inventory later, you do not need to change the playbook. Setting `hosts: web` means every host in that group is automatically included in future runs.
 ====
 =====
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How to use inventory groups to target multiple hosts with a single playbook
+* Why `hosts: web` is more scalable than `hosts: node1`
+* How Lightspeed adapts its output based on the group or host name in your prompt
+* How ansible-navigator manages parallel execution across multiple nodes
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -110,6 +144,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+04-playbook-multi-node[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+04-playbook-multi-node[Writing your first playbook repository^].
 =====
 ======

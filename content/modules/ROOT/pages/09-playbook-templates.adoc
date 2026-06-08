@@ -1,24 +1,24 @@
 :sectnums:
 = 1.8 - Templates
 
-Jinja2 templates let you generate *dynamic configuration files* that are customized for each managed node at runtime. Instead of copying a static file, Ansible fills in variables like hostname, IP address, or OS version before placing the file on the target.
+Jinja2 templates let you generate *dynamic configuration files* that are customized per host at runtime. Ansible renders the template on the control node — substituting host-specific facts — and then copies the result to each managed node. The same template file produces a different output on each host.
 
-In this challenge, you will use Ansible Lightspeed to generate a Jinja2 template for `/etc/motd` (the message of the day) and the playbook task that deploys it.
+In this challenge, you will prompt Lightspeed to generate a Jinja2 template for `/etc/motd` (the login message of the day) and the playbook task that deploys it.
 
 =====
 .How templates work in Ansible
 [%collapsible]
 ====
-* Template files use the `.j2` extension and contain a mix of static text and `{{ variable }}` placeholders.
-* The `ansible.builtin.template` module renders the template on the control node (substituting variables with facts gathered from each target host) and copies the result to the managed node.
-* Because Ansible facts are host-specific, the same template produces a different file on each managed node.
+* Template files use the `.j2` extension and mix static text with `{{ variable }}` placeholders.
+* The `ansible.builtin.template` module renders the file and copies it to the managed node.
+* Ansible facts like `ansible_hostname`, `ansible_distribution`, and `ansible_architecture` are automatically available to every template without any extra configuration.
 ====
 =====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Generate the Jinja2 template with Lightspeed
+.☑️ Task 1 - Generate motd.j2 with Lightspeed
 [%collapsible]
 =====
 [NOTE]
@@ -26,26 +26,21 @@ In this challenge, you will use Ansible Lightspeed to generate a Jinja2 template
 Switch to the *VS Code* tab.
 ====
 
-. In the *ansible-files* directory, right-click and create a new folder named *templates*.
-. Inside *templates*, right-click and create a new file named *motd.j2*.
-. The file is a `.j2` template, not a playbook — but you can still ask Lightspeed to help. Type the following in the file:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
-[source,jinja2]
 ----
-Welcome to {{ ansible_hostname }}.
+Generate a Jinja2 template for /etc/motd that displays the hostname, OS distribution and version, and system architecture using Ansible facts
 ----
-. Let Lightspeed suggest additional lines. Place your cursor at the end of the line, press Enter, and continue typing:
-+
-[source,text]
-----
-OS:
-----
-+
-Watch for Lightspeed to suggest the OS fact variable. Press Tab to accept, then continue with a new line for Architecture.
+. Review the generated template in the new editor tab. Verify that:
+
+* `{{ ansible_hostname }}` is present
+* `{{ ansible_distribution }}` and `{{ ansible_distribution_version }}` are present
+* `{{ ansible_architecture }}` is present
 
 [TIP]
 ====
-*Expected completed motd.j2:*
+*Expected Lightspeed output:*
 
 [source,jinja2]
 ----
@@ -53,48 +48,46 @@ Welcome to {{ ansible_hostname }}.
 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
 Architecture: {{ ansible_architecture }}
 ----
-
-`ansible_hostname`, `ansible_distribution`, `ansible_distribution_version`, and `ansible_architecture` are all *Ansible facts* — they are populated automatically by the *Gathering Facts* task at the start of every play.
 ====
 
-. Save the file.
+. Create the *templates* directory in the *ansible-files* directory first. In the VS Code file explorer, right-click *ansible-files* and select *New Folder* → name it `templates`.
+
+. Press `Ctrl+S` and save the generated file as *motd.j2* inside the *ansible-files/templates* directory.
 =====
 ======
 
 
 ======
-.☑️ Task 2 - Use Lightspeed to add the template task to the playbook
+.☑️ Task 2 - Generate the updated playbook with the template task
 [%collapsible]
 =====
-[NOTE]
-====
-Switch to the *VS Code* tab and open *system_setup.yml*.
-====
-
-. Before the `handlers:` section, add a new task. Type:
+. Open the Lightspeed generation panel again.
+. Enter the following prompt:
 +
-[source,yaml]
 ----
-    - name: Deploy MOTD from Jinja2 template to all nodes
+Write a playbook targeting all hosts that creates user padawan, installs and configures httpd and firewalld with an HTTP firewall rule on web servers only with handlers, and deploys a Jinja2 motd template from templates/motd.j2 to /etc/motd on all hosts
 ----
-. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+. Review the generated playbook. Verify that the template task is present:
+
+* Module is `ansible.builtin.template`
+* `src: templates/motd.j2`
+* `dest: /etc/motd`
+* No `when:` condition — the MOTD deploys to all hosts
 
 [TIP]
 ====
-*Expected Lightspeed output:*
+*Expected template task in the playbook:*
 
 [source,yaml]
 ----
-    - name: Deploy MOTD from Jinja2 template to all nodes
+    - name: Deploy MOTD from Jinja2 template
       ansible.builtin.template:
         src: templates/motd.j2
         dest: /etc/motd
 ----
-
-Lightspeed recognizes "Jinja2 template" in the task name, picks the correct module, and resolves the source path relative to the playbook directory.
 ====
 
-. Save the file.
+. Press `Ctrl+S` and save over *system_setup.yml* in the *ansible-files* directory.
 =====
 ======
 
@@ -108,12 +101,12 @@ Lightspeed recognizes "Jinja2 template" in the task name, picks the correct modu
 Switch to the *Control* tab.
 ====
 
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run system_setup.yml
 ----
@@ -122,50 +115,57 @@ ansible-navigator run system_setup.yml
 
 
 ======
-.☑️ Task 4 - Verify the MOTD on each node
+.☑️ Task 4 - Verify the MOTD is unique per node
 [%collapsible]
 =====
-. SSH into *node1* and check the MOTD:
+. SSH into *node1* and read the MOTD:
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1
 ----
 +
-.You should see something like (version numbers will vary):
-[source,text]
+.Expected output (version numbers will vary)
 ----
 Welcome to node1.
 OS: RedHat 9.2
 Architecture: x86_64
 ----
-. Exit and try *node2* — notice the hostname is different:
+
+. Exit and check *node2* — notice the hostname is different even though the same template was used:
 +
-[source,shell]
+[source,role="execute"]
 ----
 exit
 ----
 +
-[source,shell]
+[source,role="execute"]
 ----
 ssh node2
 ----
+
 . Exit node2:
 +
-[source,shell]
+[source,role="execute"]
 ----
 exit
 ----
-
-[NOTE]
-====
-The same `motd.j2` template produced a *unique file* on each node because Ansible substituted the host-specific facts at runtime. This is the power of templating.
-====
 =====
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How Jinja2 templates generate host-specific files from a single source template
+* Which Ansible facts are automatically available inside templates
+* How to use `ansible.builtin.template` to render and deploy a `.j2` file
+* How to prompt Lightspeed to generate both a template file and the playbook task that uses it
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -182,6 +182,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+09-playbook-templates[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+09-playbook-templates[Writing your first playbook repository^].
 =====
 ======

@@ -1,13 +1,13 @@
 :sectnums:
 = 1.7 - Loops
 
-Loops let Ansible repeat a task multiple times with different values — for example, creating several users in a single task instead of writing one task per user. In this challenge, you will use Ansible Lightspeed to generate a new playbook that creates three users using a loop.
+Loops let Ansible repeat a task for a list of values — creating several users in one task instead of writing a separate task for each. In this challenge, you will prompt Lightspeed to generate a new playbook that creates three users using a `loop`.
 
 =====
 .How loops work in Ansible
 [%collapsible]
 ====
-The `loop:` keyword provides a list of items. The special variable `{{ item }}` is replaced with each list value in turn. Instead of three separate user tasks, you write one task with a loop:
+The `loop:` keyword provides a list of items to iterate over. The special variable `{{ item }}` is replaced with each list value in turn:
 
 [source,yaml]
 ----
@@ -22,14 +22,14 @@ The `loop:` keyword provides a list of items. The special variable `{{ item }}` 
         - carol
 ----
 
-Ansible runs this task three times — once for each name in the list.
+Ansible runs this single task three times — once per name. The output shows three sub-results listed under one task name.
 ====
 =====
 
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Create loop_users.yml with Lightspeed
+.☑️ Task 1 - Generate loop_users.yml with Lightspeed
 [%collapsible]
 =====
 [NOTE]
@@ -37,25 +37,17 @@ Ansible runs this task three times — once for each name in the list.
 Switch to the *VS Code* tab.
 ====
 
-. In the *ansible-files* directory, right-click and create a new file named *loop_users.yml*.
-. Add the play header:
+. Open the Lightspeed generation panel.
+. Enter the following prompt:
 +
-[source,yaml]
 ----
----
-- name: Create multiple users with a loop
-  hosts: node1
-  become: true
-  tasks:
+Write a playbook targeting node1 that creates users alice bob and carol each with a home directory using a loop
 ----
+. Review the generated playbook in the new editor tab. Verify that:
 
-. Now type the following task name and let Lightspeed generate the loop:
-+
-[source,yaml]
-----
-    - name: Create users alice bob and carol using a loop
-----
-. Press *Enter*, then *Tab* to accept the suggestion.
+* `hosts: node1` is set
+* A single `ansible.builtin.user` task uses `name: "{{ item }}"` as the loop variable
+* The `loop:` block lists `alice`, `bob`, and `carol`
 
 [TIP]
 ====
@@ -63,7 +55,12 @@ Switch to the *VS Code* tab.
 
 [source,yaml]
 ----
-    - name: Create users alice bob and carol using a loop
+---
+- name: Create multiple users with a loop
+  hosts: node1
+  become: true
+  tasks:
+    - name: Create users alice bob and carol with a loop
       ansible.builtin.user:
         name: "{{ item }}"
         state: present
@@ -74,16 +71,16 @@ Switch to the *VS Code* tab.
         - carol
 ----
 
-Lightspeed extracts the names from your task description and builds the `loop:` list. The `{{ item }}` placeholder is the key pattern — it is replaced by each list entry at runtime.
+Lightspeed extracts the names from your prompt and builds both the `loop:` list and the `{{ item }}` reference automatically.
 ====
 
-. Save the file.
+. Press `Ctrl+S` and save the file as *loop_users.yml* in the *ansible-files* directory.
 =====
 ======
 
 
 ======
-.☑️ Task 2 - Run the loop_users.yml playbook
+.☑️ Task 2 - Run loop_users.yml
 [%collapsible]
 =====
 [NOTE]
@@ -91,19 +88,19 @@ Lightspeed extracts the names from your task description and builds the `loop:` 
 Switch to the *Control* tab.
 ====
 
-[source,shell]
+[source,role="execute"]
 ----
 cd /home/rhel/ansible-files
 ----
 
-[source,shell]
+[source,role="execute"]
 ----
 ansible-navigator run loop_users.yml
 ----
 
 [NOTE]
 ====
-Watch the output. The task appears *once* in the play output, but Ansible runs it *three times* — once for each item. You will see three sub-results listed under the single task name.
+The task appears *once* in the output, but Ansible runs it *three times* — once per item. You will see three sub-results listed beneath the single task name, one for each username.
 ====
 =====
 ======
@@ -113,13 +110,12 @@ Watch the output. The task appears *once* in the play output, but Ansible runs i
 .☑️ Task 3 - Verify all three users were created
 [%collapsible]
 =====
-[source,shell]
+[source,role="execute"]
 ----
 ssh node1 id alice && ssh node1 id bob && ssh node1 id carol
 ----
 +
-.Each user should show output like:
-[source,text]
+.Expected output
 ----
 uid=1004(alice) gid=1004(alice) groups=1004(alice)
 uid=1005(bob) gid=1005(bob) groups=1005(bob)
@@ -129,7 +125,18 @@ uid=1006(carol) gid=1006(carol) groups=1006(carol)
 ======
 
 
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How `loop:` replaces repetitive tasks with a single parameterized task
+* How `{{ item }}` maps to each value in the loop list at runtime
+* How to prompt Lightspeed to generate a loop-based playbook from a natural-language list of names
+* How to read loop sub-results in ansible-navigator output
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -146,6 +153,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+08-playbook-loops[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+08-playbook-loops[Writing your first playbook repository^].
 =====
 ======

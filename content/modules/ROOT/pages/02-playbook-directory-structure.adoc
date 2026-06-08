@@ -1,32 +1,37 @@
 :sectnums:
 = 1.1 - Generating Your First Playbook with Lightspeed
 
-Playbooks in Ansible are scripts written in YAML that define what tasks to run on your managed nodes. Instead of writing every line by hand, you will use *Ansible Lightspeed* to generate your first playbook from plain-English task descriptions.
+Playbooks are the heart of Ansible automation — YAML scripts that define exactly what to do on your managed nodes. In this challenge, you will use *Ansible Lightspeed* to generate your first playbook from a plain-English prompt instead of writing YAML by hand.
 
-In this challenge, you will generate a playbook called *system_setup.yml* that installs kernel security updates and creates a new user on a managed node.
+The playbook will perform a basic system setup on *node1*: install kernel security updates and create a new user.
 
-== How Lightspeed Inline Generation Works
+== How Lightspeed Playbook Generation Works
 
 =====
-.Lightspeed inline task generation
+.The generation workflow
 [%collapsible]
 ====
-When you open an Ansible YAML file and write a task `name:` field, Lightspeed reads your description and *suggests the module and all its parameters* on the next line. Here is the workflow:
+Lightspeed's playbook generation works like this:
 
-. Open or create an Ansible `.yml` file.
-. Under the `tasks:` block, type a task name:
-+
-[source,yaml]
-----
-    - name: Install security updates for the kernel
-----
-. Press *Enter* to go to the next line. Lightspeed analyzes your description and shows a ghost-text suggestion.
-. Press *Tab* to accept the suggestion. Lightspeed fills in the module and parameters for you.
-. Review what was generated — make sure it matches your intent before moving on.
+. Open the Lightspeed generation panel by clicking the *Lightspeed icon* in the VS Code Activity Bar (the vertical icon strip on the far left), or use the Command Palette (`Ctrl+Shift+P`) and search for *Ansible Lightspeed: Playbook generation*.
+
+. A panel opens where you type a plain-English description of what you want the playbook to do.
+
+. Lightspeed analyzes your prompt against its knowledge of Ansible modules, best practices, and the Galaxy content ecosystem, then generates a complete playbook.
+
+. The generated playbook opens in a *new editor tab*.
+
+. Review the YAML — check that the modules, parameters, and structure match your intent.
+
+. Press `Ctrl+S` to save it. Name the file and choose a location inside *ansible-files*.
 
 [TIP]
 ====
-The better your task name, the better Lightspeed's suggestion. Be specific: instead of "install package", write "install the httpd web server package".
+*Better prompts produce better playbooks.* Be specific about:
+
+* Which hosts to target (e.g. "on node1" or "on web servers")
+* What state you want (e.g. "install", "ensure running", "create")
+* Any constraints (e.g. "security updates only", "create a home directory")
 ====
 ====
 =====
@@ -35,7 +40,7 @@ The better your task name, the better Lightspeed's suggestion. Be specific: inst
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Create the system_setup.yml file
+.☑️ Task 1 - Generate system_setup.yml with Lightspeed
 [%collapsible]
 =====
 [NOTE]
@@ -43,76 +48,22 @@ The better your task name, the better Lightspeed's suggestion. Be specific: inst
 Switch to the *VS Code* tab.
 ====
 
-. In the VS Code file explorer, right-click in a blank space within the *ansible-files* directory and select *New File*.
-. Name the file *system_setup.yml* and press Enter.
-. Add the following play header to the file. This tells Ansible to run on *node1* with elevated privileges:
+. Open the Lightspeed generation panel from the Activity Bar or Command Palette.
+
+. Enter the following prompt in the generation panel:
 +
-[source,yaml]
 ----
----
-- name: Basic System Setup
-  hosts: node1
-  become: true
-  tasks:
-----
-+
-[IMPORTANT]
-====
-YAML is whitespace-sensitive. Use 2 spaces per indentation level — never tabs.
-====
-=====
-======
-
-
-======
-.☑️ Task 2 - Use Lightspeed to generate the kernel update task
-[%collapsible]
-=====
-[NOTE]
-====
-Still in *VS Code*, editing *system_setup.yml*.
-====
-
-. Position your cursor after the `tasks:` line and press Enter to start a new line.
-. Type the following task name exactly (Lightspeed uses it as the prompt):
-+
-[source,yaml]
-----
-    - name: Install security updates for the kernel
-----
-. Press *Enter* to move to the next line. Watch for the ghost-text suggestion from Lightspeed.
-. Press *Tab* to accept it.
-
-[TIP]
-====
-*Expected Lightspeed output* — you should see something like:
-
-[source,yaml]
-----
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
+Write a playbook targeting node1 that installs security updates for the kernel and creates a new user named myuser with a home directory
 ----
 
-Lightspeed uses the *ansible.builtin.dnf* module (the fully qualified collection name for DNF package management) and sets `security: true` to limit updates to security patches only.
-====
-=====
-======
+. Wait for Lightspeed to generate the playbook. It opens in a new editor tab.
 
+. Review the generated YAML. Verify that it includes:
 
-======
-.☑️ Task 3 - Use Lightspeed to generate the user creation task
-[%collapsible]
-=====
-. After the kernel update task, press Enter twice to add a blank line, then type:
-+
-[source,yaml]
-----
-    - name: Create a new user named myuser
-----
-. Press *Enter*, then *Tab* to accept Lightspeed's suggestion.
+* `hosts: node1` targeting the correct node
+* `become: true` for privilege escalation
+* An `ansible.builtin.dnf` task with `security: true` for the kernel update
+* An `ansible.builtin.user` task creating `myuser` with `create_home: true`
 
 [TIP]
 ====
@@ -120,46 +71,6 @@ Lightspeed uses the *ansible.builtin.dnf* module (the fully qualified collection
 
 [source,yaml]
 ----
-    - name: Create a new user named myuser
-      ansible.builtin.user:
-        name: myuser
-        state: present
-        create_home: true
-----
-
-Lightspeed picks the *ansible.builtin.user* module and sets sensible defaults: `state: present` ensures the user exists and `create_home: true` creates their home directory.
-====
-
-. Save the file with *Ctrl+S*.
-=====
-======
-
-
-======
-.☑️ Task 4 - Ask Lightspeed to explain the playbook
-[%collapsible]
-=====
-Now that you have a complete playbook, let Lightspeed walk you through it.
-
-. Select *all the content* in *system_setup.yml* (Ctrl+A).
-. Right-click and choose:
-+
-[source,text]
-----
-Ansible Lightspeed → Explain
-----
-. Read through Lightspeed's explanation. Pay attention to:
-+
-* Why `become: true` is needed
-* What `ansible.builtin.dnf` does differently from the bare `dnf` command
-* What `state: present` means for idempotency
-
-[NOTE]
-====
-Your complete *system_setup.yml* should look like this:
-
-[source,yaml]
-----
 ---
 - name: Basic System Setup
   hosts: node1
@@ -177,12 +88,48 @@ Your complete *system_setup.yml* should look like this:
         state: present
         create_home: true
 ----
+
+Notice that Lightspeed uses *fully qualified collection names* (`ansible.builtin.dnf`, `ansible.builtin.user`) — this is the recommended practice for all modern Ansible content.
 ====
+
+. If the output looks correct, press `Ctrl+S` and save the file as *system_setup.yml* inside the *ansible-files* directory.
 =====
 ======
 
 
+======
+.☑️ Task 2 - Ask Lightspeed to explain the playbook
+[%collapsible]
+=====
+Before running the playbook, use Lightspeed to understand what was generated.
+
+. In the new editor tab containing *system_setup.yml*, select all the content (`Ctrl+A`).
+. Right-click and choose:
++
+----
+Ansible Lightspeed → Explain
+----
+. Read through the explanation. Pay attention to:
+
+* Why `become: true` is needed for package and user management
+* What `state: latest` with `security: true` does differently from a full system upgrade
+* What `state: present` means for the user task and why it is idempotent
+=====
+======
+
+
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How to use Lightspeed's generation panel to produce a complete playbook from a prompt
+* Why fully qualified collection names (`ansible.builtin.*`) are used in modern Ansible
+* How `become: true` enables privilege escalation in a play
+* What idempotency means at the task level (state-based, not action-based)
+
+
 == Embracing the Next Challenge
+
 ======
 .✅ Next Challenge
 [%collapsible]
@@ -199,6 +146,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or have noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-playbook-directory-structure[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-playbook-directory-structure[Writing your first playbook repository^].
 =====
 ======

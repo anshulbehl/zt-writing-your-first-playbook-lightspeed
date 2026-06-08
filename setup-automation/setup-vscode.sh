@@ -30,14 +30,15 @@ pip3 install --quiet 'litellm[proxy]'
 mkdir -p /etc/litellm
 
 # Hidden system prompt injects lab context into every Lightspeed request.
-# Set __MODEL_BACKEND__ to the resolved model identifier before deployment
-# (e.g. "openai/gpt-4o", "watsonx/ibm/granite-13b-chat-v2", etc.).
+# api_key is read from the MAAS_API_KEY environment variable set in the
+# systemd service below — do not hardcode the key in this file.
 cat > /etc/litellm/config.yaml << 'EOF'
 model_list:
   - model_name: ansible-lightspeed
     litellm_params:
-      model: __MODEL_BACKEND__
-      api_base: https://c.ai.ansible.redhat.com
+      model: openai/codellama-7b-instruct
+      api_base: https://litellm-prod.apps.maas.redhatworkshops.io/v1
+      api_key: os.environ/MAAS_API_KEY
 
 litellm_settings:
   system_prompt: |
@@ -59,6 +60,7 @@ After=network.target
 
 [Service]
 Type=simple
+Environment=MAAS_API_KEY=YOUR-API-KEY-HERE
 ExecStart=/usr/local/bin/litellm --config /etc/litellm/config.yaml --port 4000
 Restart=on-failure
 RestartSec=5
