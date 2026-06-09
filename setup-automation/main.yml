@@ -22,7 +22,6 @@
       ansible_become_password: "{{ lookup('ansible.builtin.env', 'BASTION_PASSWORD') }}"
       ansible_python_interpreter: /usr/bin/python3
     loop:
-      - control
       - node1
       - node2
       - node3
