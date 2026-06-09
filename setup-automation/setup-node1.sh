@@ -17,8 +17,8 @@ wait_for_dnf() {
             echo "Package manager is ready"
             return 0
         fi
-        sleep 3
-        elapsed=$((elapsed + 3))
+        sleep 1
+        elapsed=$((elapsed + 1))
     done
 
     echo "WARN: Package manager may not be fully initialized"
@@ -26,6 +26,7 @@ wait_for_dnf() {
 }
 
 # ─── Wait for System Readiness ──────────────────────────────────────────────
+# Note: All three nodes run this setup in parallel via the showroom runner
 wait_for_dnf 60
 
 echo "Node1 setup complete - SSH access enabled via cloud-init"

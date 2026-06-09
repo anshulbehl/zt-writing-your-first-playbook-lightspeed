@@ -6,29 +6,6 @@
 
 set -e
 
-# ─── Helper Functions ────────────────────────────────────────────────────────
-wait_for_podman_pull() {
-    local image=$1
-    local max_wait=${2:-300}
-    local elapsed=0
-
-    echo "Pulling execution environment image: $image"
-    # Pre-pull the image with retry logic
-    for attempt in {1..3}; do
-        echo "Pull attempt $attempt/3..."
-        if timeout $max_wait podman pull "$image" 2>&1 | tee /tmp/podman-pull.log; then
-            echo "Successfully pulled $image"
-            return 0
-        fi
-        echo "Pull attempt $attempt failed, retrying in 10s..."
-        sleep 10
-    done
-
-    echo "ERROR: Failed to pull $image after 3 attempts"
-    cat /tmp/podman-pull.log
-    return 1
-}
-
 # ─── Directory Setup ─────────────────────────────────────────────────────────
 mkdir -p /home/rhel/ansible-files /home/rhel/.logs
 chown -R rhel:rhel /home/rhel/ansible-files /home/rhel/.logs
@@ -98,14 +75,23 @@ chown rhel:rhel /home/rhel/ansible-files/inventory
 # Pull the EE image as rhel user (ansible-navigator runs as rhel, not root)
 # This prevents first-run delay when student runs their first playbook.
 echo "Pre-pulling execution environment image as rhel user..."
-su - rhel -c 'podman pull quay.io/acme_corp/first_playbook_ee:latest' || \
-  echo "WARN: Failed to pre-pull EE image, will pull on first playbook run"
+for attempt in {1..3}; do
+    echo "Pull attempt $attempt/3..."
+    if su - rhel -c 'podman pull quay.io/acme_corp/first_playbook_ee:latest' 2>&1 | tee /tmp/podman-pull.log; then
+        echo "Successfully pulled execution environment image"
+        break
+    fi
+    echo "Pull attempt $attempt failed, retrying in 5s..."
+    sleep 5
+done
 
 # Verify the pull succeeded
 if su - rhel -c 'podman images | grep -q first_playbook_ee'; then
     echo "Execution environment image ready"
 else
-    echo "WARN: Execution environment image not found in podman images"
+    echo "ERROR: Failed to pull EE image after 3 attempts"
+    cat /tmp/podman-pull.log
+    exit 1
 fi
 
 echo "Control node setup complete"
