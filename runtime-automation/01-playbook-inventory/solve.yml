@@ -1,16 +1,31 @@
 ---
-- name: Solve control node
+- name: Solve module 01 - Ensure inventory is complete
   hosts: controller
   gather_facts: false
   vars:
     USER: rhel
   tasks:
-    - name: Create hosts
+    - name: Ensure ansible-files directory exists
+      ansible.builtin.file:
+        path: /home/{{ USER }}/ansible-files
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0755"
+
+    - name: Write complete inventory file
       ansible.builtin.copy:
         content: |
           [web]
           node1
           node2
+
+          [database]
+          node3
+
+          [nodes:children]
+          web
+          database
         dest: /home/{{ USER }}/ansible-files/inventory
         owner: "{{ USER }}"
         group: "{{ USER }}"

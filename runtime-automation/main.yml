@@ -3,70 +3,45 @@
   hosts: localhost
   gather_facts: false
   tasks:
-  - name: Add bastion host
-    ansible.builtin.add_host:
-      name: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
-      ansible_ssh_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
-      ansible_ssh_port: "{{ lookup('ansible.builtin.env', 'BASTION_PORT') }}"
-      ansible_ssh_user: "{{ lookup('ansible.builtin.env', 'BASTION_USER') }}"
-      ansible_ssh_pass: "{{ lookup('ansible.builtin.env', 'BASTION_PASSWORD') }}"
-- name: Demo Playbook for the ansible-runner API
-  hosts: all:!localhost
+    - name: Add bastion host
+      ansible.builtin.add_host:
+        name: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+        ansible_ssh_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+        ansible_ssh_port: "{{ lookup('ansible.builtin.env', 'BASTION_PORT') }}"
+        ansible_ssh_user: "{{ lookup('ansible.builtin.env', 'BASTION_USER') }}"
+        ansible_ssh_pass: "{{ lookup('ansible.builtin.env', 'BASTION_PASSWORD') }}"
+
+- name: Dispatch module stage playbook
+  hosts: localhost
   gather_facts: false
-  become: false
 
   tasks:
-  - name: Simple debug task
-    ansible.builtin.debug:
-      msg: "Hello Runner"
+    - name: Check if module stage playbook exists
+      ansible.builtin.stat:
+        path: "./{{ module_dir }}/{{ module_stage }}.yml"
+      register: r_playbook
 
-  - name: Set config_host variable with ansible_host value
-    set_fact:
-      config_host: "{{ ansible_host }}"
+    - name: Run module stage playbook
+      when: r_playbook.stat.exists
+      ansible.builtin.command:
+        cmd: >
+          ansible-playbook
+          ./{{ module_dir }}/{{ module_stage }}.yml
+          -i {{ playbook_dir }}/../inventory
+          --extra-vars "job_info_dir={{ job_info_dir | default('/tmp') }}"
+        chdir: "{{ playbook_dir }}"
+      register: r_result
+      failed_when: r_result.rc != 0
 
-  - name: Create a directory if it does not exist
-    ansible.builtin.file:
-      path: "/tmp/runtime-scripts/{{ module_dir }}"
-      state: directory
-      mode: '0755'
+    - name: Write playbook output to job_info_dir
+      ansible.builtin.copy:
+        content: "{{ r_result.stdout | default('') }}"
+        dest: "{{ job_info_dir }}/output.txt"
+        mode: "0644"
+      delegate_to: localhost
+      when: r_playbook.stat.exists and job_info_dir is defined
 
-  - name: Check if /module_dir/module_stage-host.sh exists
-    ansible.builtin.stat:
-      path: "./{{ module_dir }}/{{ module_stage }}-{{ config_host }}.sh"
-    delegate_to: localhost
-    register: r_script_test
-
-  - name: Copy script file
-    when: r_script_test.stat.exists
-    copy:
-      src: "./{{ module_dir }}/{{ module_stage }}-{{ ansible_host }}.sh"
-      dest: "/tmp/runtime-scripts/{{ module_dir }}/{{ module_stage }}-{{ ansible_host }}.sh"
-    register: r_result
-
-  - name: Execute module_stage-host.sh if it exists
-    when: r_script_test.stat.exists
-    shell: "sh -x /tmp/runtime-scripts/{{ module_dir }}/{{ module_stage }}-{{ ansible_host }}.sh > /tmp/runtime-scripts/{{ module_dir }}/{{ module_stage }}-{{ ansible_host }}.log 2>&1"
-    become: true
-    register: r_result
-
-  - name: Output script result
-    ansible.builtin.debug:
-      msg: "{{ r_result.stdout | default('') }}"
-    when: r_script_test.stat.exists
-
-  - name: Write script result to file
-    ansible.builtin.copy:
-      content: "{{ r_result.stdout | default('') }}"
-      dest: "{{ job_info_dir }}/script.out"
-    delegate_to: localhost
-    when: r_script_test.stat.exists and job_info_dir is defined
-
-  - name: Output script result
-    ansible.builtin.debug:
-      var: r_result
-    when: r_script_test.stat.exists and job_info_dir is defined
-
-  - name: Fail if stage was failed
-    ansible.builtin.fail:
-      msg: "Stage failed"
-    when: r_script_test.stat.exists and r_result.rc != 0
+    - name: Fail with output if playbook failed
+      ansible.builtin.fail:
+        msg: "Module {{ module_dir }}/{{ module_stage }}.yml failed:\n{{ r_result.stderr | default('') }}"
+      when: r_playbook.stat.exists and r_result.rc != 0

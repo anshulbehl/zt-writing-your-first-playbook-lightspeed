@@ -1,0 +1,18 @@
+---
+ansible-navigator:
+  ansible:
+    inventory:
+      entries:
+      - /home/rhel/ansible-files/inventory
+  execution-environment:
+    container-engine: podman
+    enabled: true
+    image: quay.io/acme_corp/first_playbook_ee:latest
+    pull:
+      policy: missing
+  logging:
+    level: debug
+    file: /home/rhel/.logs/ansible-navigator.log
+  mode: stdout
+  playbook-artifact:
+    save-as: /home/rhel/.logs/{playbook_name}-artifact-{time_stamp}.json

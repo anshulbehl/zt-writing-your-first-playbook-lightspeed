@@ -6,6 +6,46 @@
 
 set -e
 
+# ─── Helper Functions ────────────────────────────────────────────────────────
+wait_for_service() {
+    local service=$1
+    local max_wait=${2:-60}
+    local elapsed=0
+
+    echo "Waiting for $service to be active..."
+    while [ $elapsed -lt $max_wait ]; do
+        if systemctl is-active --quiet "$service"; then
+            echo "$service is active"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+
+    echo "ERROR: $service failed to start within ${max_wait}s"
+    systemctl status "$service" --no-pager || true
+    return 1
+}
+
+wait_for_http() {
+    local url=$1
+    local max_wait=${2:-60}
+    local elapsed=0
+
+    echo "Waiting for $url to respond..."
+    while [ $elapsed -lt $max_wait ]; do
+        if curl -sf "$url" >/dev/null 2>&1; then
+            echo "$url is responding"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+
+    echo "ERROR: $url not responding within ${max_wait}s"
+    return 1
+}
+
 # ─── code-server ─────────────────────────────────────────────────────────────
 mkdir -p /home/rhel/ansible-files
 chown -R rhel:rhel /home/rhel/ansible-files
@@ -25,7 +65,16 @@ EOF
 chown -R rhel:rhel /home/rhel/.config/code-server
 
 # ─── LiteLLM proxy ───────────────────────────────────────────────────────────
-pip3 install --quiet 'litellm[proxy]'
+echo "Installing LiteLLM proxy..."
+# Retry pip install in case of network issues
+for attempt in {1..3}; do
+    if pip3 install --quiet 'litellm[proxy]'; then
+        echo "LiteLLM installed successfully"
+        break
+    fi
+    echo "Attempt $attempt failed, retrying in 5s..."
+    sleep 5
+done
 
 mkdir -p /etc/litellm
 
@@ -73,6 +122,10 @@ systemctl daemon-reload
 systemctl enable litellm
 systemctl start litellm
 
+# Wait for LiteLLM to be ready
+wait_for_service litellm 60
+wait_for_http "http://localhost:4000/health" 30
+
 # ─── VS Code extension settings ──────────────────────────────────────────────
 # Points the redhat.ansible extension's Lightspeed feature at the local proxy.
 mkdir -p /home/rhel/.local/share/code-server/User
@@ -96,4 +149,8 @@ chown -R rhel:rhel /home/rhel/.local
 systemctl start code-server
 systemctl enable code-server
 
-echo "VSCode VM setup complete — LiteLLM proxy listening on localhost:4000"
+# Wait for code-server to be ready
+wait_for_service code-server 60
+wait_for_http "http://localhost:8080" 30
+
+echo "VSCode VM setup complete — LiteLLM proxy listening on localhost:4000, code-server on :8080"

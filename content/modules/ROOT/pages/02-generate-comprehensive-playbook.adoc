@@ -18,11 +18,11 @@ When prompting Lightspeed to generate a playbook, *specificity and structure* pr
 * *Variables to define* — reusable values like usernames, package names, service names
 * *Tasks in logical order* — what to install, configure, start, and verify
 * *Conditionals* — which tasks run only on specific host groups
-* * *Loops* — repeating tasks across multiple items (users, packages, files)
+* *Loops* — repeating tasks across multiple items (users, packages, files)
 * *Handlers* — tasks that trigger only when something changes (service restarts, config reloads)
 * *Templates* — dynamic configuration files that use Jinja2 and host facts
 
-The more detail you provide, the more accurate Lightspeed's output will be. Think of it like briefing a colleague: "set up Apache on the web servers" is vague, but "install httpd on the web group, ensure it's running and enabled, allow HTTP through firewalld, and reload the firewall only if the rule changes" is actionable.
+The more detail you provide, the more accurate Lightspeed's output will be.
 ====
 =====
 

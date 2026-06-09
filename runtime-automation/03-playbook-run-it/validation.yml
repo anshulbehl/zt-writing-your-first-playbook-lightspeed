@@ -1,58 +1,82 @@
 ---
-- name: Validate module 03 - Comprehensive playbook execution
+- name: Validate module 03 - user and MOTD on all hosts
   hosts: all
   become: true
   tasks:
-    - name: Check that user padawan exists on all hosts
+    - name: Check that user padawan exists
       ansible.builtin.command:
         cmd: id padawan
       changed_when: false
-      register: user_check
-      failed_when: user_check.rc != 0
+      failed_when: false
+      register: r_user
 
-    - name: Check that MOTD was updated on all hosts
-      ansible.builtin.stat:
-        path: /etc/motd
-      register: motd_file
-      failed_when: not motd_file.stat.exists
+    - name: Fail if padawan does not exist
+      ansible.builtin.fail:
+        msg: "User 'padawan' does not exist on {{ inventory_hostname }}"
+      when: r_user.rc != 0
 
-    - name: Verify MOTD contains hostname
+    - name: Check MOTD contains this host's hostname
       ansible.builtin.shell: grep -q "{{ ansible_hostname }}" /etc/motd
       changed_when: false
       failed_when: false
-      register: motd_content
+      register: r_motd
 
-- name: Validate web group specific tasks
+    - name: Fail if MOTD is missing or does not reference hostname
+      ansible.builtin.fail:
+        msg: "/etc/motd on {{ inventory_hostname }} does not contain the expected hostname"
+      when: r_motd.rc != 0
+
+- name: Validate module 03 - httpd and firewall on web group only
   hosts: web
   become: true
   tasks:
-    - name: Check that httpd is installed
+    - name: Check that httpd is installed on web servers
       ansible.builtin.command:
         cmd: rpm -q httpd
       changed_when: false
-      register: httpd_check
-      failed_when: httpd_check.rc != 0
+      failed_when: false
+      register: r_httpd
+
+    - name: Fail if httpd is not installed
+      ansible.builtin.fail:
+        msg: "httpd is not installed on {{ inventory_hostname }}"
+      when: r_httpd.rc != 0
 
     - name: Check that httpd is running
-      ansible.builtin.systemd:
-        name: httpd
-      register: httpd_status
-      failed_when: httpd_status.status.ActiveState != 'active'
-
-    - name: Check that firewalld allows HTTP
-      ansible.builtin.shell: firewall-cmd --list-services | grep -q http
+      ansible.builtin.command:
+        cmd: systemctl is-active httpd
       changed_when: false
-      register: firewall_check
-      failed_when: firewall_check.rc != 0
+      failed_when: false
+      register: r_httpd_active
 
-- name: Validate database group (should NOT have httpd)
+    - name: Fail if httpd is not running
+      ansible.builtin.fail:
+        msg: "httpd is not running on {{ inventory_hostname }}"
+      when: r_httpd_active.rc != 0
+
+    - name: Check firewalld allows HTTP
+      ansible.builtin.shell: firewall-cmd --list-services | grep -q '\bhttp\b'
+      changed_when: false
+      failed_when: false
+      register: r_firewall
+
+    - name: Fail if HTTP is not allowed through firewall
+      ansible.builtin.fail:
+        msg: "firewalld on {{ inventory_hostname }} does not allow HTTP traffic"
+      when: r_firewall.rc != 0
+
+- name: Validate module 03 - httpd must NOT be on database group
   hosts: database
   become: true
   tasks:
-    - name: Verify httpd is NOT installed on database servers
+    - name: Check httpd is not installed on database servers
       ansible.builtin.command:
         cmd: rpm -q httpd
       changed_when: false
-      register: httpd_check
-      failed_when: httpd_check.rc == 0
-      ignore_errors: true
+      failed_when: false
+      register: r_httpd_db
+
+    - name: Fail if httpd is installed on database server
+      ansible.builtin.fail:
+        msg: "httpd should not be installed on {{ inventory_hostname }} (database group) — check your conditionals"
+      when: r_httpd_db.rc == 0
