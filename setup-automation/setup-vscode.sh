@@ -144,6 +144,29 @@ cat > /home/rhel/.local/share/code-server/User/settings.json << 'EOF'
   "files.autoSaveDelay": 1000
 }
 EOF
+
+# Create a workspace file that opens ansible-files folder by default
+cat > /home/rhel/.local/share/code-server/User/workspaceStorage/ansible-files.code-workspace << 'EOF'
+{
+  "folders": [
+    {
+      "path": "/home/rhel/ansible-files"
+    }
+  ],
+  "settings": {}
+}
+EOF
+
+# Store last opened folder path so code-server remembers it
+mkdir -p /home/rhel/.local/share/code-server/User/globalStorage
+cat > /home/rhel/.local/share/code-server/User/globalStorage/storage.json << 'EOF'
+{
+  "lastActiveWindow": {
+    "folder": "file:///home/rhel/ansible-files"
+  }
+}
+EOF
+
 chown -R rhel:rhel /home/rhel/.local
 
 systemctl start code-server
