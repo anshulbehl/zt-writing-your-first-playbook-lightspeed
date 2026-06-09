@@ -1,0 +1,141 @@
+:sectnums:
+= 1.3 - Wrap-Up and Next Steps
+
+Congratulations! You have successfully used *Ansible Lightspeed* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
+
+== What You Accomplished
+
+In this lab, you:
+
+* Connected to Ansible Lightspeed and verified it was ready to assist
+* Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, handlers, loops, and templates
+* Generated a complete playbook in one shot using Lightspeed's playbook generation feature
+* Created a Jinja2 template for dynamic configuration file deployment
+* Ran the playbook with `ansible-navigator` across multiple inventory groups
+* Verified user creation, package installation, service configuration, firewall rules, and template rendering
+* Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
+
+Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of Lightspeed's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
+
+
+== The Power of Lightspeed for Ansible Automation
+
+Ansible Lightspeed transforms how you write automation:
+
+* *Faster iteration* — generate a working playbook in seconds instead of writing YAML by hand
+* *Fewer syntax errors* — Lightspeed produces valid YAML and uses correct module parameters
+* *Learning from examples* — use the Explain feature to understand patterns and best practices
+* *Content source tracing* — see which Ansible Galaxy content informed each suggestion
+
+In production environments, Lightspeed helps teams:
+
+* Onboard new Ansible users faster by reducing the YAML learning curve
+* Standardize playbook patterns across teams (consistent variable naming, handler usage, conditional syntax)
+* Reduce time spent looking up module documentation — Lightspeed knows the parameters
+* Focus on *what to automate* instead of *how to write the YAML*
+
+
+== Next Steps: Beyond This Lab
+
+Now that you understand how to use Lightspeed to generate playbooks, here are ways to continue your Ansible journey:
+
+=====
+.🚀 Explore Ansible Galaxy
+[%collapsible]
+====
+*Ansible Galaxy* is the community hub for sharing roles and collections. Instead of writing every task from scratch, you can reuse pre-built automation:
+
+* Browse roles at https://galaxy.ansible.com
+* Install a role with `ansible-galaxy install <role_name>`
+* Use collections like `community.general` or `ansible.posix` for additional modules
+
+Lightspeed is trained on Galaxy content, so the playbooks it generates often reference popular community roles and collections.
+====
+=====
+
+
+=====
+.📦 Learn About Ansible Roles
+[%collapsible]
+====
+As your automation grows, playbooks become difficult to manage. *Roles* solve this by organizing tasks, variables, handlers, templates, and files into a reusable directory structure:
+
+----
+roles/
+  webserver/
+    tasks/
+      main.yml          # Tasks to run
+    handlers/
+      main.yml          # Handlers triggered by tasks
+    templates/
+      httpd.conf.j2     # Jinja2 templates
+    vars/
+      main.yml          # Role-specific variables
+    defaults/
+      main.yml          # Default variable values
+----
+
+A role can be applied to any playbook with:
+
+[source,yaml]
+----
+- name: Configure web servers
+  hosts: web
+  roles:
+    - webserver
+----
+
+You can prompt Lightspeed to generate roles as well, not just standalone playbooks.
+====
+=====
+
+
+=====
+.🔗 Integrate Ansible with CI/CD Pipelines
+[%collapsible]
+====
+Ansible playbooks can be triggered from CI/CD tools like Jenkins, GitLab CI, or GitHub Actions. This enables:
+
+* *Automated deployment* — merge to `main` triggers a playbook that deploys your app
+* *Infrastructure as Code (IaC)* — store playbooks in version control and track changes over time
+* *Testing automation* — run playbooks in a staging environment before production
+
+Combining Lightspeed (for playbook generation) with version control (for change tracking) and CI/CD (for automation) creates a powerful workflow.
+====
+=====
+
+
+=====
+.🤖 TODO: Add content about Claude skills here
+[%collapsible]
+====
+*Placeholder for Claude skills and custom automation content.*
+
+[NOTE]
+====
+This section is reserved for discussing how to extend this lab with Claude Code skills, custom workflows, or advanced LLM-assisted automation patterns.
+====
+====
+=====
+
+
+== Final Thoughts
+
+Ansible Lightspeed is not a replacement for learning Ansible — it is a *force multiplier* that accelerates your work once you understand the fundamentals. The best results come from combining:
+
+* *Your domain knowledge* — what to automate and why
+* *Ansible's declarative model* — describing desired state instead of scripting steps
+* *Lightspeed's generation* — producing correct YAML faster than manual authoring
+
+As you continue your automation journey, remember: the quality of your automation depends on the quality of your prompts. Think clearly, describe precisely, and Lightspeed will handle the rest.
+
+Thank you for completing this lab. Now go automate something!
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+04-wrap-up[Writing your first playbook repository^].
+=====
+======

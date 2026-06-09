@@ -1,0 +1,247 @@
+:sectnums:
+= 1.1 - Generate a Comprehensive Playbook with Lightspeed
+
+Real-world playbooks handle multiple concerns in a single automation run — user management, package installation, service configuration, firewall rules, and dynamic file deployment. In this challenge, you will use *Ansible Lightspeed* to generate a complete, production-ready playbook from a single well-structured prompt.
+
+Instead of writing YAML by hand or iterating through multiple attempts, you will learn how to construct a *comprehensive prompt* that gives Lightspeed all the context it needs to generate exactly what you want in one shot.
+
+== Understanding Comprehensive Prompts
+
+=====
+.💡 What makes a good LLM prompt for playbook generation?
+[%collapsible]
+====
+When prompting Lightspeed to generate a playbook, *specificity and structure* produce better results than vague requests. A comprehensive prompt should include:
+
+* *Target hosts* — which inventory group or specific hosts
+* *Required privilege escalation* — does it need `become: true`?
+* *Variables to define* — reusable values like usernames, package names, service names
+* *Tasks in logical order* — what to install, configure, start, and verify
+* *Conditionals* — which tasks run only on specific host groups
+* * *Loops* — repeating tasks across multiple items (users, packages, files)
+* *Handlers* — tasks that trigger only when something changes (service restarts, config reloads)
+* *Templates* — dynamic configuration files that use Jinja2 and host facts
+
+The more detail you provide, the more accurate Lightspeed's output will be. Think of it like briefing a colleague: "set up Apache on the web servers" is vague, but "install httpd on the web group, ensure it's running and enabled, allow HTTP through firewalld, and reload the firewall only if the rule changes" is actionable.
+====
+=====
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Construct the comprehensive prompt
+[%collapsible]
+=====
+[NOTE]
+====
+Switch to the *VS Code* tab.
+====
+
+You will construct a prompt that asks Lightspeed to generate a playbook covering all the essentials. Copy and customize the template below, filling in the details where indicated.
+
+Your prompt should request a playbook that:
+
+. Targets the *`all`* hosts (includes both web and database groups)
+. Uses privilege escalation (`become: true`)
+. Defines these variables:
+   * `user_name` — set to `padawan`
+   * `package_name` — set to `httpd`
+   * `apache_service_name` — set to `httpd`
+. Performs these tasks *in order*:
+   .. Install security updates for the kernel package (only on the `web` group)
+   .. Create the user defined in `user_name` with a home directory
+   .. Install the package defined in `package_name` (only on the `web` group)
+   .. Ensure the Apache service is running and enabled (only on the `web` group)
+   .. Ensure `firewalld` is running and enabled (only on the `web` group)
+   .. Allow HTTP traffic through the firewall permanently (only on the `web` group), and notify the `Reload Firewall` handler when this task changes
+   .. Deploy a Jinja2 template from `templates/motd.j2` to `/etc/motd` on all hosts
+. Defines one handler:
+   * Name: `Reload Firewall`
+   * Action: Reload the `firewalld` service
+
+[TIP]
+====
+When specifying conditionals, tell Lightspeed to use `when: inventory_hostname in groups['web']` to target only the web servers.
+====
+
+*Example starter prompt* (expand on this):
+
+----
+Create an Ansible playbook named "Basic System Setup" that targets all hosts and uses privilege escalation.
+
+Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
+
+Include these tasks in order:
+1. Install security updates for the kernel package, but only on hosts in the web group
+2. Create a user with the name from user_name variable, ensuring a home directory is created
+3. Install the package from package_name variable, only on the web group
+4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group
+5. Ensure firewalld is running and enabled, only on the web group
+6. Allow HTTP traffic through the firewall permanently on the web group, and notify a handler named "Reload Firewall" when this changes
+7. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
+
+Define a handler named "Reload Firewall" that reloads the firewalld service.
+----
+
+[IMPORTANT]
+====
+*Before you submit this prompt to Lightspeed*, make sure you have:
+
+* Specified the inventory target (`all` hosts)
+* Included `become: true` for privilege escalation
+* Listed all three variables with their values
+* Described each task clearly, including which group it targets
+* Mentioned the handler and what triggers it
+* Referenced the template path and destination
+
+The more complete your prompt, the more accurate Lightspeed's output will be.
+====
+=====
+======
+
+
+======
+.☑️ Task 2 - Generate the playbook with Lightspeed
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *VS Code* tab.
+====
+
+. Open the *Command Palette* with `Ctrl+Shift+P` and type:
++
+[source,role="execute"]
+----
+Ansible Lightspeed: Create a playbook with Ansible Lightspeed
+----
+
+. When prompted, paste your comprehensive prompt from Task 1.
+
+. Lightspeed will generate the playbook and open it in a new tab. Review the output to confirm it includes:
++
+   * A `vars:` section with `user_name`, `package_name`, and `apache_service_name`
+   * Tasks with `when:` conditionals targeting the `web` group
+   * A `notify:` keyword on the firewall task
+   * A `handlers:` section with the `Reload Firewall` handler
+   * A `template:` task referencing `templates/motd.j2`
+
+. Save the file as `system_setup.yml` in the `/home/rhel/ansible-files/` directory:
++
+   * Press `Ctrl+S`
+   * Navigate to `/home/rhel/ansible-files/`
+   * Name the file `system_setup.yml`
+   * Click *Save*
+
+[NOTE]
+====
+If Lightspeed's output is missing a section or has an error, don't manually edit it yet. Instead, refine your prompt to be more explicit about what's missing and regenerate. This trains you to write better prompts.
+====
+=====
+======
+
+
+======
+.☑️ Task 3 - Create the Jinja2 template
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *VS Code* tab.
+====
+
+The playbook references a template that doesn't exist yet. You will create it manually (Lightspeed generates playbooks, but templates are separate files).
+
+. In the VS Code file explorer, right-click on the `ansible-files` directory and select *New Folder*. Name it `templates`.
+
+. Right-click on the `templates` folder and select *New File*. Name it `motd.j2`.
+
+. Paste this Jinja2 content into the file:
++
+[source,jinja2]
+----
+Welcome to {{ ansible_hostname }}.
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+Architecture: {{ ansible_architecture }}
+----
+
+. Save the file with `Ctrl+S`.
+
+[TIP]
+====
+Jinja2 templates use `{{ variable_name }}` for substitution, just like Ansible playbooks. The difference is that templates are rendered on the control node *before* being copied to managed nodes, so each host gets a customized version.
+====
+=====
+======
+
+
+======
+.☑️ Task 4 - Use Lightspeed to explain the generated playbook
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *VS Code* tab with `system_setup.yml` open.
+====
+
+Now that you have a complete playbook, use Lightspeed's *Explain* feature to understand specific sections.
+
+. *Explain the handlers section*:
+   * Scroll to the `handlers:` section in `system_setup.yml`
+   * Select the entire `handlers:` block (including the handler name and task)
+   * Right-click and choose: `Ansible Lightspeed → Explain`
+   * Read Lightspeed's explanation of how handlers work and when they run
+
+. *Explain a conditional task*:
+   * Find the task that installs kernel updates (it should have a `when:` clause)
+   * Select the entire task (from the task name to the `when:` line)
+   * Right-click and choose: `Ansible Lightspeed → Explain`
+   * Read how Lightspeed explains conditionals and inventory group targeting
+
+. *Explain the template task*:
+   * Find the task that uses `ansible.builtin.template`
+   * Select the entire task
+   * Right-click and choose: `Ansible Lightspeed → Explain`
+   * Read how templates differ from static file copies
+
+[NOTE]
+====
+The *Explain* feature is how you learn from Lightspeed's output. Whenever you see a pattern or module you don't recognize, select it and ask Lightspeed to explain — this builds your Ansible knowledge without leaving the editor.
+====
+=====
+======
+
+
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How to construct a comprehensive LLM prompt that produces accurate, production-ready playbooks
+* Why specificity matters when prompting Lightspeed (variables, conditionals, handlers, templates)
+* How to use Lightspeed's generation feature to create a full playbook from a single prompt
+* How to use Lightspeed's Explain feature to learn from generated code
+* The structure of a real-world playbook that manages multiple concerns (packages, users, services, firewall, configuration files)
+
+
+== Embracing the Next Challenge
+
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the next challenge.
+
+* The image:next.png[Next, 50] button will validate your steps. If anything is missing, an error will appear so you can correct it before proceeding.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+02-generate-comprehensive-playbook[Writing your first playbook repository^].
+=====
+======

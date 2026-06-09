@@ -1,0 +1,3 @@
+---
+# Setup playbook for module 02 - runs at module start
+# No special setup needed - user will generate the playbook with Lightspeed

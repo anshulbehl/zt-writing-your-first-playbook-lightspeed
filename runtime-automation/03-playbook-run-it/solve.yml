@@ -1,15 +1,58 @@
-- name: Basic System Setup
-  hosts: node1
+---
+- name: Execute comprehensive setup on all nodes
+  hosts: all
   become: true
+  vars:
+    user_name: 'padawan'
+    package_name: httpd
+    apache_service_name: httpd
   tasks:
     - name: Install security updates for the kernel
       ansible.builtin.dnf:
         name: 'kernel'
         state: latest
         security: true
+        update_only: true
+      when: inventory_hostname in groups['web']
 
-    - name: Create a new user
+    - name: Create user padawan
       ansible.builtin.user:
-        name: myuser
+        name: "{{ user_name }}"
         state: present
         create_home: true
+
+    - name: Install Apache on web servers
+      ansible.builtin.dnf:
+        name: "{{ package_name }}"
+        state: present
+      when: inventory_hostname in groups['web']
+
+    - name: Ensure Apache is running and enabled
+      ansible.builtin.service:
+        name: "{{ apache_service_name }}"
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['web']
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['web']
+
+    - name: Allow HTTP traffic on web servers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      when: inventory_hostname in groups['web']
+
+    - name: Update MOTD
+      ansible.builtin.copy:
+        content: |
+          Welcome to {{ ansible_hostname }}.
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+        dest: /etc/motd
+        mode: "0644"

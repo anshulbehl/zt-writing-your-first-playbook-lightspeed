@@ -1,82 +1,82 @@
 = zt-writing-your-first-playbook
-Zero Touch Writing your first playbook lab
+Zero Touch Writing your first playbook lab - Streamlined for Ansible Lightspeed
 
 
-== Understanding Directory Structure
-. Content Directory
-+
-.tree output
+== Lab Overview
+
+This is a condensed, 4-page lab focused on showcasing *Ansible Lightspeed's VS Code extension* for generating comprehensive playbooks from plain-English prompts. The lab teaches LLM prompting best practices by having students construct a single comprehensive prompt rather than iterating multiple times.
+
+*Key Learning Objectives:*
+
+* How to construct effective LLM prompts for playbook generation
+* How Ansible Lightspeed generates production-ready playbooks from plain English
+* How to verify comprehensive automation (variables, conditionals, handlers, loops, templates)
+* Understanding idempotency and multi-host targeting
+
+
+== Lab Structure
+
+The lab consists of 4 modules:
+
+1. *Meet Ansible Lightspeed* - Introduction, verify connection, explore inventory
+2. *Generate a Comprehensive Playbook* - Construct a detailed prompt that generates a full playbook with variables, conditionals, handlers, and templates in one shot
+3. *Run and Verify* - Execute the playbook and verify all components across multiple hosts
+4. *Wrap-Up and Next Steps* - Summary and future learning paths
+
+
+== Directory Structure
+
+.Content Directory
 [source,shell]
 ----
 .
-├── README.adoc                 # Readme file
+├── README.adoc                 # This file
 ├── content                     # Content directory
-├── runtime-automation          # Playbook directory
-├── zero-touch-config.yml       # Configuration file
-└── zero-touch-site.yml         
+│   └── modules/ROOT/
+│       ├── assets/images       # Lab screenshots and images
+│       └── pages               # Lab content (4 modules)
+│           ├── 01-playbook-inventory.adoc
+│           ├── 02-generate-comprehensive-playbook.adoc
+│           ├── 03-playbook-run-it.adoc
+│           └── 04-wrap-up.adoc
+├── runtime-automation          # Module automation (setup/solve/validation)
+│   ├── 01-playbook-inventory/
+│   ├── 02-generate-comprehensive-playbook/
+│   ├── 03-playbook-run-it/
+│   └── 04-wrap-up/
+├── setup-automation            # Lab infrastructure setup
+├── site.yml                    # Antora site configuration
+└── ui-config.yml               # Lab UI and module configuration
 ----
 
-
-. Content Directory
-+
-.tree output
-[source,shell]
-----
-content/modules/ROOT/
-├── assets
-│   └── images                                  # Images used in your content 
-│       ├── collasped.png
-│       ├── end.png
-│       ├── idem-output.png
-│       ├── navigator-output.png
-│       ├── next.png
-│       ├── solve.png
-│       ├── tabs.png
-│       └── vscode_inventory.png
-└── pages                                       # Your content goes here
-    ├── 01-playbook-inventory.adoc              # First page of your lab
-    ├── 02-playbook-directory-structure.adoc
-    ├── 03-playbook-run-it.adoc
-    ├── 04-playbook-multi-node.adoc
-    ├── 05-playbook-variables.adoc
-    ├── 06-playbook-conditionals.adoc
-    ├── 07-handlers.adoc
-    ├── 08-playbook-loops.adoc
-    ├── 09-playbook-templates.adoc
-    └── 10-roles.adoc
-
-----
-. Module Playbook Directory Structure
-+
-.tree output
+.Module Playbook Directory Structure
 [source,shell]
 ----
 runtime-automation/
-├── 01-playbook-inventory               # The directory name should be the same as 
-│                                       # the module content page name
-│   ├── setup.yml                       # Setup playbook which run at start of module 
-│                                       # and when clicked on next button
-│   ├── solve.yml                       # Solve playbook, run when clicked on solve button
-│   └── validation.yml                  # Validation playbook, run when click on next button
-├── 02-playbook-directory-structure
+├── 01-playbook-inventory
+│   ├── setup.yml           # Setup playbook (runs at module start)
+│   ├── solve.yml           # Solve playbook (runs on "Solve" button)
+│   └── validation.yml      # Validation playbook (runs on "Next" button)
+├── 02-generate-comprehensive-playbook
+│   ├── setup.yml
+│   ├── solve.yml           # Creates comprehensive system_setup.yml playbook
+│   └── validation.yml      # Validates playbook structure
+├── 03-playbook-run-it
+│   ├── setup.yml
+│   ├── solve.yml           # Executes the comprehensive playbook
+│   └── validation.yml      # Validates execution on all hosts
+├── 04-wrap-up
 │   ├── setup.yml
 │   ├── solve.yml
 │   └── validation.yml
-│
-├── # --- output Omitted ---
-│
-├── 10-roles
-│   ├── setup.yml
-│   ├── solve.yml
-│   └── validation.yml
-├── ansible.cfg                         # Ansible configuration used with module playbooks
-└── inventory                           # Inventory for the playbook
+├── ansible.cfg             # Ansible configuration
+└── inventory               # Inventory for runtime automation
 ----
 
-== Understanding Zero Touch Configration file
-. The *zero-touch-config.yml* configuration file
-+
-.tree output
+
+== Understanding Zero Touch Configuration
+
+.The *ui-config.yml* configuration file
 [source,yaml]
 ----
 ---
@@ -84,27 +84,57 @@ antora:
   name: modules
   dir: www
   modules:
-    - name: 01-playbook-inventory               # Module Name
-      label: Playbook Inventory                 # Module Label
-      solveButton: true                         # Enable Solve button
-    - name: 02-playbook-directory-structure
-      label: Playbook Directory Structure
+    - name: 01-playbook-inventory
+      label: Meet Ansible Lightspeed
       solveButton: true
-   
-    # --- output Omitted ---
-   
-    - name: 10-roles
-      label: Roles
+    - name: 02-generate-comprehensive-playbook
+      label: Generate a Comprehensive Playbook
       solveButton: true
+    - name: 03-playbook-run-it
+      label: Run and Verify
+      solveButton: true
+    - name: 04-wrap-up
+      label: Wrap-Up and Next Steps
+      solveButton: false             # No solve button for wrap-up
 
 tabs:
-  - name: VSCode Editor                         # Tab name
-    port: 8443                                  # Port no of the service
-    path: /?folder=/home/rhel/ansible-files/    # Path suffix
-  - name: ">_control"
-    port: 443
-    path: /tty1
+  - name: VS Code                     # VS Code with Lightspeed extension
+    url: https://vscode-${guid}.${domain}/
+    external: false
+  - name: Control                     # Terminal for ansible-navigator
+    url: /wetty
+    external: false
 ----
-NOTE: Keep the rest of directories and files as default. 
 
-IMPORTANT: This stucture works well with agnosticd role *showroom* .
+NOTE: This structure works with the agnosticd role *showroom*.
+
+
+== Design Philosophy
+
+This lab was redesigned to:
+
+* *Reduce token consumption* - Generate the complete playbook once instead of iterating multiple times
+* *Teach LLM prompting* - Focus on constructing comprehensive prompts with clear requirements
+* *Showcase Lightspeed* - Demonstrate the power of generating production-ready automation from plain English
+* *Streamline the learning path* - 4 pages instead of 10, covering the same concepts more efficiently
+
+The comprehensive playbook approach works because Lightspeed's playbook generation feature cannot edit existing playbooks - it only generates new ones. By teaching students to construct a complete prompt upfront, we avoid the iteration problem and demonstrate best practices for AI-assisted automation.
+
+
+== Key Changes from Original Lab
+
+* *Compressed modules 02-09 into a single module* (02-generate-comprehensive-playbook)
+* *Removed roles module* (10) - complexity not needed for a Lightspeed demo
+* *Enhanced verification* (module 03) to validate all playbook components across multiple hosts
+* *Streamlined runtime automation* from 10 directories to 4
+* *Added LLM prompting guidance* - explicit instruction on constructing comprehensive prompts
+
+
+== Development Notes
+
+See the following files for additional context:
+
+* `CONVERSION_SUMMARY.md` - Summary of AWS to CNV conversion
+* `CONVERSION_TO_CNV.md` - Detailed conversion notes
+* `RUNTIME_AUTOMATION_ANALYSIS.md` - Analysis of runtime automation patterns
+* `FINAL_STATUS.md` - Final conversion status

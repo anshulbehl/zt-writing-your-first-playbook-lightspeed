@@ -1,0 +1,41 @@
+---
+- name: Validate module 02
+  hosts: controller
+  vars:
+    USER: rhel
+  tasks:
+    - name: Check that system_setup.yml exists
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/system_setup.yml
+      register: playbook_file
+      failed_when: not playbook_file.stat.exists
+
+    - name: Check that templates directory exists
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/templates
+      register: templates_dir
+      failed_when: not templates_dir.stat.exists
+
+    - name: Check that motd.j2 template exists
+      ansible.builtin.stat:
+        path: /home/{{ USER }}/ansible-files/templates/motd.j2
+      register: motd_template
+      failed_when: not motd_template.stat.exists
+
+    - name: Verify system_setup.yml contains required sections
+      ansible.builtin.shell: |
+        grep -q "hosts: all" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "become: true" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "vars:" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "user_name" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "when: inventory_hostname in groups\['web'\]" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "handlers:" /home/{{ USER }}/ansible-files/system_setup.yml && \
+        grep -q "ansible.builtin.template" /home/{{ USER }}/ansible-files/system_setup.yml
+      changed_when: false
+      failed_when: false
+      register: playbook_content
+
+    - name: Fail if playbook is missing required sections
+      ansible.builtin.fail:
+        msg: "system_setup.yml is missing required sections (vars, conditionals, handlers, or template task)"
+      when: playbook_content.rc != 0

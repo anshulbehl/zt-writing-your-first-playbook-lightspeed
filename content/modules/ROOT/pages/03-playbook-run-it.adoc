@@ -1,7 +1,7 @@
 :sectnums:
-= 1.2 - Run the Playbook!
+= 1.2 - Run and Verify the Playbook
 
-In this challenge, you will run the Lightspeed-generated playbook using *ansible-navigator*, verify that the user was created, and discover one of Ansible's most important concepts: *idempotency*.
+In this challenge, you will run the comprehensive playbook generated in the previous module using *ansible-navigator*, verify that every component worked correctly across multiple hosts, and discover one of Ansible's most important concepts: *idempotency*.
 
 == Hands-On Experience
 
@@ -30,42 +30,209 @@ ansible-navigator run system_setup.yml
 
 [IMPORTANT]
 ====
-The first run may take a minute or two. ansible-navigator pulls the Execution Environment container image and then runs the kernel update task on *node1*. Subsequent runs are much faster.
+The first run may take a few minutes. ansible-navigator pulls the Execution Environment container image and then runs all tasks across the web and database groups. Subsequent runs are much faster.
 ====
 
-. Watch the output. The *PLAY RECAP* at the end summarizes changes made across all tasks:
+. Watch the output carefully. You should see tasks execute in the order you specified in your prompt:
++
+   * Gathering Facts (automatic)
+   * Install security updates (only on node1 and node2)
+   * Create user padawan (on all nodes)
+   * Install httpd (only on node1 and node2)
+   * Ensure httpd is running (only on node1 and node2)
+   * Ensure firewalld is running (only on node1 and node2)
+   * Allow HTTP traffic (only on node1 and node2)
+   * Deploy motd template (on all nodes)
+
+. The *PLAY RECAP* at the end summarizes changes made across all hosts:
 +
 image::navigator-output.png[ansible-navigator run output showing task results and PLAY RECAP,link=self,window=blank,width=700,title="Playbook run output"]
 
 [NOTE]
 ====
-The first task in every run is *Gathering Facts*. Ansible automatically collects system information from each managed node — hostname, OS version, IP addresses, installed packages — before running any tasks. Lightspeed uses this fact data to generate context-aware suggestions.
+The first task in every run is *Gathering Facts*. Ansible automatically collects system information from each managed node — hostname, OS version, IP addresses, network interfaces, installed packages — before running any tasks. This fact data is what makes templates dynamic (each host renders a different MOTD based on its own hostname and OS).
 ====
 =====
 ======
 
 
 ======
-.☑️ Task 2 - Verify the user was created
+.☑️ Task 2 - Verify user creation across all hosts
 [%collapsible]
 =====
-. SSH into *node1* and confirm *myuser* exists:
+[NOTE]
+====
+Stay in the *Control* tab.
+====
+
+The playbook created the user *padawan* on all hosts (node1, node2, and node3). Verify this worked on each node.
+
+. Check node1:
 +
 [source,role="execute"]
 ----
-ssh node1 id myuser
+ssh node1 id padawan
 ----
 +
 .Expected output
 ----
-uid=1002(myuser) gid=1002(myuser) groups=1002(myuser)
+uid=1002(padawan) gid=1002(padawan) groups=1002(padawan)
 ----
+
+. Check node2:
++
+[source,role="execute"]
+----
+ssh node2 id padawan
+----
+
+. Check node3:
++
+[source,role="execute"]
+----
+ssh node3 id padawan
+----
+
+All three should show the user exists. This demonstrates that tasks without a `when:` conditional ran on *all* hosts.
 =====
 ======
 
 
 ======
-.☑️ Task 3 - Discover idempotency
+.☑️ Task 3 - Verify httpd is installed and running (web group only)
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *Control* tab.
+====
+
+The playbook should have installed and started Apache *only* on the web group (node1 and node2), not on the database server (node3).
+
+. Check httpd status on node1:
++
+[source,role="execute"]
+----
+ssh node1 systemctl is-active httpd
+----
++
+.Expected output
+----
+active
+----
+
+. Check httpd status on node2:
++
+[source,role="execute"]
+----
+ssh node2 systemctl is-active httpd
+----
+
+. Try to check httpd on node3 (the database server):
++
+[source,role="execute"]
+----
+ssh node3 systemctl is-active httpd 2>&1 || echo "httpd not installed (expected)"
+----
++
+.Expected output
+----
+httpd not installed (expected)
+----
+
+This proves the `when: inventory_hostname in groups['web']` conditionals worked correctly — tasks that specified this condition only ran on node1 and node2.
+=====
+======
+
+
+======
+.☑️ Task 4 - Verify the firewall configuration
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *Control* tab.
+====
+
+The playbook configured firewalld to allow HTTP traffic on the web servers.
+
+. Check firewall rules on node1:
++
+[source,role="execute"]
+----
+ssh node1 sudo firewall-cmd --list-services
+----
++
+.Expected output (look for "http" in the list)
+----
+cockpit dhcpv6-client http ssh
+----
+
+. Check firewall rules on node2:
++
+[source,role="execute"]
+----
+ssh node2 sudo firewall-cmd --list-services
+----
+
+Both should show `http` in the service list. This means the firewall task executed and the handler was triggered to reload the firewall configuration.
+
+[TIP]
+====
+Handlers only run *when notified*. The first time you ran the playbook, the "Allow HTTP traffic" task made a change and triggered the `Reload Firewall` handler. On subsequent runs, if the rule is already in place, the task reports `ok`, does not trigger the handler, and the firewall is not reloaded. This is efficient automation.
+====
+=====
+======
+
+
+======
+.☑️ Task 5 - Verify the dynamic MOTD template
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *Control* tab.
+====
+
+The playbook deployed a Jinja2 template to `/etc/motd` on all hosts. Each host should have a *different* MOTD because the template uses host-specific facts.
+
+. View the MOTD on node1:
++
+[source,role="execute"]
+----
+ssh node1 cat /etc/motd
+----
++
+.Expected output (hostname and architecture will match node1)
+----
+Welcome to node1.
+OS: RedHat 9.4
+Architecture: x86_64
+----
+
+. View the MOTD on node2:
++
+[source,role="execute"]
+----
+ssh node2 cat /etc/motd
+----
++
+Notice the hostname changed to `node2` even though both nodes used the same template file.
+
+. View the MOTD on node3:
++
+[source,role="execute"]
+----
+ssh node3 cat /etc/motd
+----
+
+Each host rendered a unique MOTD because Ansible substituted each host's facts (`ansible_hostname`, `ansible_distribution`, `ansible_distribution_version`, `ansible_architecture`) into the template at runtime. This is why templates are powerful — one source file generates customized output for every host.
+=====
+======
+
+
+======
+.☑️ Task 6 - Discover idempotency
 [%collapsible]
 =====
 =====
@@ -74,9 +241,14 @@ uid=1002(myuser) gid=1002(myuser) groups=1002(myuser)
 ====
 *Idempotency* means that running an operation once produces the same result as running it many times. An idempotent Ansible task only makes a change when the desired state does not already exist. If the state is already correct, the task reports `ok` and does nothing.
 
-This is what separates Ansible from shell scripts: you can safely run a playbook repeatedly and it will never break a system that is already configured correctly.
+This is what separates Ansible from shell scripts: you can safely run a playbook repeatedly and it will never break a system that is already configured correctly. Ansible checks the current state before every task and only acts when necessary.
 ====
 =====
+
+[NOTE]
+====
+Switch to the *Control* tab if you aren't already there.
+====
 
 . Run the playbook a second time:
 +
@@ -88,11 +260,16 @@ ansible-navigator run system_setup.yml
 . Compare the output to the first run. Notice:
 
 * Task status changed from *changed* (yellow) to *ok* (green)
-* The *PLAY RECAP* shows `changed=0` — Ansible confirmed everything was already in place
+* The *PLAY RECAP* shows `changed=0` for all hosts — Ansible confirmed everything was already in the desired state
 +
 image::idem-output.png[Second run showing ok status and changed=0 in PLAY RECAP,link=self,window=blank,width=700,title="Idempotent second run"]
 
-. Switch to the *VS Code* tab, open *system_setup.yml*, select all the content, and use *Ansible Lightspeed → Explain*. Ask: "Why is this playbook idempotent?" and read the explanation.
+. Switch to the *VS Code* tab, open *system_setup.yml*, select all the content, right-click, and choose *Ansible Lightspeed → Explain*. Read the explanation and look for mentions of idempotency and state checking.
+
+[IMPORTANT]
+====
+Idempotency is why Ansible playbooks are safe to run repeatedly in production. Whether you run a playbook once or a hundred times, the end state is the same. This makes Ansible ideal for configuration management, drift correction, and disaster recovery — you can re-run the same playbook to fix issues without fear of breaking things.
+====
 =====
 ======
 
@@ -103,8 +280,12 @@ By completing this module, you now understand:
 
 * How to run an Ansible playbook with `ansible-navigator run`
 * What Gathering Facts does and why Ansible runs it automatically
-* What idempotency means and why it matters for safe automation
-* How to read a PLAY RECAP to understand what changed on each run
+* How to verify that tasks executed correctly on the right hosts
+* How conditionals control which tasks run on which inventory groups
+* How handlers trigger only when configuration changes
+* How Jinja2 templates render differently on each host using facts
+* What idempotency means and why it makes Ansible safe for production use
+* How to read a PLAY RECAP to understand what changed (or didn't change) on each run
 
 
 == Embracing the Next Challenge

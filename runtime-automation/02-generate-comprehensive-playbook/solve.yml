@@ -1,11 +1,31 @@
 ---
-- name: Solve control node
+- name: Solve module 02 - Create comprehensive playbook and template
   hosts: controller
-  gather_facts: false
   vars:
     USER: rhel
   tasks:
-    - name: Create hosts
+    - name: Create templates directory
+      ansible.builtin.file:
+        path: /home/{{ USER }}/ansible-files/templates
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0755"
+
+    - name: Create MOTD Jinja2 template
+      ansible.builtin.copy:
+        content: |
+          {% raw %}
+          Welcome to {{ ansible_hostname }}.
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          {% endraw %}
+        dest: /home/{{ USER }}/ansible-files/templates/motd.j2
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create comprehensive system_setup.yml playbook
       ansible.builtin.copy:
         content: |
           ---
@@ -44,12 +64,6 @@
                   enabled: true
                 when: inventory_hostname in groups['web']
 
-              - name: Install firewalld
-                ansible.builtin.dnf:
-                  name: firewalld
-                  state: present
-                when: inventory_hostname in groups['web']
-
               - name: Ensure firewalld is running
                 ansible.builtin.service:
                   name: firewalld
@@ -65,6 +79,11 @@
                 when: inventory_hostname in groups['web']
                 notify: Reload Firewall
 
+              - name: Update MOTD from Jinja2 Template
+                ansible.builtin.template:
+                  src: templates/motd.j2
+                  dest: /etc/motd
+
             handlers:
               - name: Reload Firewall
                 ansible.builtin.service:
@@ -74,34 +93,3 @@
         owner: "{{ USER }}"
         group: "{{ USER }}"
         mode: "0644"
-
-
-- name: Basic System Setup
-  hosts: web
-  become: true
-  gather_facts: false
-  tasks:
-    - name: Install firewalld
-      ansible.builtin.dnf:
-        name: firewalld
-        state: present
-
-    - name: Ensure firewalld is running
-      ansible.builtin.service:
-        name: "{{ item }}"
-        state: started
-        enabled: true
-      loop:
-        - httpd
-        - firewalld
-
-    - name: Allow HTTP traffic on web servers
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-
-    - name: Reload Firewall
-      ansible.builtin.service:
-        name: firewalld
-        state: reloaded

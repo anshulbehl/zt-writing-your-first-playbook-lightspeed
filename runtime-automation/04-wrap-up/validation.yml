@@ -1,0 +1,9 @@
+---
+# Validation playbook for module 04 - wrap-up
+# This module is informational only, always passes validation
+- name: Validate module 04
+  hosts: controller
+  tasks:
+    - name: Module 04 is complete
+      ansible.builtin.debug:
+        msg: "Wrap-up module complete. Thank you for completing this lab!"
