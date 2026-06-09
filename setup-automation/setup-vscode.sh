@@ -18,8 +18,8 @@ wait_for_service() {
             echo "$service is active"
             return 0
         fi
-        sleep 1
-        elapsed=$((elapsed + 1))
+        sleep 2
+        elapsed=$((elapsed + 2))
     done
 
     echo "ERROR: $service failed to start within ${max_wait}s"
@@ -38,8 +38,8 @@ wait_for_http() {
             echo "$url is responding"
             return 0
         fi
-        sleep 1
-        elapsed=$((elapsed + 1))
+        sleep 2
+        elapsed=$((elapsed + 2))
     done
 
     echo "ERROR: $url not responding within ${max_wait}s"
@@ -72,8 +72,8 @@ for attempt in {1..3}; do
         echo "LiteLLM installed successfully"
         break
     fi
-    echo "Attempt $attempt failed, retrying in 3s..."
-    sleep 3
+    echo "Attempt $attempt failed, retrying in 5s..."
+    sleep 5
 done
 
 mkdir -p /etc/litellm
