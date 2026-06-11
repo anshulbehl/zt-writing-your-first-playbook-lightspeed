@@ -78,6 +78,37 @@ Students interact with two tabs in the Showroom UI:
 
 ---
 
+### Attempt 3: Single VM Architecture (SUCCESSFUL)
+**Files**: config/instances.yaml (4 VMs), setup-automation/setup-control.sh (97 lines with code-server)
+
+**Architecture**:
+- Consolidated vscode and control VMs into a single `control` VM
+- control VM uses devtools-ansible image (has code-server pre-installed)
+- VS Code runs on port 8080 via code-server service
+- Wetty terminal connects to the same control VM
+- Both interfaces access `/home/rhel/ansible-files/` on the same filesystem
+- setup-control.sh generates all 4 files inline AND configures code-server
+
+**Why it works**:
+- ✓ **Single source of truth**: Both VS Code and terminal on same VM, same filesystem
+- ✓ **No file sharing needed**: No SSHFS, no NFS, no network mounts
+- ✓ **No network dependencies**: All files generated inline during setup
+- ✓ **Student workflow preserved**: Two tabs (VS Code + Control) work as expected
+- ✓ **Simple and reliable**: Fewer moving parts, easier to debug
+
+**Key insight**: The file sharing problem was architectural - we don't need two VMs. The vscode VM already has terminal capability (SSH), and the devtools-ansible image has everything needed for both VS Code and ansible-navigator.
+
+**Implementation**:
+1. Replaced control VM definition in instances.yaml with vscode VM definition
+2. Changed name from "vscode" to "control" (wetty expects this)
+3. Merged setup-vscode.sh code-server config into setup-control.sh
+4. Deleted setup-vscode.sh (no longer needed)
+5. ui-config.yml tabs work unchanged (VS Code → vscode-8080 route, Control → /wetty)
+
+**Result**: 4 VMs instead of 5, file sharing works naturally, provisioning is fast and reliable.
+
+---
+
 ### Comparison with working-playbook-lab
 
 We compared against `/Users/asergiso/Documents/working-playbook-lab` to understand the proven pattern.
@@ -151,17 +182,21 @@ RHDP provisioning environment has unreliable network access:
 **Git commits this session**:
 1. `Remove nav.adoc reference from antora.yml to fix Showroom pod` (4843275)
 2. `Simplify setup scripts to use inline file generation` (082d7c3)
+3. `Add session handoff documentation` (3d288c3)
+4. `Merge branch 'worktree-add-handoff'` (535dc95)
 
-**Files changed**:
-- content/antora.yml (removed nav reference)
-- content/modules/ROOT/nav.adoc (deleted)
-- setup-automation/setup-control.sh (171 → 72 lines, inline generation, no SSHFS)
-- setup-automation/setup-vscode.sh (348 → 88 lines, inline generation, no SSHFS)
+**Files changed** (pending commit):
+- config/instances.yaml (consolidated VMs: control now has devtools-ansible image + code-server)
+- setup-automation/setup-control.sh (added code-server configuration)
+- setup-automation/setup-vscode.sh (deleted - merged into setup-control.sh)
 
 **Status**:
 - ✓ Showroom pod builds successfully
 - ✓ No network dependencies during provisioning
-- ✗ **File sharing broken**: VMs have independent ansible-files directories
+- ✓ **File sharing RESOLVED**: Single VM architecture - control VM runs both VS Code and terminal
+- ✓ Students edit in VS Code and run commands in terminal on the same filesystem
+
+**Architecture change**: Consolidated vscode and control VMs into a single control VM that runs both code-server (VS Code) and provides the wetty terminal. Both interfaces access `/home/rhel/ansible-files/` on the same VM, eliminating file sharing complexity.
 
 **Not pushed to remote**: Changes are committed to local main branch but not pushed to origin.
 

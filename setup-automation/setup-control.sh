@@ -69,4 +69,27 @@ mkdir -p /home/rhel/.logs
 chown -R rhel:rhel /home/rhel/ansible-files
 chown -R rhel:rhel /home/rhel/.logs
 
-echo "Control node setup complete"
+# Configure code-server (VS Code in browser)
+echo "Configuring code-server..."
+
+# Stop code-server if already running
+systemctl stop code-server || true
+
+# Backup existing config if present
+[ -f /home/rhel/.config/code-server/config.yaml ] && \
+  mv /home/rhel/.config/code-server/config.yaml /home/rhel/.config/code-server/config.bk.yaml || true
+
+# Create code-server configuration
+mkdir -p /home/rhel/.config/code-server
+cat > /home/rhel/.config/code-server/config.yaml << 'EOF'
+bind-addr: 0.0.0.0:8080
+auth: none
+cert: false
+EOF
+chown -R rhel:rhel /home/rhel/.config/code-server
+
+# Start code-server service
+systemctl start code-server
+systemctl enable code-server
+
+echo "Control node setup complete (ansible-files + code-server)"

@@ -36,17 +36,19 @@ check_port() {
 }
 
 # SSH reachability checks (internal lab network)
-check_port "control node SSH" "control" 22
-check_port "node1 SSH"        "node1"   22
-check_port "node2 SSH"        "node2"   22
-check_port "node3 SSH"        "node3"   22
-check_port "vscode SSH"       "vscode"  22
+check_port "control SSH" "control" 22
+check_port "node1 SSH"   "node1"   22
+check_port "node2 SSH"   "node2"   22
+check_port "node3 SSH"   "node3"   22
 
-# VS Code service (external route)
+# VS Code (code-server) service — runs on control VM, exposed via vscode-8080 route
 check_http "VS Code (code-server)" "https://vscode-${GUID}.${DOMAIN}" 200
 
-# LiteLLM proxy (internal, from vscode VM — checked via SSH if possible)
-check_port "LiteLLM proxy on vscode" "vscode" 4000
+# code-server port on control VM (internal)
+check_port "code-server on control" "control" 8080
+
+# LiteLLM proxy on control VM (Ansible Lightspeed AI backend)
+check_port "LiteLLM proxy on control" "control" 4000
 
 report_results() {
     local status="SUCCESS"
