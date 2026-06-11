@@ -177,37 +177,69 @@ RHDP provisioning environment has unreliable network access:
 
 ---
 
-## Current State
+## Current State (FINAL SOLUTION - June 2026)
 
-**Git commits this session**:
-1. `Remove nav.adoc reference from antora.yml to fix Showroom pod` (4843275)
-2. `Simplify setup scripts to use inline file generation` (082d7c3)
-3. `Add session handoff documentation` (3d288c3)
-4. `Merge branch 'worktree-add-handoff'` (535dc95)
+### Attempt 4: Network Routing Fix via Services/Routes (WORKING)
+**Commits**: 
+- `f693d63` Fix control-to-nodes connectivity by using same image for all VMs
+- `91d687c` Restore /etc/hosts workaround for cross-subnet node access
+- `103cecb` testing
+- `9fdcf1e` Adding routing to hosts
 
-**Files changed** (pending commit):
-- config/instances.yaml (4 VMs: control uses devtools-ansible, node1-3 use rhel-9.6)
-- setup-automation/setup-control.sh (adds /etc/hosts entries for nodes, configures code-server)
-- setup-automation/setup-vscode.sh (deleted - merged into setup-control.sh)
-- setup-automation/main.yml (removed vscode from nodes loop)
-- utilities/health-check.sh (updated vscode references to control)
+**Problem discovered**:
+The initial assumption was wrong - **VM image type does NOT determine subnet assignment**. All VMs using `devtools-ansible` still resulted in:
+- Control: `10.0.2.2/24` (isolated network)
+- Nodes: `10.130.x.x` (pod network)
+
+**Root cause**: VMs with `services:` and `routes:` definitions get placed on the isolated 10.0.2.x network. VMs without services/routes land on the pod network (10.130.x). This is a CNV provisioning behavior, not related to image type.
+
+**Solution**: Add services/routes to ALL VMs so they all land on the same 10.0.2.x subnet.
+
+**Files changed**:
+1. **config/instances.yaml** - Added HTTP services and routes to node1, node2, node3
+   - Each node now has `services:` section (HTTP port 80)
+   - Each node now has `routes:` section (web access via TLS edge termination)
+   - Forces CNV to provision all nodes on same isolated network as control (10.0.2.x)
+
+2. **setup-automation/main.yml** - Moved /etc/hosts configuration to Ansible playbook
+   - Added `Gather node IP addresses` play to collect Ansible facts from nodes
+   - Added `Configure node hostname resolution on control` play
+   - Uses `ansible_default_ipv4.address` from facts (reliable) instead of `getent hosts` (unreliable - returns duplicate IPs in CNV DNS)
+   - Populates /etc/hosts on control BEFORE setup scripts run
+   - Uses `lineinfile` with regexp to prevent duplicate entries
+
+3. **setup-automation/setup-control.sh** - Removed DNS resolution logic
+   - Deleted 18 lines of bash DNS resolution + sleep delays
+   - Now just a comment explaining /etc/hosts is handled by main.yml
+   - Simpler, cleaner script (back to ~109 lines)
+
+4. **ui-config.yml** - Added wetty tabs for direct node access
+   - Students can now SSH directly to node1, node2, node3 via web terminal
+   - Useful for debugging connectivity issues
+
+5. **ansible-files/ansible.cfg** - Added SSH connection parameters (retained from earlier fix)
+   - `[ssh_connection]` section with 10-second timeout
+   - Prevents SSH from hanging on unreachable hosts
+
+6. **ansible-files/inventory** - Added explicit connection variables (retained from earlier fix)
+   - `[all:vars]` section with `ansible_user=rhel` and SSH args
+   - Documents authentication method for students
 
 **Status**:
-- ✓ Showroom pod builds successfully
 - ✓ **File sharing RESOLVED**: Single VM architecture - control VM runs both VS Code and terminal
-- ✓ Students edit in VS Code and run commands in terminal on the same filesystem
-- ✓ **Network issue fixed**: Control resolves node IPs via DNS and adds to /etc/hosts for cross-subnet access
-- ✓ **No external dependencies**: All files generated inline, code-server pre-installed in devtools-ansible image
+- ✓ **Network routing RESOLVED**: All VMs on same subnet (10.0.2.x) via services/routes configuration
+- ✓ **Hostname resolution RESOLVED**: /etc/hosts populated via Ansible facts (not DNS)
+- ✓ Showroom pod builds successfully
+- ✓ No external dependencies during provisioning
+- ✓ All changes pushed to origin/main
 
-**Architecture change (FINAL)**: 
-1. Consolidated vscode and control VMs into single control VM
-2. Control uses `devtools-ansible` (has code-server pre-installed, on 10.0.2.x subnet)
-3. Nodes use `rhel-9.6` (on 10.130.x.x / 10.129.x.x subnet)
-4. Setup script resolves node IPs via `getent hosts` and adds to `/etc/hosts` for cross-subnet communication
-5. Ansible-navigator uses `--network=host` so EE container can read /etc/hosts
-6. Both VS Code and wetty terminal access same `/home/rhel/ansible-files/` on control VM
-
-**Not pushed to remote**: Changes are committed to local main branch but not pushed to origin.
+**Architecture (FINAL)**: 
+1. **4 VMs total**: control + node1 + node2 + node3 (all using devtools-ansible image)
+2. **All VMs on 10.0.2.x subnet**: Achieved by adding services/routes to all VM definitions
+3. **Control VM**: Runs code-server (VS Code) on port 8080 + wetty terminal
+4. **Node VMs**: Run HTTP service on port 80 (for routing purposes, forces same subnet)
+5. **/etc/hosts populated by Ansible**: Using gathered facts, not DNS (more reliable)
+6. **Students access**: VS Code tab (edit) + Control tab (run ansible-navigator) on same filesystem
 
 ---
 
@@ -253,40 +285,41 @@ RHDP provisioning environment has unreliable network access:
 
 **Symptom**: `ansible-navigator` can't SSH to nodes, "Connection timed out" errors
 
-**Root cause**: Different VM images get IPs on different subnets in CNV:
-- `devtools-ansible` image → 10.0.2.x/24 (isolated network)
-- `rhel-9.6` image → 10.130.x.x or 10.129.x.x (pod network)
+**Root cause (CORRECTED)**: Subnet assignment is NOT determined by VM image type. It's determined by whether the VM has `services:` and `routes:` defined in instances.yaml:
+- VMs **with** services/routes → 10.0.2.x/24 (isolated network)
+- VMs **without** services/routes → 10.130.x.x or 10.129.x.x (pod network)
 
-**Why secondary network doesn't work**:
-- Adding `networks: [default, secondary]` to instances.yaml doesn't create a second interface (eth1)
-- Only eth0 exists on the VM
-- `nmcli connection add ... eth1` commands fail silently
-- The secondary network feature may not be implemented in CNV or requires additional configuration
+**Failed approaches**:
+1. ❌ **Secondary network**: Adding `networks: [default, secondary]` to instances.yaml doesn't create eth1 interface
+2. ❌ **DNS resolution in setup script**: `getent hosts` returns duplicate IPs in CNV DNS (unreliable)
+3. ❌ **Image type switching**: All VMs using devtools-ansible still landed on different subnets
 
-**Solution used**:
-- Control VM uses `devtools-ansible` (10.0.2.x) 
-- Nodes use `rhel-9.6` (10.130.x.x)
-- Setup script on control runs `getent hosts nodeX` to resolve IPs via cluster DNS
-- Adds resolved IPs to `/etc/hosts`: `10.130.15.235 node1`
+**Working solution**:
+- Add `services:` and `routes:` to ALL VMs (control + node1/2/3) in instances.yaml
+- This forces CNV to provision all VMs on same 10.0.2.x isolated network
+- Use Ansible facts (`ansible_default_ipv4.address`) to populate /etc/hosts reliably
+- Populate /etc/hosts BEFORE setup scripts run (in setup-automation/main.yml)
 - Ansible-navigator EE uses `--network=host` so it can read control's /etc/hosts
-- Cross-subnet routing works because both subnets are in the same OpenShift cluster
+
+**Key learning**: Services/routes in instances.yaml are not just for web access - they also control network placement in CNV.
 
 **Diagnostic commands** (run from control VM):
 ```bash
 # Check what subnet control is on
 ip addr show eth0
 
-# Check if DNS can resolve nodes
-getent hosts node1
-
-# Check if nodes are in /etc/hosts
+# Check if nodes are in /etc/hosts (should be populated by main.yml)
 cat /etc/hosts | grep node
 
-# Try pinging node IPs directly
-ping -c 2 10.130.15.235
+# Try pinging nodes by hostname
+ping -c 2 node1
 
 # Check if SSH port is open
-timeout 3 bash -c "cat < /dev/tcp/10.130.15.235/22"
+timeout 3 bash -c "cat < /dev/tcp/node1/22"
+
+# Test ansible connectivity
+cd /home/rhel/ansible-files
+ansible-navigator run -m ping all --mode stdout
 ```
 
 ### Code-Server Installation
