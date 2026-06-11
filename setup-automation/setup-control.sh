@@ -1,18 +1,29 @@
 #!/bin/bash
 #
 # Setup script for control node
-# Purpose: Create Ansible workspace with pre-configured files
-# This VM is where students run ansible-navigator commands from the Control terminal
+# Purpose: Install Ansible, code-server, and create workspace
+# This VM runs both VS Code (code-server) and ansible-navigator
 #
 set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
-# Configure secondary network interface (eth1) for VM-to-VM communication
-echo "Configuring secondary network interface..."
-nmcli connection add type ethernet con-name eth1 ifname eth1 ipv4.addresses 192.168.1.10/24 ipv4.method manual connection.autoconnect yes
-nmcli connection up eth1
-echo "192.168.1.10 control.lab control" >> /etc/hosts
+# Register to RHDP Satellite for package installation
+echo "Registering to Red Hat Satellite..."
+subscription-manager register \
+  --org="${SATELLITE_ORG}" \
+  --activationkey="${SATELLITE_ACTIVATIONKEY}"
+
+# Install required packages
+echo "Installing ansible-navigator and podman..."
+dnf install -y \
+  ansible-navigator \
+  podman \
+  git
+
+# Install code-server (VS Code in browser)
+echo "Installing code-server..."
+curl -fsSL https://code-server.dev/install.sh | sh
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -81,7 +92,7 @@ chown -R rhel:rhel /home/rhel/.logs
 echo "Configuring code-server..."
 
 # Stop code-server if already running
-systemctl stop code-server || true
+systemctl stop code-server@rhel || true
 
 # Backup existing config if present
 [ -f /home/rhel/.config/code-server/config.yaml ] && \
@@ -96,8 +107,11 @@ cert: false
 EOF
 chown -R rhel:rhel /home/rhel/.config/code-server
 
-# Start code-server service
-systemctl start code-server
-systemctl enable code-server
+# Start code-server service as rhel user
+systemctl enable --now code-server@rhel
 
-echo "Control node setup complete (ansible-files + code-server)"
+# Install Ansible VS Code extension (for Lightspeed)
+echo "Installing Ansible VS Code extension..."
+su - rhel -c "code-server --install-extension redhat.ansible"
+
+echo "Control node setup complete (ansible-navigator + code-server)"

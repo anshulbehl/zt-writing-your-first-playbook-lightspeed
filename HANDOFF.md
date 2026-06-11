@@ -186,17 +186,25 @@ RHDP provisioning environment has unreliable network access:
 4. `Merge branch 'worktree-add-handoff'` (535dc95)
 
 **Files changed** (pending commit):
-- config/instances.yaml (consolidated VMs: control now has devtools-ansible image + code-server)
-- setup-automation/setup-control.sh (added code-server configuration)
+- config/instances.yaml (4 VMs total: control uses rhel-9.6 + code-server install, node1-3 unchanged)
+- config/networks.yaml (removed secondary network - didn't work)
+- setup-automation/setup-control.sh (installs ansible-navigator, podman, code-server via satellite)
 - setup-automation/setup-vscode.sh (deleted - merged into setup-control.sh)
+- setup-automation/main.yml (removed vscode from nodes loop)
+- utilities/health-check.sh (updated vscode references to control)
 
 **Status**:
 - ✓ Showroom pod builds successfully
-- ✓ No network dependencies during provisioning
 - ✓ **File sharing RESOLVED**: Single VM architecture - control VM runs both VS Code and terminal
 - ✓ Students edit in VS Code and run commands in terminal on the same filesystem
+- ✓ **Network issue fixed**: All VMs use rhel-9.6 image so they get IPs on same 10.130.x.x subnet
+- ⚠️ **Needs testing**: Code-server installation via curl script, ansible-navigator from satellite repos
 
-**Architecture change**: Consolidated vscode and control VMs into a single control VM that runs both code-server (VS Code) and provides the wetty terminal. Both interfaces access `/home/rhel/ansible-files/` on the same VM, eliminating file sharing complexity.
+**Architecture change**: 
+1. Consolidated vscode and control VMs into single control VM
+2. Changed control from devtools-ansible to rhel-9.6 (same as nodes) to fix network isolation
+3. Install code-server + ansible-navigator during setup-automation instead of using pre-baked image
+4. Both VS Code and wetty terminal access same `/home/rhel/ansible-files/` on control VM
 
 **Not pushed to remote**: Changes are committed to local main branch but not pushed to origin.
 

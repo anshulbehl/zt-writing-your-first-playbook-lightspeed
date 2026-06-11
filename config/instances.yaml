@@ -1,22 +1,19 @@
 ---
 # Virtual machines for Writing Your First Playbook lab
-# 1 control node + 3 worker nodes + 1 vscode VM
-# Uses rhel-9.6 image with cloud-init for user setup
+# 1 control node (with code-server for VS Code) + 3 worker nodes
+# All use rhel-9.6 image with cloud-init for user setup
 
 virtualmachines:
   - name: "control"
-    image: "devtools-ansible"
+    image: "rhel-9.6"
     memory: "8G"
     cores: 2
     image_size: "30Gi"
-    disk_type: "scsi"
-    bootloader: "efi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
     networks:
       - default
-      - secondary
     services:
       - name: vscode-8080
         ports:
