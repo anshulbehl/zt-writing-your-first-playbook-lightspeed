@@ -8,6 +8,12 @@ set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
+# Configure secondary network interface (eth1) for VM-to-VM communication
+echo "Configuring secondary network interface..."
+nmcli connection add type ethernet con-name eth1 ifname eth1 ipv4.addresses 192.168.1.10/24 ipv4.method manual connection.autoconnect yes
+nmcli connection up eth1
+echo "192.168.1.10 control.lab control" >> /etc/hosts
+
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
 chown -R rhel:rhel /home/rhel/ansible-files

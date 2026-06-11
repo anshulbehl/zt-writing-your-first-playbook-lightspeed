@@ -2,3 +2,4 @@
 # Default network configuration
 # Using default pod network for VM communication
 - name: default
+- name: secondary
