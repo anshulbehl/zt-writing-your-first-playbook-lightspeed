@@ -8,24 +8,9 @@ set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
-# Add /etc/hosts entries for nodes (they're on 10.130.x.x, we're on 10.0.2.x)
-# We'll get the IPs from DNS and add them to /etc/hosts for ansible to use
-echo "Configuring /etc/hosts for node access..."
-
-# Wait for DNS to be available
-sleep 10
-
-# Resolve and add node IPs to /etc/hosts
-for node in node1 node2 node3; do
-  echo "Resolving $node..."
-  IP=$(getent hosts $node | awk '{print $1}' || echo "")
-  if [ -n "$IP" ]; then
-    echo "$IP $node" >> /etc/hosts
-    echo "Added $node -> $IP"
-  else
-    echo "WARNING: Could not resolve $node"
-  fi
-done
+# All nodes now use devtools-ansible image (same 10.0.2.x subnet as control)
+# DNS resolution works natively - no /etc/hosts manipulation needed
+echo "All nodes on same subnet - DNS resolution automatic"
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -36,6 +21,9 @@ cat > /home/rhel/ansible-files/ansible.cfg << 'EOF'
 [defaults]
 inventory = inventory
 host_key_checking = False
+
+[ssh_connection]
+ssh_args = -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10
 EOF
 
 # Create ansible-navigator.yml
@@ -74,6 +62,11 @@ node3
 [nodes:children]
 web
 database
+
+[all:vars]
+ansible_user=rhel
+ansible_connection=ssh
+ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 EOF
 
 # Create motd.j2 template
@@ -114,5 +107,3 @@ systemctl start code-server
 systemctl enable code-server
 
 echo "Control node setup complete (ansible-files + code-server)"
-echo "Node IP mappings:"
-grep -E "node[123]" /etc/hosts || echo "No nodes found in /etc/hosts"

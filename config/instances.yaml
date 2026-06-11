@@ -1,7 +1,7 @@
 ---
 # Virtual machines for Writing Your First Playbook lab
 # 1 control node (with code-server for VS Code) + 3 worker nodes
-# All use rhel-9.6 image with cloud-init for user setup
+# All use devtools-ansible image for same-subnet connectivity (10.0.2.x)
 
 virtualmachines:
   - name: "control"
@@ -40,10 +40,12 @@ virtualmachines:
         - systemctl reload sshd
 
   - name: "node1"
-    image: "rhel-9.6"
+    image: "devtools-ansible"
     memory: "8G"
     cores: 2
-    image_size: "30Gi"
+    image_size: "20Gi"
+    disk_type: "scsi"
+    bootloader: "efi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
@@ -59,10 +61,12 @@ virtualmachines:
         - systemctl reload sshd
 
   - name: "node2"
-    image: "rhel-9.6"
+    image: "devtools-ansible"
     memory: "8G"
     cores: 2
-    image_size: "30Gi"
+    image_size: "20Gi"
+    disk_type: "scsi"
+    bootloader: "efi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
@@ -78,10 +82,12 @@ virtualmachines:
         - systemctl reload sshd
 
   - name: "node3"
-    image: "rhel-9.6"
+    image: "devtools-ansible"
     memory: "8G"
     cores: 2
-    image_size: "30Gi"
+    image_size: "20Gi"
+    disk_type: "scsi"
+    bootloader: "efi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
