@@ -26,6 +26,35 @@
       - node2
       - node3
 
+- name: Wait for SSH on all VMs
+  hosts: all:!localhost
+  gather_facts: false
+  tasks:
+  - name: "waiting for the port tcp/22 to be open"
+    ansible.builtin.wait_for_connection:
+      timeout: 300
+      delay: 5
+
+- name: Gather node IP addresses
+  hosts: node1,node2,node3
+  gather_facts: true
+
+- name: Configure node hostname resolution on control
+  hosts: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+  gather_facts: false
+  tasks:
+  - name: Add node entries to /etc/hosts
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      regexp: '^.*\s+{{ item }}$'
+      line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}"
+      state: present
+    loop:
+      - node1
+      - node2
+      - node3
+    when: hostvars[item].ansible_default_ipv4.address is defined
+
 - name: Setup VMs for Writing Your First Playbook lab
   hosts: all:!localhost
   gather_facts: false
@@ -34,11 +63,6 @@
     satellite_org: "{{ lookup('ansible.builtin.env', 'SATELLITE_ORG') }}"
     satellite_activationkey: "{{ lookup('ansible.builtin.env', 'SATELLITE_ACTIVATIONKEY') }}"
   tasks:
-  - name: "waiting for the port tcp/22 to be open"
-    ansible.builtin.wait_for_connection:
-      timeout: 300
-      delay: 5
-
   - name: Set short hostname for script lookup
     set_fact:
       short_hostname: "{{ inventory_hostname.split('.')[0] }}"

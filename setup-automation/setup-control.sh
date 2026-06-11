@@ -8,24 +8,8 @@ set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
-# Add /etc/hosts entries for cross-subnet access
-# Nodes may be on different subnet despite using same image
-echo "Configuring /etc/hosts for node access..."
-
-# Wait for DNS to be available
-sleep 10
-
-# Resolve and add node IPs to /etc/hosts
-for node in node1 node2 node3; do
-  echo "Resolving $node..."
-  IP=$(getent hosts $node | awk '{print $1}' || echo "")
-  if [ -n "$IP" ]; then
-    echo "$IP $node" >> /etc/hosts
-    echo "Added $node -> $IP"
-  else
-    echo "WARNING: Could not resolve $node"
-  fi
-done
+# Node /etc/hosts entries are configured by setup-automation/main.yml
+# using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates

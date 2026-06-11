@@ -51,6 +51,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node1-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: node1
+    routes:
+      - name: node1-web
+        host: node1
+        service: node1-http
+        targetPort: 80
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -72,6 +86,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node2-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: node2
+    routes:
+      - name: node2-web
+        host: node2
+        service: node2-http
+        targetPort: 80
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -93,6 +121,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node3-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: node3
+    routes:
+      - name: node3-web
+        host: node3
+        service: node3-http
+        targetPort: 80
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
