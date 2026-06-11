@@ -6,6 +6,8 @@ ansible-navigator:
       - /home/rhel/ansible-files/inventory
   execution-environment:
     container-engine: podman
+    container-options:
+      - "--network=host"
     enabled: true
     image: quay.io/acme_corp/first_playbook_ee:latest
     pull:
