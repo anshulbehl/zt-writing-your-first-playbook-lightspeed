@@ -24,3 +24,12 @@ tabs:
   - name: Control
     url: /wetty
     external: false
+  - name: Node1
+    url: /wetty_node1
+    external: false
+  - name: Node2
+    url: /wetty_node2
+    external: false
+  - name: Node3
+    url: /wetty_node3
+    external: false
