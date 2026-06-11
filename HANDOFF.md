@@ -186,9 +186,8 @@ RHDP provisioning environment has unreliable network access:
 4. `Merge branch 'worktree-add-handoff'` (535dc95)
 
 **Files changed** (pending commit):
-- config/instances.yaml (4 VMs total: control uses rhel-9.6 + code-server install, node1-3 unchanged)
-- config/networks.yaml (removed secondary network - didn't work)
-- setup-automation/setup-control.sh (installs ansible-navigator, podman, code-server via satellite)
+- config/instances.yaml (4 VMs: control uses devtools-ansible, node1-3 use rhel-9.6)
+- setup-automation/setup-control.sh (adds /etc/hosts entries for nodes, configures code-server)
 - setup-automation/setup-vscode.sh (deleted - merged into setup-control.sh)
 - setup-automation/main.yml (removed vscode from nodes loop)
 - utilities/health-check.sh (updated vscode references to control)
@@ -197,14 +196,16 @@ RHDP provisioning environment has unreliable network access:
 - ✓ Showroom pod builds successfully
 - ✓ **File sharing RESOLVED**: Single VM architecture - control VM runs both VS Code and terminal
 - ✓ Students edit in VS Code and run commands in terminal on the same filesystem
-- ✓ **Network issue fixed**: All VMs use rhel-9.6 image so they get IPs on same 10.130.x.x subnet
-- ⚠️ **Needs testing**: Code-server installation via curl script, ansible-navigator from satellite repos
+- ✓ **Network issue fixed**: Control resolves node IPs via DNS and adds to /etc/hosts for cross-subnet access
+- ✓ **No external dependencies**: All files generated inline, code-server pre-installed in devtools-ansible image
 
-**Architecture change**: 
+**Architecture change (FINAL)**: 
 1. Consolidated vscode and control VMs into single control VM
-2. Changed control from devtools-ansible to rhel-9.6 (same as nodes) to fix network isolation
-3. Install code-server + ansible-navigator during setup-automation instead of using pre-baked image
-4. Both VS Code and wetty terminal access same `/home/rhel/ansible-files/` on control VM
+2. Control uses `devtools-ansible` (has code-server pre-installed, on 10.0.2.x subnet)
+3. Nodes use `rhel-9.6` (on 10.130.x.x / 10.129.x.x subnet)
+4. Setup script resolves node IPs via `getent hosts` and adds to `/etc/hosts` for cross-subnet communication
+5. Ansible-navigator uses `--network=host` so EE container can read /etc/hosts
+6. Both VS Code and wetty terminal access same `/home/rhel/ansible-files/` on control VM
 
 **Not pushed to remote**: Changes are committed to local main branch but not pushed to origin.
 
@@ -231,21 +232,79 @@ RHDP provisioning environment has unreliable network access:
 
 ---
 
-## Next Steps Considerations
+## Troubleshooting Guide for Future Sessions
 
-Any new approach must:
-1. ✓ Generate ansible-files inline (no GitHub dependency)
-2. ✓ Share files between vscode VM and control VM
-3. ✓ Work without network access during provisioning
-4. ✓ Be simple enough to debug when things go wrong
+### Common Provisioning Hangups
 
-**Approaches to consider**:
-- NFS mount instead of SSHFS?
-- Copy files with rsync on a timer?
-- Pre-bake files into the devtools-ansible image?
-- Reverse the architecture: create files on vscode VM, mount to control VM?
-- Investigate how wetty actually connects (maybe it's on vscode VM?)?
-- Check if there's a zero-touch pattern for shared filesystems we're missing?
+**Symptom**: Lab hangs on "checking if showroom is up and ready"
+
+**Likely causes**:
+1. **Network downloads in setup scripts** - Any `curl`, `wget`, `npm install`, `pip install`, or package installs from external repos will timeout or hang during RHDP provisioning
+2. **Systemd service failures** - Commands like `systemctl enable --now service` can hang if the service fails to start
+3. **Missing packages** - Installing code-server requires nodejs/npm which may not be in satellite repos
+4. **VM waiting for network** - VMs on different images (devtools-ansible vs rhel-9.6) get different network configurations
+
+**How to debug**:
+1. Check OpenShift console → showroom pod logs → init containers for setup-automation output
+2. SSH into control VM (if provisioned) and check `/tmp/setup-scripts/*.log` for script failures
+3. Look for timeout errors, package installation failures, or systemd service startup issues
+
+### Networking Issues (VM-to-VM Communication)
+
+**Symptom**: `ansible-navigator` can't SSH to nodes, "Connection timed out" errors
+
+**Root cause**: Different VM images get IPs on different subnets in CNV:
+- `devtools-ansible` image → 10.0.2.x/24 (isolated network)
+- `rhel-9.6` image → 10.130.x.x or 10.129.x.x (pod network)
+
+**Why secondary network doesn't work**:
+- Adding `networks: [default, secondary]` to instances.yaml doesn't create a second interface (eth1)
+- Only eth0 exists on the VM
+- `nmcli connection add ... eth1` commands fail silently
+- The secondary network feature may not be implemented in CNV or requires additional configuration
+
+**Solution used**:
+- Control VM uses `devtools-ansible` (10.0.2.x) 
+- Nodes use `rhel-9.6` (10.130.x.x)
+- Setup script on control runs `getent hosts nodeX` to resolve IPs via cluster DNS
+- Adds resolved IPs to `/etc/hosts`: `10.130.15.235 node1`
+- Ansible-navigator EE uses `--network=host` so it can read control's /etc/hosts
+- Cross-subnet routing works because both subnets are in the same OpenShift cluster
+
+**Diagnostic commands** (run from control VM):
+```bash
+# Check what subnet control is on
+ip addr show eth0
+
+# Check if DNS can resolve nodes
+getent hosts node1
+
+# Check if nodes are in /etc/hosts
+cat /etc/hosts | grep node
+
+# Try pinging node IPs directly
+ping -c 2 10.130.15.235
+
+# Check if SSH port is open
+timeout 3 bash -c "cat < /dev/tcp/10.130.15.235/22"
+```
+
+### Code-Server Installation
+
+**Why we use devtools-ansible image**:
+- Code-server is pre-installed and configured
+- Installing code-server during setup causes hangups (requires npm/nodejs, downloads from internet)
+- The lab needs VS Code for the Ansible Lightspeed extension demo
+
+**Attempted approaches that failed**:
+1. ❌ `curl -fsSL https://code-server.dev/install.sh | sh` - network download hangs
+2. ❌ `npm install -g code-server` - requires nodejs/npm packages, network download hangs
+3. ❌ Installing from satellite repos - code-server not available in RHDP repos
+
+**Working approach**:
+- Use devtools-ansible image which has code-server pre-baked
+- Setup script only configures it (config.yaml) and starts the service
+- No network dependencies during provisioning
 
 ---
 
@@ -268,3 +327,165 @@ Any new approach must:
 - ansible-files/templates/motd.j2 (4 lines)
 
 All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-first-playbook/ansible-files/`
+
+---
+
+## File Inventory and Purpose
+
+### Configuration Files
+
+**config/instances.yaml** (4 VMs, 117 lines)
+- `control`: devtools-ansible, 8G RAM, 30Gi disk, has services/routes for code-server on port 8080
+- `node1`, `node2`, `node3`: rhel-9.6, 8G RAM, 30Gi disk, managed nodes for playbook execution
+- All VMs: `AnsibleGroup: isolated` tag (enables cloud-init password auth)
+- All VMs: `networks: [default]` (CNV pod network)
+
+**config/networks.yaml** (3 lines)
+- Single network: `default` (CNV pod network)
+- No secondary network (doesn't work in CNV)
+
+**config/firewall.yaml** (20 lines)
+- Egress: allows TCP 80, 443 (for downloading EE container images)
+- Ingress: allows TCP 8080 (for code-server web UI)
+- Platform defaults: SSH (22), DNS (5353), VM-to-VM traffic
+
+**ui-config.yml** (27 lines)
+- Defines 4 content modules (01-04) with solve buttons
+- Tab 1: VS Code → `https://vscode-${guid}.${domain}/` (code-server on control:8080)
+- Tab 2: Control → `/wetty` (terminal provided by zero-touch-base-rhel, connects to control VM)
+
+**site.yml** (21 lines)
+- Antora site configuration for Showroom content
+- Points to content/ directory for AsciiDoc modules
+- Uses nookbag-bundle UI theme
+
+### Setup Automation
+
+**setup-automation/main.yml** (89 lines)
+- Creates dynamic inventory from environment variables (BASTION_HOST, BASTION_PORT, etc.)
+- Adds bastion (control) and nodes (node1, node2, node3) to inventory
+- Copies setup-*.sh scripts to each VM and executes them
+- Waits up to 300 seconds for SSH connection before timeout
+- Runs on `all:!localhost` (control + node1 + node2 + node3)
+
+**setup-automation/setup-control.sh** (118 lines)
+- Resolves node1/node2/node3 IPs via `getent hosts` and adds to `/etc/hosts`
+- Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory, templates/motd.j2
+- Configures code-server (config.yaml, systemctl start/enable)
+- No network dependencies (all files inline, code-server pre-installed)
+
+**setup-automation/setup-node1.sh, setup-node2.sh, setup-node3.sh** (31 lines each)
+- Waits for dnf/yum to be ready (cloud-init may still be running)
+- Minimal setup - SSH already configured via cloud-init
+- No package installations (keeps provisioning fast)
+
+### Runtime Automation
+
+**runtime-automation/main.yml** (47 lines)
+- Dispatcher pattern: runs module-specific setup/solve/validation playbooks
+- Uses `ansible-playbook` to execute `./module_dir/module_stage.yml`
+- Reads from `runtime-automation/inventory` (maps controller→control, web→node1/2, database→node3)
+
+**runtime-automation/NN-module-name/** (4 modules)
+- Each module has: `setup.yml`, `solve.yml`, `validation.yml`
+- Module 01: Verifies inventory exists, teaches ansible-navigator inventory commands
+- Module 02: Students generate system_setup.yml playbook with Lightspeed
+- Module 03: Students run playbook, verify httpd on web group, user on all hosts
+- Module 04: Wrap-up, no validation (informational only)
+
+### Health Monitoring
+
+**utilities/health-check.sh** (72 lines)
+- Auto-generated by Lab Foundry validate-lab skill
+- Checks SSH connectivity to all VMs (control, node1, node2, node3)
+- Checks code-server HTTP endpoint (https://vscode-${GUID}.${DOMAIN})
+- Checks code-server port on control (8080)
+- Optionally reports to webhook (HEALTH_WEBHOOK_URL)
+- Returns exit code = number of failures
+
+### Content
+
+**content/modules/ROOT/pages/** (4 modules, ~800 lines total AsciiDoc)
+- 01-playbook-inventory.adoc: Introduction to inventory, ansible-navigator
+- 02-generate-comprehensive-playbook.adoc: Using Lightspeed to generate playbooks
+- 03-playbook-run-it.adoc: Running playbooks, verifying results, idempotency
+- 04-wrap-up.adoc: Summary and next steps
+
+**content/modules/ROOT/assets/images/** (9 images)
+- Screenshots of Showroom UI, VS Code, ansible-navigator output
+- Used in content pages to guide students
+
+
+---
+
+## Validation Checklist (Before Next Provision)
+
+### Pre-Provision Checks
+- [ ] All setup scripts are executable: `chmod +x setup-automation/setup-*.sh`
+- [ ] No network downloads in setup scripts (curl, wget, npm, pip)
+- [ ] No `set -e` failures on non-critical commands (use `|| true` or error handling)
+- [ ] setup-automation/main.yml nodes loop matches actual VMs (node1, node2, node3 only)
+
+### Post-Provision Validation (if provisioning succeeds)
+
+**From Control VM terminal:**
+```bash
+# 1. Check /etc/hosts has node entries
+cat /etc/hosts | grep node
+# Expected: 3 lines with node1, node2, node3 IPs
+
+# 2. Check code-server is running
+systemctl status code-server
+curl -s http://localhost:8080 | head -20
+# Expected: code-server HTML response
+
+# 3. Check ansible-files exists
+ls -la /home/rhel/ansible-files/
+# Expected: ansible.cfg, ansible-navigator.yml, inventory, templates/
+
+# 4. Test DNS resolution
+getent hosts node1
+getent hosts node2  
+getent hosts node3
+# Expected: IP addresses returned (10.130.x.x or 10.129.x.x)
+
+# 5. Test ping to nodes
+ping -c 2 node1
+ping -c 2 node2
+ping -c 2 node3
+# Expected: Replies received (if on same subnet) or 100% loss (if cross-subnet but /etc/hosts works)
+
+# 6. Test SSH to nodes
+ssh -o ConnectTimeout=5 rhel@node1 hostname
+# Expected: "node1" returned, password: ansible123!
+
+# 7. Test ansible-navigator
+cd /home/rhel/ansible-files
+ansible-navigator inventory --list
+# Expected: JSON with web, database, nodes groups
+```
+
+**From Showroom UI:**
+- [ ] VS Code tab loads and shows /home/rhel/ansible-files/ in file explorer
+- [ ] Control tab shows wetty terminal prompt
+- [ ] Can edit a file in VS Code and see it in Control terminal: `cat /home/rhel/ansible-files/inventory`
+- [ ] Ansible Lightspeed extension is visible in VS Code extensions panel
+
+### Known Issues to Watch For
+
+**If provisioning hangs:**
+- Check OpenShift console → showroom pod → init container logs
+- Look for setup script failures in `/tmp/setup-scripts/*.log` on VMs
+- Common culprits: network timeouts, systemctl hangs, package installation failures
+
+**If ansible-navigator can't reach nodes:**
+- Check `/etc/hosts` on control has node IPs
+- Check `ip addr show eth0` on control (should be 10.0.2.x)
+- Check nodes are on 10.130.x.x or 10.129.x.x network
+- Verify ansible-navigator.yml has `container-options: ["--network=host"]`
+
+**If VS Code doesn't load:**
+- Check code-server service: `systemctl status code-server`
+- Check port 8080 is listening: `ss -tlnp | grep 8080`
+- Check route in instances.yaml: vscode-8080 → port 8080
+- Check ui-config.yml: VS Code tab URL matches route host

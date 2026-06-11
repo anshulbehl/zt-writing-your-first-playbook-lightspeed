@@ -1,29 +1,31 @@
 #!/bin/bash
 #
 # Setup script for control node
-# Purpose: Install Ansible, code-server, and create workspace
-# This VM runs both VS Code (code-server) and ansible-navigator
+# Purpose: Configure code-server and create Ansible workspace
+# The devtools-ansible image already has code-server pre-installed
 #
 set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
-# Register to RHDP Satellite for package installation
-echo "Registering to Red Hat Satellite..."
-subscription-manager register \
-  --org="${SATELLITE_ORG}" \
-  --activationkey="${SATELLITE_ACTIVATIONKEY}"
+# Add /etc/hosts entries for nodes (they're on 10.130.x.x, we're on 10.0.2.x)
+# We'll get the IPs from DNS and add them to /etc/hosts for ansible to use
+echo "Configuring /etc/hosts for node access..."
 
-# Install required packages
-echo "Installing ansible-navigator and podman..."
-dnf install -y \
-  ansible-navigator \
-  podman \
-  git
+# Wait for DNS to be available
+sleep 10
 
-# Install code-server (VS Code in browser)
-echo "Installing code-server..."
-curl -fsSL https://code-server.dev/install.sh | sh
+# Resolve and add node IPs to /etc/hosts
+for node in node1 node2 node3; do
+  echo "Resolving $node..."
+  IP=$(getent hosts $node | awk '{print $1}' || echo "")
+  if [ -n "$IP" ]; then
+    echo "$IP $node" >> /etc/hosts
+    echo "Added $node -> $IP"
+  else
+    echo "WARNING: Could not resolve $node"
+  fi
+done
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -92,7 +94,7 @@ chown -R rhel:rhel /home/rhel/.logs
 echo "Configuring code-server..."
 
 # Stop code-server if already running
-systemctl stop code-server@rhel || true
+systemctl stop code-server || true
 
 # Backup existing config if present
 [ -f /home/rhel/.config/code-server/config.yaml ] && \
@@ -107,11 +109,10 @@ cert: false
 EOF
 chown -R rhel:rhel /home/rhel/.config/code-server
 
-# Start code-server service as rhel user
-systemctl enable --now code-server@rhel
+# Start code-server service
+systemctl start code-server
+systemctl enable code-server
 
-# Install Ansible VS Code extension (for Lightspeed)
-echo "Installing Ansible VS Code extension..."
-su - rhel -c "code-server --install-extension redhat.ansible"
-
-echo "Control node setup complete (ansible-navigator + code-server)"
+echo "Control node setup complete (ansible-files + code-server)"
+echo "Node IP mappings:"
+grep -E "node[123]" /etc/hosts || echo "No nodes found in /etc/hosts"
