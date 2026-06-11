@@ -8,9 +8,24 @@ set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
-# All nodes now use devtools-ansible image (same 10.0.2.x subnet as control)
-# DNS resolution works natively - no /etc/hosts manipulation needed
-echo "All nodes on same subnet - DNS resolution automatic"
+# Add /etc/hosts entries for cross-subnet access
+# Nodes may be on different subnet despite using same image
+echo "Configuring /etc/hosts for node access..."
+
+# Wait for DNS to be available
+sleep 10
+
+# Resolve and add node IPs to /etc/hosts
+for node in node1 node2 node3; do
+  echo "Resolving $node..."
+  IP=$(getent hosts $node | awk '{print $1}' || echo "")
+  if [ -n "$IP" ]; then
+    echo "$IP $node" >> /etc/hosts
+    echo "Added $node -> $IP"
+  else
+    echo "WARNING: Could not resolve $node"
+  fi
+done
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -107,3 +122,5 @@ systemctl start code-server
 systemctl enable code-server
 
 echo "Control node setup complete (ansible-files + code-server)"
+echo "Node IP mappings:"
+grep -E "node[123]" /etc/hosts || echo "No nodes found in /etc/hosts"
