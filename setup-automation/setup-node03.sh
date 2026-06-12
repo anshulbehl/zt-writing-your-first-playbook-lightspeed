@@ -28,4 +28,4 @@ wait_for_dnf() {
 # ─── Wait for System Readiness ──────────────────────────────────────────────
 wait_for_dnf 60
 
-echo "Node3 setup complete - SSH access enabled via cloud-init"
+echo "# ─── Open SSH Port ──────────────────────────────────────────────────────────\necho "Opening SSH port 22 in firewall..."\nfirewall-cmd --permanent --add-service=ssh\nfirewall-cmd --reload\necho "SSH port opened successfully"\n\necho "Node03 setup complete - SSH access enabled""
