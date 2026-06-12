@@ -28,6 +28,17 @@ ping -c 2 10.0.2.1 >> /home/rhel/network-debug.txt 2>&1 || echo "Gateway 10.0.2.
 echo "" >> /home/rhel/network-debug.txt
 chown rhel:rhel /home/rhel/network-debug.txt
 
+# Add route to pod network so control can reach nodes
+echo "Adding route to pod network (10.130.0.0/16)..." >> /home/rhel/network-debug.txt
+if ip route add 10.130.0.0/16 via 10.0.2.1 dev eth0 2>> /home/rhel/network-debug.txt; then
+  echo "✓ Route added successfully" >> /home/rhel/network-debug.txt
+else
+  echo "✗ Route add failed (may already exist)" >> /home/rhel/network-debug.txt
+fi
+echo "" >> /home/rhel/network-debug.txt
+echo "Final routing table:" >> /home/rhel/network-debug.txt
+ip route show >> /home/rhel/network-debug.txt
+
 # Node /etc/hosts entries are configured by setup-automation/main.yml
 # using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
 
