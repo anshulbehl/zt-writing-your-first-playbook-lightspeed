@@ -49,6 +49,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node01-ssh
+        ports:
+          - port: 22
+            protocol: TCP
+            targetPort: 22
+            name: ssh
+    routes:
+      - name: node01-ssh
+        host: node01
+        service: node01-ssh
+        targetPort: 22
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -68,6 +82,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node02-ssh
+        ports:
+          - port: 22
+            protocol: TCP
+            targetPort: 22
+            name: ssh
+    routes:
+      - name: node02-ssh
+        host: node02
+        service: node02-ssh
+        targetPort: 22
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -87,6 +115,20 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+    services:
+      - name: node03-ssh
+        ports:
+          - port: 22
+            protocol: TCP
+            targetPort: 22
+            name: ssh
+    routes:
+      - name: node03-ssh
+        host: node03
+        service: node03-ssh
+        targetPort: 22
+        tls: true
+        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel

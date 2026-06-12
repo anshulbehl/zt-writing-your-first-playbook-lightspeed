@@ -206,21 +206,22 @@ ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/n
 ### Control VM
 - **Image**: `devtools-ansible`
 - **Services**: vscode-8080 (code-server on port 8080)
-- **Routes**: vscode-8080 (external HTTPS access)
+- **Routes**: vscode-8080 (external HTTPS access for VS Code UI)
 - **Expected subnet**: 10.0.2.x (isolated network, has services/routes)
 
 ### Node01, Node02, Node03
 - **Image**: `rhel-9.6`
-- **Services**: NONE
-- **Routes**: NONE
-- **Expected subnet**: 10.130.x or 10.129.x (pod network, no services/routes)
+- **Services**: SSH:22 (for wetty terminal access)
+- **Routes**: node01/02/03-ssh (external HTTPS access for wetty tabs)
+- **Expected subnet**: 10.0.2.x (isolated network, has services/routes)
 
-### Cross-Subnet Connectivity
-**How it works** (based on roadshow's proven architecture):
-1. CNV creates DNS entries for all VMs: `node01.namespace.svc.cluster.local`
-2. Control VM can resolve node hostnames via CNV DNS
-3. Even though subnets differ, CNV routing allows control→node communication
-4. No /etc/hosts hacks needed
+### Same-Subnet Connectivity
+**How it works**:
+1. All VMs have services/routes → all land on 10.0.2.x subnet
+2. CNV creates DNS entries for all VMs
+3. Same subnet = direct connectivity
+4. SSH services enable wetty tab routing
+5. No /etc/hosts hacks needed
 
 ---
 
@@ -284,7 +285,10 @@ ssh rhel@node03 'ip addr show eth0'
 9. `runtime-automation/01-playbook-inventory/validation.yml` - Node checks
 10. `runtime-automation/01-playbook-inventory/solve.yml` - Inventory template
 
-**Total files modified**: 10 files
+### UI Configuration
+11. `ui-config.yml` - Removed node wetty tabs (no longer accessible without services/routes)
+
+**Total files modified**: 11 files
 **Files renamed**: 3 files (setup-node*.sh)
 
 ---
