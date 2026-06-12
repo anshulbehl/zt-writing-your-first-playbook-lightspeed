@@ -19,12 +19,11 @@
       ansible_ssh_port: "{{ lookup('ansible.builtin.env', 'BASTION_PORT') }}"
       ansible_ssh_user: "{{ lookup('ansible.builtin.env', 'BASTION_USER') }}"
       ansible_ssh_pass: "{{ lookup('ansible.builtin.env', 'BASTION_PASSWORD') }}"
-      ansible_become_password: "{{ lookup('ansible.builtin.env', 'BASTION_PASSWORD') }}"
       ansible_python_interpreter: /usr/bin/python3
     loop:
-      - node1
-      - node2
-      - node3
+      - node01
+      - node02
+      - node03
 
 - name: Setup VMs for Writing Your First Playbook lab
   hosts: all:!localhost
@@ -36,12 +35,10 @@
   tasks:
   - name: "waiting for the port tcp/22 to be open"
     ansible.builtin.wait_for_connection:
-      timeout: 300
-      delay: 5
 
-  - name: Set short hostname for script lookup
+  - name: Set config_host variable with ansible_host value
     set_fact:
-      short_hostname: "{{ inventory_hostname.split('.')[0] }}"
+      config_host: "{{ ansible_host }}"
 
   - name: Create a directory if it does not exist
     ansible.builtin.file:
@@ -51,19 +48,19 @@
 
   - name: Check if setup script exists
     ansible.builtin.stat:
-      path: "./setup-{{ short_hostname }}.sh"
+      path: "./setup-{{ config_host }}.sh"
     delegate_to: localhost
     register: r_script_test
 
   - name: Copy script file
     when: r_script_test.stat.exists
     copy:
-      src: "./setup-{{ short_hostname }}.sh"
-      dest: "/tmp/setup-scripts/setup-{{ short_hostname }}.sh"
+      src: "./setup-{{ ansible_host }}.sh"
+      dest: "/tmp/setup-scripts/setup-{{ ansible_host }}.sh"
 
   - name: Execute setup script if it exists
     when: r_script_test.stat.exists
-    shell: "sh -x /tmp/setup-scripts/setup-{{ short_hostname }}.sh > /tmp/setup-scripts/setup-{{ short_hostname }}.log 2>&1"
+    shell: "sh -x /tmp/setup-scripts/setup-{{ ansible_host }}.sh > /tmp/setup-scripts/setup-{{ ansible_host }}.log 2>&1"
     become: true
     register: r_result
     environment:
@@ -74,14 +71,14 @@
   - name: Write script result to file
     ansible.builtin.copy:
       content: "{{ r_result.stdout | default(r_result.stderr) | default(r_result) }}"
-      dest: "/tmp/{{ short_hostname }}-setup-script.out"
+      dest: "/tmp/{{ ansible_host }}-setup-script.out"
     delegate_to: localhost
     when:
     - r_result is defined
 
   - name: Fail if stage was failed
     ansible.builtin.fail:
-      msg: "Setup failed on {{ short_hostname }}"
+      msg: "Setup failed"
     when:
     - r_result is defined
     - r_result.rc != 0

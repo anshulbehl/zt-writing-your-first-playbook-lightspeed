@@ -52,11 +52,11 @@ EOF
 # Create inventory
 cat > /home/rhel/ansible-files/inventory << 'EOF'
 [web]
-node1
-node2
+node01
+node02
 
 [database]
-node3
+node03
 
 [nodes:children]
 web

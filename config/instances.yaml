@@ -39,32 +39,16 @@ virtualmachines:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node1"
-    image: "devtools-ansible"
+  - name: "node01"
+    image: "rhel-9.6"
     memory: "8G"
     cores: 2
-    image_size: "20Gi"
-    disk_type: "scsi"
-    bootloader: "efi"
+    image_size: "30Gi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
     networks:
       - default
-    services:
-      - name: node1-http
-        ports:
-          - port: 80
-            protocol: TCP
-            targetPort: 80
-            name: node1
-    routes:
-      - name: node1-web
-        host: node1
-        service: node1-http
-        targetPort: 80
-        tls: true
-        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -74,32 +58,16 @@ virtualmachines:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node2"
-    image: "devtools-ansible"
+  - name: "node02"
+    image: "rhel-9.6"
     memory: "8G"
     cores: 2
-    image_size: "20Gi"
-    disk_type: "scsi"
-    bootloader: "efi"
+    image_size: "30Gi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
     networks:
       - default
-    services:
-      - name: node2-http
-        ports:
-          - port: 80
-            protocol: TCP
-            targetPort: 80
-            name: node2
-    routes:
-      - name: node2-web
-        host: node2
-        service: node2-http
-        targetPort: 80
-        tls: true
-        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
@@ -109,32 +77,16 @@ virtualmachines:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node3"
-    image: "devtools-ansible"
+  - name: "node03"
+    image: "rhel-9.6"
     memory: "8G"
     cores: 2
-    image_size: "20Gi"
-    disk_type: "scsi"
-    bootloader: "efi"
+    image_size: "30Gi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
     networks:
       - default
-    services:
-      - name: node3-http
-        ports:
-          - port: 80
-            protocol: TCP
-            targetPort: 80
-            name: node3
-    routes:
-      - name: node3-web
-        host: node3
-        service: node3-http
-        targetPort: 80
-        tls: true
-        tls_termination: Edge
     userdata: |-
       #cloud-config
       user: rhel
