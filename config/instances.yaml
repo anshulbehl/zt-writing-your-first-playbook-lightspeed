@@ -38,23 +38,6 @@ virtualmachines:
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
-        - echo "=== Network Setup Log ===" > /var/log/network-setup.log
-        - echo "Date: $(date)" >> /var/log/network-setup.log
-        - echo "" >> /var/log/network-setup.log
-        - echo "Control IP Address:" >> /var/log/network-setup.log
-        - ip addr show eth0 | grep "inet " >> /var/log/network-setup.log
-        - echo "" >> /var/log/network-setup.log
-        - echo "Routing Table:" >> /var/log/network-setup.log
-        - ip route show >> /var/log/network-setup.log
-        - echo "" >> /var/log/network-setup.log
-        - echo "DNS Resolution Test:" >> /var/log/network-setup.log
-        - getent hosts node01 >> /var/log/network-setup.log 2>&1 || echo "node01 resolution FAILED" >> /var/log/network-setup.log
-        - getent hosts node02 >> /var/log/network-setup.log 2>&1 || echo "node02 resolution FAILED" >> /var/log/network-setup.log
-        - getent hosts node03 >> /var/log/network-setup.log 2>&1 || echo "node03 resolution FAILED" >> /var/log/network-setup.log
-        - echo "" >> /var/log/network-setup.log
-        - echo "Gateway reachability:" >> /var/log/network-setup.log
-        - ping -c 2 10.0.2.1 >> /var/log/network-setup.log 2>&1 || echo "Gateway 10.0.2.1 not reachable" >> /var/log/network-setup.log
-        - chmod 644 /var/log/network-setup.log
 
   - name: "node01"
     image: "rhel-9.6"

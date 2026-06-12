@@ -8,6 +8,26 @@ set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
+# Create network diagnostics log
+echo "=== Network Setup Diagnostics ===" > /home/rhel/network-debug.txt
+echo "Date: $(date)" >> /home/rhel/network-debug.txt
+echo "" >> /home/rhel/network-debug.txt
+echo "Control IP Address:" >> /home/rhel/network-debug.txt
+ip addr show eth0 | grep "inet " >> /home/rhel/network-debug.txt
+echo "" >> /home/rhel/network-debug.txt
+echo "Routing Table:" >> /home/rhel/network-debug.txt
+ip route show >> /home/rhel/network-debug.txt
+echo "" >> /home/rhel/network-debug.txt
+echo "DNS Resolution Test:" >> /home/rhel/network-debug.txt
+getent hosts node01 >> /home/rhel/network-debug.txt 2>&1 || echo "node01 resolution FAILED" >> /home/rhel/network-debug.txt
+getent hosts node02 >> /home/rhel/network-debug.txt 2>&1 || echo "node02 resolution FAILED" >> /home/rhel/network-debug.txt
+getent hosts node03 >> /home/rhel/network-debug.txt 2>&1 || echo "node03 resolution FAILED" >> /home/rhel/network-debug.txt
+echo "" >> /home/rhel/network-debug.txt
+echo "Gateway reachability:" >> /home/rhel/network-debug.txt
+ping -c 2 10.0.2.1 >> /home/rhel/network-debug.txt 2>&1 || echo "Gateway 10.0.2.1 not reachable" >> /home/rhel/network-debug.txt
+echo "" >> /home/rhel/network-debug.txt
+chown rhel:rhel /home/rhel/network-debug.txt
+
 # Node /etc/hosts entries are configured by setup-automation/main.yml
 # using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
 
