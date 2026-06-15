@@ -124,9 +124,11 @@
       mode: '0644'
     when: inventory_hostname == bastion_host
 
-  - name: Add public key to authorized_keys on nodes
-    ansible.posix.authorized_key:
-      user: rhel
-      key: "{{ lookup('file', '/tmp/lab-ssh-key.pub') }}"
-      state: present
+  - name: Write authorized_keys on nodes
+    ansible.builtin.copy:
+      content: "{{ lookup('file', '/tmp/lab-ssh-key.pub') }}\n"
+      dest: /home/rhel/.ssh/authorized_keys
+      owner: rhel
+      group: rhel
+      mode: '0600'
     when: inventory_hostname != bastion_host

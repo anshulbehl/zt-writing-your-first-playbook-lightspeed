@@ -4,7 +4,6 @@
 # Purpose: Configure code-server and create Ansible workspace
 # The devtools-ansible image already has code-server pre-installed
 #
-set -e  # Exit immediately if any command fails
 
 echo "Setting up control node..."
 
