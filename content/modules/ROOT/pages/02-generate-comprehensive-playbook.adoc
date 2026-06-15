@@ -1,7 +1,7 @@
 :sectnums:
 = 1.1 - Generate a Comprehensive Playbook with Lightspeed
 
-Real-world playbooks handle multiple concerns in a single automation run — user management, package installation, service configuration, firewall rules, and dynamic file deployment. In this challenge, you will use *Ansible Lightspeed* to generate a complete, production-ready playbook from a single well-structured prompt.
+Real-world playbooks handle multiple concerns in a single automation run — user management, package installation, service configuration, and dynamic file deployment. In this challenge, you will use *Ansible Lightspeed* to generate a complete, production-ready playbook from a single well-structured prompt.
 
 Instead of writing YAML by hand or iterating through multiple attempts, you will learn how to construct a *comprehensive prompt* that gives Lightspeed all the context it needs to generate exactly what you want in one shot.
 
@@ -19,7 +19,6 @@ When prompting Lightspeed to generate a playbook, *specificity and structure* pr
 * *Tasks in logical order* — what to install, configure, start, and verify
 * *Conditionals* — which tasks run only on specific host groups
 * *Loops* — repeating tasks across multiple items (users, packages, files)
-* *Handlers* — tasks that trigger only when something changes (service restarts, config reloads)
 * *Templates* — dynamic configuration files that use Jinja2 and host facts
 
 The more detail you provide, the more accurate Lightspeed's output will be.
@@ -53,12 +52,7 @@ Your prompt should request a playbook that:
    .. Create the user defined in `user_name` with a home directory
    .. Install the package defined in `package_name` (only on the `web` group)
    .. Ensure the Apache service is running and enabled (only on the `web` group)
-   .. Ensure `firewalld` is running and enabled (only on the `web` group)
-   .. Allow HTTP traffic through the firewall permanently (only on the `web` group), and notify the `Reload Firewall` handler when this task changes
    .. Deploy a Jinja2 template from `templates/motd.j2` to `/etc/motd` on all hosts
-. Defines one handler:
-   * Name: `Reload Firewall`
-   * Action: Reload the `firewalld` service
 
 [TIP]
 ====
@@ -77,11 +71,7 @@ Include these tasks in order:
 2. Create a user with the name from user_name variable, ensuring a home directory is created
 3. Install the package from package_name variable, only on the web group
 4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group
-5. Ensure firewalld is running and enabled, only on the web group
-6. Allow HTTP traffic through the firewall permanently on the web group, and notify a handler named "Reload Firewall" when this changes
-7. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
-
-Define a handler named "Reload Firewall" that reloads the firewalld service.
+5. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
 ----
 
 [IMPORTANT]
@@ -92,7 +82,6 @@ Define a handler named "Reload Firewall" that reloads the firewalld service.
 * Included `become: true` for privilege escalation
 * Listed all three variables with their values
 * Described each task clearly, including which group it targets
-* Mentioned the handler and what triggers it
 * Referenced the template path and destination
 
 The more complete your prompt, the more accurate Lightspeed's output will be.
@@ -123,8 +112,6 @@ Ansible Lightspeed: Create a playbook with Ansible Lightspeed
 +
    * A `vars:` section with `user_name`, `package_name`, and `apache_service_name`
    * Tasks with `when:` conditionals targeting the `web` group
-   * A `notify:` keyword on the firewall task
-   * A `handlers:` section with the `Reload Firewall` handler
    * A `template:` task referencing `templates/motd.j2`
 
 . Save the file as `system_setup.yml` in the `/home/rhel/ansible-files/` directory:
@@ -218,10 +205,10 @@ The *Explain* feature is how you learn from Lightspeed's output. Whenever you se
 By completing this module, you now understand:
 
 * How to construct a comprehensive LLM prompt that produces accurate, production-ready playbooks
-* Why specificity matters when prompting Lightspeed (variables, conditionals, handlers, templates)
+* Why specificity matters when prompting Lightspeed (variables, conditionals, templates)
 * How to use Lightspeed's generation feature to create a full playbook from a single prompt
 * How to use Lightspeed's Explain feature to learn from generated code
-* The structure of a real-world playbook that manages multiple concerns (packages, users, services, firewall, configuration files)
+* The structure of a real-world playbook that manages multiple concerns (packages, users, services, configuration files)
 
 
 == Embracing the Next Challenge

@@ -8,11 +8,11 @@ Congratulations! You have successfully used *Ansible Lightspeed* to generate a p
 In this lab, you:
 
 * Connected to Ansible Lightspeed and verified it was ready to assist
-* Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, handlers, loops, and templates
+* Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, loops, and templates
 * Generated a complete playbook in one shot using Lightspeed's playbook generation feature
 * Created a Jinja2 template for dynamic configuration file deployment
 * Ran the playbook with `ansible-navigator` across multiple inventory groups
-* Verified user creation, package installation, service configuration, firewall rules, and template rendering
+* Verified user creation, package installation, service configuration, and template rendering
 * Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
 
 Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of Lightspeed's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.

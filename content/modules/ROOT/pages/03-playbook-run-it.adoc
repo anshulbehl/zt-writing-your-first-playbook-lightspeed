@@ -40,8 +40,6 @@ The first run may take a few minutes. ansible-navigator pulls the Execution Envi
    * Create user padawan (on all nodes)
    * Install httpd (only on node1 and node2)
    * Ensure httpd is running (only on node1 and node2)
-   * Ensure firewalld is running (only on node1 and node2)
-   * Allow HTTP traffic (only on node1 and node2)
    * Deploy motd template (on all nodes)
 
 . The *PLAY RECAP* at the end summarizes changes made across all hosts:
@@ -146,47 +144,7 @@ This proves the `when: inventory_hostname in groups['web']` conditionals worked 
 
 
 ======
-.☑️ Task 4 - Verify the firewall configuration
-[%collapsible]
-=====
-[NOTE]
-====
-Stay in the *Control* tab.
-====
-
-The playbook configured firewalld to allow HTTP traffic on the web servers.
-
-. Check firewall rules on node1:
-+
-[source,role="execute"]
-----
-ssh node1 sudo firewall-cmd --list-services
-----
-+
-.Expected output (look for "http" in the list)
-----
-cockpit dhcpv6-client http ssh
-----
-
-. Check firewall rules on node2:
-+
-[source,role="execute"]
-----
-ssh node2 sudo firewall-cmd --list-services
-----
-
-Both should show `http` in the service list. This means the firewall task executed and the handler was triggered to reload the firewall configuration.
-
-[TIP]
-====
-Handlers only run *when notified*. The first time you ran the playbook, the "Allow HTTP traffic" task made a change and triggered the `Reload Firewall` handler. On subsequent runs, if the rule is already in place, the task reports `ok`, does not trigger the handler, and the firewall is not reloaded. This is efficient automation.
-====
-=====
-======
-
-
-======
-.☑️ Task 5 - Verify the dynamic MOTD template
+.☑️ Task 4 - Verify the dynamic MOTD template
 [%collapsible]
 =====
 [NOTE]
@@ -232,18 +190,19 @@ Each host rendered a unique MOTD because Ansible substituted each host's facts (
 
 
 ======
-.☑️ Task 6 - Discover idempotency
+.☑️ Task 5 - Discover idempotency
 [%collapsible]
 =====
-=====
+
+====
 .What is idempotency?
 [%collapsible]
-====
+===
 *Idempotency* means that running an operation once produces the same result as running it many times. An idempotent Ansible task only makes a change when the desired state does not already exist. If the state is already correct, the task reports `ok` and does nothing.
 
 This is what separates Ansible from shell scripts: you can safely run a playbook repeatedly and it will never break a system that is already configured correctly. Ansible checks the current state before every task and only acts when necessary.
+===
 ====
-=====
 
 [NOTE]
 ====
@@ -282,7 +241,6 @@ By completing this module, you now understand:
 * What Gathering Facts does and why Ansible runs it automatically
 * How to verify that tasks executed correctly on the right hosts
 * How conditionals control which tasks run on which inventory groups
-* How handlers trigger only when configuration changes
 * How Jinja2 templates render differently on each host using facts
 * What idempotency means and why it makes Ansible safe for production use
 * How to read a PLAY RECAP to understand what changed (or didn't change) on each run
