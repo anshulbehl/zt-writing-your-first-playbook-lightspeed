@@ -84,8 +84,8 @@ database
 
 [all:vars]
 ansible_user=rhel
+ansible_password=ansible123!
 ansible_connection=ssh
-ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 EOF
 
 # Create motd.j2 template
