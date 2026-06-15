@@ -29,9 +29,32 @@ wait_for_dnf() {
 wait_for_dnf 60
 
 # ─── Open SSH Port ──────────────────────────────────────────────────────────
-echo "Opening SSH port 22 in firewall..."
-firewall-cmd --permanent --add-service=ssh
-firewall-cmd --reload
-echo "SSH port opened successfully"
+echo "Configuring firewall to allow SSH..."
 
-echo "Node01 setup complete - SSH access enabled"
+# Ensure firewalld is installed and running
+if ! systemctl is-active --quiet firewalld; then
+    echo "Starting firewalld service..."
+    if systemctl start firewalld 2>/dev/null; then
+        echo "Firewalld started successfully"
+    else
+        echo "WARNING: firewalld not available, attempting iptables fallback"
+        # Fallback to iptables if firewalld isn't available
+        if command -v iptables &>/dev/null; then
+            iptables -I INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || echo "WARNING: iptables command failed"
+        fi
+    fi
+fi
+
+# Open SSH port if firewalld is running
+if systemctl is-active --quiet firewalld; then
+    echo "Opening SSH port 22 in firewalld..."
+    if firewall-cmd --permanent --add-service=ssh 2>/dev/null && firewall-cmd --reload 2>/dev/null; then
+        echo "SSH port opened successfully via firewalld"
+    else
+        echo "WARNING: firewall-cmd failed, SSH may be blocked"
+    fi
+else
+    echo "WARNING: firewalld not active, SSH access depends on default firewall state"
+fi
+
+echo "Node01 setup complete"
