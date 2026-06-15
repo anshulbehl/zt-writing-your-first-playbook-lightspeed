@@ -1,31 +1,33 @@
 #!/bin/bash
 
-# Setup script for node2
-# Minimal setup - SSH access already configured via cloud-init
-# Wait for package manager to be ready (cloud-init may still be running)
+# Setup script for node02
+# Registers with Satellite so students can install packages (httpd, etc.)
 
 set -e
 
-# ─── Helper Functions ────────────────────────────────────────────────────────
-wait_for_dnf() {
-    local max_wait=${1:-60}
-    local elapsed=0
-
-    echo "Waiting for dnf/yum to be available (cloud-init may be running)..."
-    while [ $elapsed -lt $max_wait ]; do
-        if dnf check-update --quiet 2>/dev/null || [ $? -eq 100 ]; then
-            echo "Package manager is ready"
+retry() {
+    for i in {1..3}; do
+        echo "Attempt $i: $2"
+        if $1; then
             return 0
         fi
-        sleep 3
-        elapsed=$((elapsed + 3))
+        [ $i -lt 3 ] && sleep 5
     done
-
-    echo "WARN: Package manager may not be fully initialized"
-    return 0  # Non-fatal, continue anyway
+    echo "Failed after 3 attempts: $2"
+    exit 1
 }
 
-# ─── Wait for System Readiness ──────────────────────────────────────────────
-wait_for_dnf 60
+# ─── Register with Satellite ───────────────────────────────────────────────
+retry "curl -k -L https://${SATELLITE_URL}/pub/katello-server-ca.crt -o /etc/pki/ca-trust/source/anchors/${SATELLITE_URL}.ca.crt"
+retry "update-ca-trust"
+
+KATELLO_INSTALLED=$(rpm -qa | grep -c katello)
+if [ $KATELLO_INSTALLED -eq 0 ]; then
+    retry "rpm -Uhv https://${SATELLITE_URL}/pub/katello-ca-consumer-latest.noarch.rpm"
+fi
+
+if ! subscription-manager status; then
+    retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
+fi
 
 echo "Node02 setup complete"
