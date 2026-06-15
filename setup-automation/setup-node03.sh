@@ -3,8 +3,6 @@
 # Setup script for node03
 # Registers with Satellite so students can install packages (httpd, etc.)
 
-set -e
-
 retry() {
     for i in {1..3}; do
         echo "Attempt $i: $2"
@@ -21,12 +19,13 @@ retry() {
 retry "curl -k -L https://${SATELLITE_URL}/pub/katello-server-ca.crt -o /etc/pki/ca-trust/source/anchors/${SATELLITE_URL}.ca.crt"
 retry "update-ca-trust"
 
-KATELLO_INSTALLED=$(rpm -qa | grep -c katello)
-if [ $KATELLO_INSTALLED -eq 0 ]; then
+KATELLO_INSTALLED=$(rpm -qa | grep -c katello || true)
+if [ "$KATELLO_INSTALLED" -eq 0 ]; then
     retry "rpm -Uhv https://${SATELLITE_URL}/pub/katello-ca-consumer-latest.noarch.rpm"
 fi
 
-if ! subscription-manager status; then
+subscription-manager status
+if [ $? -ne 0 ]; then
     retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
 fi
 
