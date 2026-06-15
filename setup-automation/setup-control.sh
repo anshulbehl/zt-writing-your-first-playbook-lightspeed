@@ -43,21 +43,6 @@ EOF
 chmod 600 /home/rhel/.ssh/config
 chown -R rhel:rhel /home/rhel/.ssh
 
-# Expect wrapper so 'ssh node1' auto-fills the password (demo lab)
-cat > /usr/local/bin/ssh-wrapper << 'SCRIPT'
-#!/usr/bin/expect -f
-set timeout 30
-spawn /usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {*}$argv
-expect {
-    "password:" { send "ansible123!\r"; interact }
-    timeout     { interact }
-}
-SCRIPT
-chmod 755 /usr/local/bin/ssh-wrapper
-cat >> /home/rhel/.bashrc << 'EOF'
-alias ssh='/usr/local/bin/ssh-wrapper'
-EOF
-
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
 chown -R rhel:rhel /home/rhel/ansible-files

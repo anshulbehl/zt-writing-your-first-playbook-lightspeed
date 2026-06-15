@@ -82,3 +82,51 @@
     when:
     - r_result is defined
     - r_result.rc != 0
+
+- name: Generate SSH keypair for lab
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  - name: Create temp keypair
+    ansible.builtin.command:
+      cmd: ssh-keygen -t rsa -b 4096 -f /tmp/lab-ssh-key -N "" -C "lab-ssh-key" -q
+      creates: /tmp/lab-ssh-key
+
+- name: Distribute SSH keys
+  hosts: all:!localhost
+  gather_facts: false
+  vars:
+    bastion_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+  tasks:
+  - name: Create .ssh directory
+    ansible.builtin.file:
+      path: /home/rhel/.ssh
+      state: directory
+      owner: rhel
+      group: rhel
+      mode: '0700'
+
+  - name: Copy private key to control
+    ansible.builtin.copy:
+      src: /tmp/lab-ssh-key
+      dest: /home/rhel/.ssh/id_rsa
+      owner: rhel
+      group: rhel
+      mode: '0600'
+    when: inventory_hostname == bastion_host
+
+  - name: Copy public key to control
+    ansible.builtin.copy:
+      src: /tmp/lab-ssh-key.pub
+      dest: /home/rhel/.ssh/id_rsa.pub
+      owner: rhel
+      group: rhel
+      mode: '0644'
+    when: inventory_hostname == bastion_host
+
+  - name: Add public key to authorized_keys on nodes
+    ansible.posix.authorized_key:
+      user: rhel
+      key: "{{ lookup('file', '/tmp/lab-ssh-key.pub') }}"
+      state: present
+    when: inventory_hostname != bastion_host
