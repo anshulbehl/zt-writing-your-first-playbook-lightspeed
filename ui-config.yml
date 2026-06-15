@@ -19,7 +19,7 @@ antora:
 
 tabs:
   - name: VS Code
-    url: https://vscode-${guid}.${domain}/
+    url: https://vscode-${guid}.${domain}/?folder=/home/rhel/ansible-files
     external: false
   - name: Control
     url: /wetty
