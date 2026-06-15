@@ -31,11 +31,32 @@ chown rhel:rhel /home/rhel/network-debug.txt
 # Node /etc/hosts entries are configured by setup-automation/main.yml
 # using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
 
-# Generate SSH keypair for passwordless access to nodes
+# Configure SSH defaults for the rhel user
 mkdir -p /home/rhel/.ssh
 chmod 700 /home/rhel/.ssh
-ssh-keygen -t rsa -b 4096 -f /home/rhel/.ssh/id_rsa -N "" -C "lab-ssh-key" -q
+cat > /home/rhel/.ssh/config << 'EOF'
+Host node1 node2 node3
+    User rhel
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+EOF
+chmod 600 /home/rhel/.ssh/config
 chown -R rhel:rhel /home/rhel/.ssh
+
+# Expect wrapper so 'ssh node1' auto-fills the password (demo lab)
+cat > /usr/local/bin/ssh-wrapper << 'SCRIPT'
+#!/usr/bin/expect -f
+set timeout 30
+spawn /usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {*}$argv
+expect {
+    "password:" { send "ansible123!\r"; interact }
+    timeout     { interact }
+}
+SCRIPT
+chmod 755 /usr/local/bin/ssh-wrapper
+cat >> /home/rhel/.bashrc << 'EOF'
+alias ssh='/usr/local/bin/ssh-wrapper'
+EOF
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -90,6 +111,7 @@ database
 
 [all:vars]
 ansible_user=rhel
+ansible_password=ansible123!
 ansible_connection=ssh
 EOF
 

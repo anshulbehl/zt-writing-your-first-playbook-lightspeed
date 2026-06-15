@@ -11,4 +11,5 @@ database
 
 [all:vars]
 ansible_user=rhel
+ansible_password=ansible123!
 ansible_connection=ssh
