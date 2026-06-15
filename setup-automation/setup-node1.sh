@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Setup script for node01
+# Setup script for node1
 # Registers with Satellite so students can install packages (httpd, etc.)
 
 retry() {
@@ -29,4 +29,4 @@ if [ $? -ne 0 ]; then
     retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
 fi
 
-echo "Node01 setup complete"
+echo "Node1 setup complete"

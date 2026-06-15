@@ -19,9 +19,9 @@ echo "Routing Table:" >> /home/rhel/network-debug.txt
 ip route show >> /home/rhel/network-debug.txt
 echo "" >> /home/rhel/network-debug.txt
 echo "DNS Resolution Test:" >> /home/rhel/network-debug.txt
-getent hosts node01 >> /home/rhel/network-debug.txt 2>&1 || echo "node01 resolution FAILED" >> /home/rhel/network-debug.txt
-getent hosts node02 >> /home/rhel/network-debug.txt 2>&1 || echo "node02 resolution FAILED" >> /home/rhel/network-debug.txt
-getent hosts node03 >> /home/rhel/network-debug.txt 2>&1 || echo "node03 resolution FAILED" >> /home/rhel/network-debug.txt
+getent hosts node1 >> /home/rhel/network-debug.txt 2>&1 || echo "node1 resolution FAILED" >> /home/rhel/network-debug.txt
+getent hosts node2 >> /home/rhel/network-debug.txt 2>&1 || echo "node2 resolution FAILED" >> /home/rhel/network-debug.txt
+getent hosts node3 >> /home/rhel/network-debug.txt 2>&1 || echo "node3 resolution FAILED" >> /home/rhel/network-debug.txt
 echo "" >> /home/rhel/network-debug.txt
 echo "Gateway reachability:" >> /home/rhel/network-debug.txt
 ping -c 2 10.0.2.1 >> /home/rhel/network-debug.txt 2>&1 || echo "Gateway 10.0.2.1 not reachable" >> /home/rhel/network-debug.txt
@@ -30,6 +30,21 @@ chown rhel:rhel /home/rhel/network-debug.txt
 
 # Node /etc/hosts entries are configured by setup-automation/main.yml
 # using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
+
+# Install SSH private key for passwordless access to nodes
+mkdir -p /home/rhel/.ssh
+chmod 700 /home/rhel/.ssh
+cat > /home/rhel/.ssh/id_ed25519 << 'EOF'
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACDaOhUQb4Kn2H0p1rf4tVP1ujXoL68X62cFpGeeIsomvgAAAJCoPlaiqD5W
+ogAAAAtzc2gtZWQyNTUxOQAAACDaOhUQb4Kn2H0p1rf4tVP1ujXoL68X62cFpGeeIsomvg
+AAAEBrkrOSm/JnUrq+kkX2dm+2IPMoFCkCnwBsx+bu0EAgto6FRBvgqfYfSnWt/i1U/W6
+NegvrxfrZwWkZ54iyia+AAAAC2xhYi1zc2gta2V5AQI=
+-----END OPENSSH PRIVATE KEY-----
+EOF
+chmod 600 /home/rhel/.ssh/id_ed25519
+chown -R rhel:rhel /home/rhel/.ssh
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
@@ -72,11 +87,11 @@ EOF
 # Create inventory
 cat > /home/rhel/ansible-files/inventory << 'EOF'
 [web]
-node01
-node02
+node1
+node2
 
 [database]
-node03
+node3
 
 [nodes:children]
 web
@@ -84,7 +99,6 @@ database
 
 [all:vars]
 ansible_user=rhel
-ansible_password=ansible123!
 ansible_connection=ssh
 EOF
 

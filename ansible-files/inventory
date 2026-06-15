@@ -1,9 +1,9 @@
 [web]
-node01
-node02
+node1
+node2
 
 [database]
-node03
+node3
 
 [nodes:children]
 web
@@ -11,5 +11,4 @@ database
 
 [all:vars]
 ansible_user=rhel
-ansible_password=ansible123!
 ansible_connection=ssh

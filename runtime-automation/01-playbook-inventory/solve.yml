@@ -17,11 +17,11 @@
       ansible.builtin.copy:
         content: |
           [web]
-          node01
-          node02
+          node1
+          node2
 
           [database]
-          node03
+          node3
 
           [nodes:children]
           web

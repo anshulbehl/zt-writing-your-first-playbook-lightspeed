@@ -39,7 +39,7 @@ virtualmachines:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node01"
+  - name: "node1"
     image: "rhel-9.6"
     memory: "8G"
     cores: 2
@@ -50,16 +50,16 @@ virtualmachines:
     networks:
       - default
     services:
-      - name: node01-ssh
+      - name: node1-ssh
         ports:
           - port: 22
             protocol: TCP
             targetPort: 22
             name: ssh
     routes:
-      - name: node01-ssh
-        host: node01
-        service: node01-ssh
+      - name: node1-ssh
+        host: node1
+        service: node1-ssh
         targetPort: 22
         tls: true
         tls_termination: Edge
@@ -68,11 +68,13 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node02"
+  - name: "node2"
     image: "rhel-9.6"
     memory: "8G"
     cores: 2
@@ -83,16 +85,16 @@ virtualmachines:
     networks:
       - default
     services:
-      - name: node02-ssh
+      - name: node2-ssh
         ports:
           - port: 22
             protocol: TCP
             targetPort: 22
             name: ssh
     routes:
-      - name: node02-ssh
-        host: node02
-        service: node02-ssh
+      - name: node2-ssh
+        host: node2
+        service: node2-ssh
         targetPort: 22
         tls: true
         tls_termination: Edge
@@ -101,11 +103,13 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
 
-  - name: "node03"
+  - name: "node3"
     image: "rhel-9.6"
     memory: "8G"
     cores: 2
@@ -116,16 +120,16 @@ virtualmachines:
     networks:
       - default
     services:
-      - name: node03-ssh
+      - name: node3-ssh
         ports:
           - port: 22
             protocol: TCP
             targetPort: 22
             name: ssh
     routes:
-      - name: node03-ssh
-        host: node03
-        service: node03-ssh
+      - name: node3-ssh
+        host: node3
+        service: node3-ssh
         targetPort: 22
         tls: true
         tls_termination: Edge
@@ -134,6 +138,8 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd

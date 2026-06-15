@@ -33,24 +33,24 @@
         msg: "inventory is missing the [database] group"
       when: r_database.rc != 0
 
-    - name: Check inventory contains node01 and node02 in web
-      ansible.builtin.shell: grep -A5 '^\[web\]' /home/{{ USER }}/ansible-files/inventory | grep -q 'node01'
+    - name: Check inventory contains node1 in web group
+      ansible.builtin.shell: grep -A5 '^\[web\]' /home/{{ USER }}/ansible-files/inventory | grep -q 'node1'
       changed_when: false
       failed_when: false
-      register: r_node01
+      register: r_node1
 
-    - name: Fail if node01 missing from web group
+    - name: Fail if node1 missing from web group
       ansible.builtin.fail:
-        msg: "inventory is missing node01 under the [web] group"
-      when: r_node01.rc != 0
+        msg: "inventory is missing node1 under the [web] group"
+      when: r_node1.rc != 0
 
-    - name: Check inventory contains node03 in database
-      ansible.builtin.shell: grep -A5 '^\[database\]' /home/{{ USER }}/ansible-files/inventory | grep -q 'node03'
+    - name: Check inventory contains node3 in database
+      ansible.builtin.shell: grep -A5 '^\[database\]' /home/{{ USER }}/ansible-files/inventory | grep -q 'node3'
       changed_when: false
       failed_when: false
-      register: r_node03
+      register: r_node3
 
-    - name: Fail if node03 missing from database group
+    - name: Fail if node3 missing from database group
       ansible.builtin.fail:
-        msg: "inventory is missing node03 under the [database] group"
-      when: r_node03.rc != 0
+        msg: "inventory is missing node3 under the [database] group"
+      when: r_node3.rc != 0
