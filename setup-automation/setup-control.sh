@@ -31,19 +31,10 @@ chown rhel:rhel /home/rhel/network-debug.txt
 # Node /etc/hosts entries are configured by setup-automation/main.yml
 # using each VM's actual IP from Ansible facts (getent can return duplicate IPs in CNV DNS)
 
-# Install SSH private key for passwordless access to nodes
+# Generate SSH keypair for passwordless access to nodes
 mkdir -p /home/rhel/.ssh
 chmod 700 /home/rhel/.ssh
-cat > /home/rhel/.ssh/id_ed25519 << 'EOF'
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACDaOhUQb4Kn2H0p1rf4tVP1ujXoL68X62cFpGeeIsomvgAAAJCoPlaiqD5W
-ogAAAAtzc2gtZWQyNTUxOQAAACDaOhUQb4Kn2H0p1rf4tVP1ujXoL68X62cFpGeeIsomvg
-AAAEBrkrOSm/JnUrq+kkX2dm+2IPMoFCkCnwBsx+bu0EAgto6FRBvgqfYfSnWt/i1U/W6
-NegvrxfrZwWkZ54iyia+AAAAC2xhYi1zc2gta2V5AQI=
------END OPENSSH PRIVATE KEY-----
-EOF
-chmod 600 /home/rhel/.ssh/id_ed25519
+ssh-keygen -t rsa -b 4096 -f /home/rhel/.ssh/id_rsa -N "" -C "lab-ssh-key" -q
 chown -R rhel:rhel /home/rhel/.ssh
 
 # Create ansible-files directory structure

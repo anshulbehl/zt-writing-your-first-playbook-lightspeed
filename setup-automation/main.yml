@@ -82,3 +82,21 @@
     when:
     - r_result is defined
     - r_result.rc != 0
+
+- name: Distribute SSH public key from control to nodes
+  hosts: node1:node2:node3
+  gather_facts: false
+  vars:
+    bastion_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+  tasks:
+  - name: Fetch public key from control
+    ansible.builtin.slurp:
+      src: /home/rhel/.ssh/id_rsa.pub
+    delegate_to: "{{ bastion_host }}"
+    register: r_pubkey
+
+  - name: Add public key to authorized_keys on node
+    ansible.posix.authorized_key:
+      user: rhel
+      key: "{{ r_pubkey.content | b64decode }}"
+      state: present

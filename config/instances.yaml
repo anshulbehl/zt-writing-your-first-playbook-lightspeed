@@ -68,8 +68,6 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
-      ssh_authorized_keys:
-        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
@@ -103,8 +101,6 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
-      ssh_authorized_keys:
-        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
@@ -138,8 +134,6 @@ virtualmachines:
       user: rhel
       password: ansible123!
       chpasswd: { expire: False }
-      ssh_authorized_keys:
-        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINo6FRBvgqfYfSnWt/i1U/W6NegvrxfrZwWkZ54iyia+ lab-ssh-key
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
