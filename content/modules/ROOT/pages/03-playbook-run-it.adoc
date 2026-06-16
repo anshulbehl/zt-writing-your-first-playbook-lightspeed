@@ -194,15 +194,15 @@ Each host rendered a unique MOTD because Ansible substituted each host's facts (
 [%collapsible]
 =====
 
-====
+=====
 .What is idempotency?
 [%collapsible]
-===
+====
 *Idempotency* means that running an operation once produces the same result as running it many times. An idempotent Ansible task only makes a change when the desired state does not already exist. If the state is already correct, the task reports `ok` and does nothing.
 
 This is what separates Ansible from shell scripts: you can safely run a playbook repeatedly and it will never break a system that is already configured correctly. Ansible checks the current state before every task and only acts when necessary.
-===
 ====
+=====
 
 [NOTE]
 ====

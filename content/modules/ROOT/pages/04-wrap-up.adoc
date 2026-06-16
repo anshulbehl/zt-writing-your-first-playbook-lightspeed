@@ -106,10 +106,10 @@ Combining AI coding assistants (for playbook generation) with version control (f
 =====
 
 
-=====
+======
 .🤖 Use Other AI Tools for Automation
 [%collapsible]
-====
+=====
 The Automation Coding Assistant is one of many AI-powered tools for automation. As you continue your journey, you can also:
 
 * *Use Claude Code or ChatGPT* to generate Ansible playbooks from natural language descriptions
@@ -131,8 +131,8 @@ When prompting any AI tool for Ansible automation, always specify:
 
 The more specific your prompt, the better the output.
 ====
-====
 =====
+======
 
 
 == Final Thoughts

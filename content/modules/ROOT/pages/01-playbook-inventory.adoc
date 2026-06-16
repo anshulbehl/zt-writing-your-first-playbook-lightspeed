@@ -52,7 +52,7 @@ In this lab, *you will use the coding assistant to generate every playbook*. You
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Verify the coding assistant is ready
+.☑️ Task 1 - Verify the Ansible extension is installed
 [%collapsible]
 =====
 [NOTE]
@@ -60,13 +60,13 @@ In this lab, *you will use the coding assistant to generate every playbook*. You
 Switch to the *VS Code* tab at the top of the screen.
 ====
 
-. Look at the bottom *status bar* of VS Code. You should see the Ansible automation coding assistant icon — a small AI or lightning indicator. It should already be connected and ready to use.
+. Look at the *left sidebar* of VS Code for the Extensions icon (or the Activity Bar). You should see the *Red Hat Ansible* extension already installed.
 
-. The coding assistant is pre-configured in this lab and connected automatically when VS Code starts. You can confirm it's working by looking for the status indicator in the bottom status bar.
+. Click on the Ansible extension icon in the left sidebar to open the Ansible extension panel. This panel provides quick access to playbook generation, explanation, and other automation features.
 
 [TIP]
 ====
-The automation coding assistant is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
+The Ansible extension and its automation coding assistant are pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
 ====
 =====
 ======

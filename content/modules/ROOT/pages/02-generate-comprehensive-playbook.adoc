@@ -99,20 +99,20 @@ This ensures the generated playbook matches what the validation system expects.
 Stay in the *VS Code* tab.
 ====
 
-. Open the *Command Palette* with `Ctrl+Shift+P` and type:
-+
-[source,role="execute"]
-----
-Ansible Lightspeed: Create a playbook with Ansible Lightspeed
-----
+. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
+
+. Click the *"Generate a Playbook with Ansible"* button in the extension panel.
 
 . When prompted, paste your comprehensive prompt from Task 1.
 
-. The coding assistant will generate the playbook and open it in a new tab. Review the output to confirm it includes:
+. The coding assistant will generate the playbook and show you a preview with suggested tasks. *Review the suggested steps* to confirm they match your prompt, then click *"Create Playbook"* to manually confirm and create the file.
+
+. The playbook will open in a new tab. Review the output to confirm it includes:
 +
    * A `vars:` section with `user_name`, `package_name`, and `apache_service_name`
    * Tasks with `when:` conditionals targeting the `web` group
    * A `template:` task referencing `templates/motd.j2`
+   * A `handlers:` section for restarting Apache
 
 . Save the file as `system_setup.yml` in the `/home/rhel/ansible-files/` directory:
 +
@@ -130,41 +130,7 @@ If the coding assistant's output is missing a required section (vars, handlers, 
 
 
 ======
-.☑️ Task 3 - Create the Jinja2 template
-[%collapsible]
-=====
-[NOTE]
-====
-Stay in the *VS Code* tab.
-====
-
-The playbook references a template that doesn't exist yet. You will create it manually (the coding assistant generates playbooks, but templates are separate files).
-
-. In the VS Code file explorer, right-click on the `ansible-files` directory and select *New Folder*. Name it `templates`.
-
-. Right-click on the `templates` folder and select *New File*. Name it `motd.j2`.
-
-. Paste this Jinja2 content into the file:
-+
-[source,jinja2]
-----
-Welcome to {{ ansible_hostname }}.
-OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
-Architecture: {{ ansible_architecture }}
-----
-
-. Save the file with `Ctrl+S`.
-
-[TIP]
-====
-Jinja2 templates use `{{ variable_name }}` for substitution, just like Ansible playbooks. The difference is that templates are rendered on the control node *before* being copied to managed nodes, so each host gets a customized version.
-====
-=====
-======
-
-
-======
-.☑️ Task 4 - Use the coding assistant to explain the generated playbook
+.☑️ Task 3 - Use the coding assistant to explain the generated playbook
 [%collapsible]
 =====
 [NOTE]
@@ -172,29 +138,24 @@ Jinja2 templates use `{{ variable_name }}` for substitution, just like Ansible p
 Stay in the *VS Code* tab with `system_setup.yml` open.
 ====
 
-Now that you have a complete playbook, use the coding assistant's *Explain* feature to understand specific sections.
+Now that you have a complete playbook, use the coding assistant's *Explain* feature to understand it.
 
-. *Explain the handlers section*:
-   * Scroll to the `handlers:` section in `system_setup.yml`
-   * Select the entire `handlers:` block (including the handler name and task)
-   * Right-click and choose: `Ansible Lightspeed → Explain`
-   * Read the coding assistant's explanation of how handlers work and when they run
+. Make sure your `system_setup.yml` file is open in the editor.
 
-. *Explain a conditional task*:
-   * Find the task that installs kernel updates (it should have a `when:` clause)
-   * Select the entire task (from the task name to the `when:` line)
-   * Right-click and choose: `Ansible Lightspeed → Explain`
-   * Read how the coding assistant explains conditionals and inventory group targeting
+. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
 
-. *Explain the template task*:
-   * Find the task that uses `ansible.builtin.template`
-   * Select the entire task
-   * Right-click and choose: `Ansible Lightspeed → Explain`
-   * Read how templates differ from static file copies
+. Click the *"Explain Playbook"* button in the extension panel.
+
+. The coding assistant will analyze your entire playbook and provide an explanation covering:
+   * What the playbook does overall
+   * How the `vars:` section defines reusable values
+   * How `when:` conditionals target specific inventory groups
+   * How the `template:` task deploys dynamic configuration files
+   * How `handlers:` work and when they run
 
 [NOTE]
 ====
-The *Explain* feature is how you learn from the coding assistant's output. Whenever you see a pattern or module you don't recognize, select it and ask the assistant to explain — this builds your Ansible knowledge without leaving the editor.
+The *Explain Playbook* feature is how you learn from the coding assistant's output. It provides a comprehensive breakdown of what your automation does and why each section matters. You can use this feature on any playbook you encounter to build your Ansible knowledge without leaving the editor.
 ====
 =====
 ======
