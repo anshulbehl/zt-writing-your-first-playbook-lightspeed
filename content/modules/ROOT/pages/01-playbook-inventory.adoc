@@ -1,5 +1,5 @@
 :sectnums:
-= 1.0 - Meet Ansible Lightspeed
+= 1.0 - Meet Your Automation Coding Assistant
 
 == Understanding the Lab Environment
 
@@ -29,20 +29,22 @@ image::tabs.png[VS Code and Control tabs at the top of the screen,link=self,wind
 
 
 =====
-.What is Ansible Lightspeed?
+.What is the Automation Coding Assistant?
 [%collapsible]
 ====
-*Ansible Lightspeed* is an AI-powered coding assistant built into the *Red Hat Ansible* VS Code extension. It generates complete, ready-to-run Ansible playbooks from plain-English descriptions — no YAML knowledge required to get started.
+The *Automation Coding Assistant* is an AI-powered feature of the *Red Hat Ansible VS Code extension*. This extension transforms Visual Studio Code into a complete Ansible development environment, and the coding assistant takes it further by generating complete, ready-to-run Ansible playbooks from plain-English descriptions — no YAML knowledge required to get started.
 
-Here is what Lightspeed can do in this lab:
+This lab focuses on using the *Ansible VS Code extension's* automation coding assistant to write playbooks faster and learn Ansible patterns as you go.
 
-* *Playbook generation* — describe what you want in plain English, and Lightspeed produces a complete playbook in a new editor tab that you can save and run immediately.
+Here is what the coding assistant can do in this lab:
 
-* *Explain* — select any block of YAML, right-click, and ask Lightspeed to explain what it does in plain English.
+* *Playbook generation* — describe what you want in plain English, and the assistant produces a complete playbook in a new editor tab that you can save and run immediately.
 
-* *Content source tracing* — Lightspeed cites which Ansible Galaxy content informed its suggestion, so every generated task is grounded in real-world automation patterns.
+* *Explain* — select any block of YAML, right-click, and ask the assistant to explain what it does in plain English.
 
-In this lab, *you will use Lightspeed to generate every playbook*. Your job is to write clear prompts, review what Lightspeed produces, save the result, and run it.
+* *Content source tracing* — the assistant cites which Ansible Galaxy content informed its suggestion, so every generated task is grounded in real-world automation patterns.
+
+In this lab, *you will use the coding assistant to generate every playbook*. Your job is to write clear prompts, review what it produces, save the result, and run it.
 ====
 =====
 
@@ -50,7 +52,7 @@ In this lab, *you will use Lightspeed to generate every playbook*. Your job is t
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Verify Lightspeed is ready
+.☑️ Task 1 - Verify the coding assistant is ready
 [%collapsible]
 =====
 [NOTE]
@@ -58,13 +60,13 @@ In this lab, *you will use Lightspeed to generate every playbook*. Your job is t
 Switch to the *VS Code* tab at the top of the screen.
 ====
 
-. Look at the bottom *status bar* of VS Code. You should see the Ansible Lightspeed icon — a small AI or lightning indicator. It should already be connected and ready to use.
+. Look at the bottom *status bar* of VS Code. You should see the Ansible automation coding assistant icon — a small AI or lightning indicator. It should already be connected and ready to use.
 
-. Lightspeed is pre-configured in this lab and connected automatically when VS Code starts. You can confirm it's working by looking for the Lightspeed status indicator in the bottom status bar.
+. The coding assistant is pre-configured in this lab and connected automatically when VS Code starts. You can confirm it's working by looking for the status indicator in the bottom status bar.
 
 [TIP]
 ====
-Lightspeed is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
+The automation coding assistant is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
 ====
 =====
 ======
@@ -101,13 +103,13 @@ web
 database
 ----
 
-. Let Lightspeed explain it. *Select all the text* in the file (`Ctrl+A`), then *right-click* and choose:
+. Let the coding assistant explain it. *Select all the text* in the file (`Ctrl+A`), then *right-click* and choose:
 +
 ----
 Ansible Lightspeed → Explain
 ----
 
-Read through Lightspeed's explanation. Notice how it describes the group structure and why grouping hosts matters for targeted automation.
+Read through the assistant's explanation. Notice how it describes the group structure and why grouping hosts matters for targeted automation.
 =====
 ======
 
@@ -166,10 +168,10 @@ ansible-navigator inventory --graph
 
 By completing this module, you now understand:
 
-* What Ansible Lightspeed is and how it fits into the VS Code workflow
+* What the Automation Coding Assistant is and how it fits into the VS Code workflow
 * How an Ansible inventory organizes managed nodes into groups
 * How to use `ansible-navigator inventory` to inspect inventory structure
-* How to use Lightspeed's Explain feature to understand existing automation
+* How to use the coding assistant's Explain feature to understand existing automation
 
 
 == Embracing the Next Challenge

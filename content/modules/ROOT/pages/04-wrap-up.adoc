@@ -7,37 +7,38 @@ Congratulations! You have successfully used *Ansible Lightspeed* to generate a p
 
 In this lab, you:
 
-* Connected to Ansible Lightspeed and verified it was ready to assist
+* Explored the *Red Hat Ansible VS Code extension* and its Automation Coding Assistant feature
 * Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, loops, and templates
-* Generated a complete playbook in one shot using Lightspeed's playbook generation feature
+* Generated a complete playbook in one shot using the Ansible VS Code extension's coding assistant
 * Created a Jinja2 template for dynamic configuration file deployment
 * Ran the playbook with `ansible-navigator` across multiple inventory groups
 * Verified user creation, package installation, service configuration, and template rendering
 * Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
 
-Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of Lightspeed's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
+Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of the coding assistant's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
 
 
-== The Power of Lightspeed for Ansible Automation
+== The Power of the Ansible VS Code Extension
 
-Ansible Lightspeed transforms how you write automation:
+The *Red Hat Ansible VS Code extension* and its Automation Coding Assistant transform how you write automation:
 
 * *Faster iteration* — generate a working playbook in seconds instead of writing YAML by hand
-* *Fewer syntax errors* — Lightspeed produces valid YAML and uses correct module parameters
+* *Fewer syntax errors* — the assistant produces valid YAML and uses correct module parameters
 * *Learning from examples* — use the Explain feature to understand patterns and best practices
 * *Content source tracing* — see which Ansible Galaxy content informed each suggestion
+* *Integrated development* — syntax highlighting, linting, and debugging all in one extension
 
-In production environments, Lightspeed helps teams:
+In production environments, the Ansible VS Code extension helps teams:
 
 * Onboard new Ansible users faster by reducing the YAML learning curve
 * Standardize playbook patterns across teams (consistent variable naming, handler usage, conditional syntax)
-* Reduce time spent looking up module documentation — Lightspeed knows the parameters
+* Reduce time spent looking up module documentation — the assistant knows the parameters
 * Focus on *what to automate* instead of *how to write the YAML*
 
 
 == Next Steps: Beyond This Lab
 
-Now that you understand how to use Lightspeed to generate playbooks, here are ways to continue your Ansible journey:
+Now that you understand how to use AI coding assistants to generate playbooks, here are ways to continue your Ansible journey:
 
 =====
 .🚀 Explore Ansible Galaxy
@@ -49,7 +50,7 @@ Now that you understand how to use Lightspeed to generate playbooks, here are wa
 * Install a role with `ansible-galaxy install <role_name>`
 * Use collections like `community.general` or `ansible.posix` for additional modules
 
-Lightspeed is trained on Galaxy content, so the playbooks it generates often reference popular community roles and collections.
+AI coding assistants are trained on Galaxy content, so the playbooks they generate often reference popular community roles and collections.
 ====
 =====
 
@@ -85,7 +86,7 @@ A role can be applied to any playbook with:
     - webserver
 ----
 
-You can prompt Lightspeed to generate roles as well, not just standalone playbooks.
+You can prompt the coding assistant to generate roles as well, not just standalone playbooks.
 ====
 =====
 
@@ -100,16 +101,16 @@ Ansible playbooks can be triggered from CI/CD tools like Jenkins, GitLab CI, or 
 * *Infrastructure as Code (IaC)* — store playbooks in version control and track changes over time
 * *Testing automation* — run playbooks in a staging environment before production
 
-Combining Lightspeed (for playbook generation) with version control (for change tracking) and CI/CD (for automation) creates a powerful workflow.
+Combining AI coding assistants (for playbook generation) with version control (for change tracking) and CI/CD (for automation) creates a powerful workflow.
 ====
 =====
 
 
 =====
-.🤖 Use AI Tools Beyond Lightspeed
+.🤖 Use Other AI Tools for Automation
 [%collapsible]
 ====
-Ansible Lightspeed is one of many AI-powered tools for automation. As you continue your journey, you can also:
+The Automation Coding Assistant is one of many AI-powered tools for automation. As you continue your journey, you can also:
 
 * *Use Claude Code or ChatGPT* to generate Ansible playbooks from natural language descriptions
 * *Ask AI tools to explain complex playbooks* you find in production or open source projects
@@ -136,13 +137,13 @@ The more specific your prompt, the better the output.
 
 == Final Thoughts
 
-Ansible Lightspeed is not a replacement for learning Ansible — it is a *force multiplier* that accelerates your work once you understand the fundamentals. The best results come from combining:
+The *Red Hat Ansible VS Code extension* and its AI coding assistant are not a replacement for learning Ansible — they are a *force multiplier* that accelerates your work once you understand the fundamentals. The best results come from combining:
 
 * *Your domain knowledge* — what to automate and why
 * *Ansible's declarative model* — describing desired state instead of scripting steps
-* *Lightspeed's generation* — producing correct YAML faster than manual authoring
+* *The Ansible VS Code extension's AI features* — producing correct YAML faster than manual authoring
 
-As you continue your automation journey, remember: the quality of your automation depends on the quality of your prompts. Think clearly, describe precisely, and Lightspeed will handle the rest.
+As you continue your automation journey, install the Red Hat Ansible extension in your own VS Code environment and keep practicing with the coding assistant. Remember: the quality of your automation depends on the quality of your prompts. Think clearly, describe precisely, and the extension's coding assistant will handle the rest.
 
 Thank you for completing this lab. Now go automate something!
 
