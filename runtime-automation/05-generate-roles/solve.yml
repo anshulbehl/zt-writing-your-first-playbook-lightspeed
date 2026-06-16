@@ -1,0 +1,134 @@
+---
+- name: Solve module 05 - Create role structure from system_setup playbook
+  hosts: controller
+  vars:
+    USER: rhel
+    ROLE_DIR: /home/rhel/ansible-files/roles/system_setup
+  tasks:
+    - name: Create role directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0755"
+      loop:
+        - "{{ ROLE_DIR }}"
+        - "{{ ROLE_DIR }}/tasks"
+        - "{{ ROLE_DIR }}/handlers"
+        - "{{ ROLE_DIR }}/templates"
+        - "{{ ROLE_DIR }}/vars"
+        - "{{ ROLE_DIR }}/defaults"
+        - "{{ ROLE_DIR }}/meta"
+
+    - name: Create tasks/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Install security updates for the kernel
+            ansible.builtin.dnf:
+              name: kernel
+              state: latest
+              security: true
+              update_only: true
+            when: inventory_hostname in groups['web']
+
+          - name: Create a new user
+            ansible.builtin.user:
+              name: "{% raw %}{{ user_name }}{% endraw %}"
+              state: present
+              create_home: true
+
+          - name: Install Apache on web servers
+            ansible.builtin.dnf:
+              name: "{% raw %}{{ package_name }}{% endraw %}"
+              state: present
+            when: inventory_hostname in groups['web']
+
+          - name: Ensure Apache is running and enabled
+            ansible.builtin.service:
+              name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+              state: started
+              enabled: true
+            when: inventory_hostname in groups['web']
+            notify: Restart Apache
+
+          - name: Update MOTD from Jinja2 Template
+            ansible.builtin.template:
+              src: motd.j2
+              dest: /etc/motd
+        dest: "{{ ROLE_DIR }}/tasks/main.yml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create handlers/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          - name: Restart Apache
+            ansible.builtin.service:
+              name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+              state: restarted
+        dest: "{{ ROLE_DIR }}/handlers/main.yml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create vars/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          user_name: padawan
+          package_name: httpd
+          apache_service_name: httpd
+        dest: "{{ ROLE_DIR }}/vars/main.yml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create defaults/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          # Default values for system_setup role
+          # These can be overridden by the calling playbook
+          user_name: padawan
+          package_name: httpd
+          apache_service_name: httpd
+        dest: "{{ ROLE_DIR }}/defaults/main.yml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Create meta/main.yml
+      ansible.builtin.copy:
+        content: |
+          ---
+          galaxy_info:
+            author: Workshop Student
+            description: Basic system setup role
+            license: GPL-3.0-or-later
+            min_ansible_version: "2.15"
+            platforms:
+              - name: EL
+                versions:
+                  - "9"
+          dependencies: []
+        dest: "{{ ROLE_DIR }}/meta/main.yml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Copy MOTD template to role
+      ansible.builtin.copy:
+        content: |
+          {% raw %}
+          Welcome to {{ ansible_hostname }}.
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          {% endraw %}
+        dest: "{{ ROLE_DIR }}/templates/motd.j2"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"

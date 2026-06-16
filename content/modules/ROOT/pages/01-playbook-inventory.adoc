@@ -40,7 +40,7 @@ Here is what the coding assistant can do in this lab:
 
 * *Playbook generation* — describe what you want in plain English, and the assistant produces a complete playbook in a new editor tab that you can save and run immediately.
 
-* *Explain* — select any block of YAML, right-click, and ask the assistant to explain what it does in plain English.
+* *Role generation* — convert an existing playbook into a reusable Ansible role with a single click, organizing tasks, handlers, templates, and variables into the standard role directory structure.
 
 * *Content source tracing* — the assistant cites which Ansible Galaxy content informed its suggestion, so every generated task is grounded in real-world automation patterns.
 
@@ -103,13 +103,7 @@ web
 database
 ----
 
-. Let the coding assistant explain it. *Select all the text* in the file (`Ctrl+A`), then *right-click* and choose:
-+
-----
-Ansible Lightspeed → Explain
-----
-
-Read through the assistant's explanation. Notice how it describes the group structure and why grouping hosts matters for targeted automation.
+. Notice how hosts are organized into groups: `[web]` contains `node1` and `node2`, `[database]` contains `node3`, and `[nodes:children]` groups them all together. This grouping lets you target specific sets of servers — for example, installing a web server only on the `web` group while creating a user on all hosts.
 =====
 ======
 
@@ -171,7 +165,7 @@ By completing this module, you now understand:
 * What the Automation Coding Assistant is and how it fits into the VS Code workflow
 * How an Ansible inventory organizes managed nodes into groups
 * How to use `ansible-navigator inventory` to inspect inventory structure
-* How to use the coding assistant's Explain feature to understand existing automation
+* How to navigate the Ansible extension panel in VS Code
 
 
 == Embracing the Next Challenge

@@ -1,0 +1,7 @@
+---
+- name: Validate module 03 - Always passes (informational module)
+  hosts: controller
+  tasks:
+    - name: Module 03 is complete
+      ansible.builtin.debug:
+        msg: "Module 03 validation passed — proceed to the next module."

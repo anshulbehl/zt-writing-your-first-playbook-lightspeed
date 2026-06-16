@@ -1,0 +1,7 @@
+---
+- name: Solve module 03 - Informational module, nothing to solve
+  hosts: controller
+  tasks:
+    - name: Module 03 is informational
+      ansible.builtin.debug:
+        msg: "This module is a walkthrough — no action needed. Click Next to proceed."

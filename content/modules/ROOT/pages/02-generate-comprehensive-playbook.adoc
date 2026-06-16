@@ -129,38 +129,6 @@ If the coding assistant's output is missing a required section (vars, handlers, 
 ======
 
 
-======
-.☑️ Task 3 - Use the coding assistant to explain the generated playbook
-[%collapsible]
-=====
-[NOTE]
-====
-Stay in the *VS Code* tab with `system_setup.yml` open.
-====
-
-Now that you have a complete playbook, use the coding assistant's *Explain* feature to understand it.
-
-. Make sure your `system_setup.yml` file is open in the editor.
-
-. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
-
-. Click the *"Explain Playbook"* button in the extension panel.
-
-. The coding assistant will analyze your entire playbook and provide an explanation covering:
-   * What the playbook does overall
-   * How the `vars:` section defines reusable values
-   * How `when:` conditionals target specific inventory groups
-   * How the `template:` task deploys dynamic configuration files
-   * How `handlers:` work and when they run
-
-[NOTE]
-====
-The *Explain Playbook* feature is how you learn from the coding assistant's output. It provides a comprehensive breakdown of what your automation does and why each section matters. You can use this feature on any playbook you encounter to build your Ansible knowledge without leaving the editor.
-====
-=====
-======
-
-
 == Learning Outcomes
 
 By completing this module, you now understand:
@@ -168,7 +136,6 @@ By completing this module, you now understand:
 * How to construct a comprehensive LLM prompt that produces accurate, production-ready playbooks
 * Why specificity matters when prompting the coding assistant (variables, conditionals, templates)
 * How to use the coding assistant's generation feature to create a full playbook from a single prompt
-* How to use the coding assistant's Explain feature to learn from generated code
 * The structure of a real-world playbook that manages multiple concerns (packages, users, services, configuration files)
 
 

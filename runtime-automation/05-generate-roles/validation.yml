@@ -1,0 +1,30 @@
+---
+- name: Validate module 05 - Verify role structure exists
+  hosts: controller
+  vars:
+    USER: rhel
+    ROLES_DIR: /home/rhel/ansible-files/roles
+  tasks:
+    - name: Check that roles directory exists
+      ansible.builtin.stat:
+        path: "{{ ROLES_DIR }}"
+      register: roles_dir
+      failed_when: not roles_dir.stat.exists
+
+    - name: Find role subdirectories
+      ansible.builtin.find:
+        paths: "{{ ROLES_DIR }}"
+        file_type: directory
+        recurse: false
+      register: role_dirs
+
+    - name: Verify at least one role exists
+      ansible.builtin.fail:
+        msg: "No role directories found under {{ ROLES_DIR }}/"
+      when: role_dirs.matched == 0
+
+    - name: Check first role has tasks/main.yml
+      ansible.builtin.stat:
+        path: "{{ role_dirs.files[0].path }}/tasks/main.yml"
+      register: tasks_file
+      failed_when: not tasks_file.stat.exists

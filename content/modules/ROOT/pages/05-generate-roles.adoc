@@ -1,0 +1,190 @@
+:sectnums:
+= 1.4 - Convert Your Playbook to a Role
+
+You have a working playbook that installs packages, creates users, deploys templates, and manages services. In this module, you will use the coding assistant to convert that playbook into an *Ansible role* — the standard way to organize and reuse automation in production.
+
+== Understanding Roles
+
+=====
+.💡 What is an Ansible role?
+[%collapsible]
+====
+A *role* is a structured way to organize automation into reusable components. Instead of putting everything in one playbook file, a role separates concerns into a standard directory layout:
+
+[source]
+----
+roles/
+└── system_setup/
+    ├── tasks/main.yml       # The tasks to execute
+    ├── handlers/main.yml    # Handlers (e.g., restart services)
+    ├── templates/           # Jinja2 template files
+    ├── vars/main.yml        # Variables specific to this role
+    ├── defaults/main.yml    # Default variable values
+    └── meta/main.yml        # Role metadata and dependencies
+----
+
+Roles make automation:
+
+* *Reusable* — apply the same role to different playbooks and projects
+* *Shareable* — publish roles to Ansible Galaxy for others to use
+* *Maintainable* — each concern lives in its own file, making changes easier to track
+
+A playbook that uses a role looks like this:
+
+[source,yaml]
+----
+---
+- name: Configure systems
+  hosts: all
+  become: true
+  roles:
+    - system_setup
+----
+
+One line replaces an entire playbook of tasks, variables, handlers, and templates.
+====
+=====
+
+
+== Hands-On Experience
+
+======
+.☑️ Task 1 - Generate a role with the coding assistant
+[%collapsible]
+=====
+[NOTE]
+====
+Switch to the *VS Code* tab.
+====
+
+. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
+
+. Click the *"Generate a Role"* button in the extension panel.
+
+. When prompted, paste this prompt — it is similar to the one you used to generate your playbook:
++
+----
+Create an Ansible role called "system_setup" that performs basic system configuration.
+
+Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
+
+Include these tasks in order:
+1. Install security updates for the kernel package, but only on hosts in the web group using the conditional: when: inventory_hostname in groups['web']
+2. Create a user with the name from user_name variable, ensuring a home directory is created
+3. Install the package from package_name variable, only on the web group using the same conditional
+4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group using the same conditional
+5. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
+
+Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
+----
+
+. The coding assistant will generate the role structure. *Review the suggested steps* to confirm they match your prompt, then click *"Create Role"* to save it.
+
+. The role should be created under a `roles/` directory in your workspace.
+
+[TIP]
+====
+Notice how the prompt is almost identical to the one you used for playbook generation — but this time the coding assistant organizes the output into the role directory structure instead of a single YAML file.
+====
+=====
+======
+
+
+======
+.☑️ Task 2 - Explore the role structure
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *VS Code* tab.
+====
+
+. In the VS Code file explorer, expand the `roles/` directory that was just created. You should see a subdirectory (e.g., `system_setup/`) with several folders inside.
+
+. Open `tasks/main.yml` — this contains the tasks, similar to what you see in your `system_setup.yml` playbook. But notice what is *missing*:
++
+   * No `hosts:` or `become:` — those are set by the playbook that *calls* the role
+   * No `vars:` section inline — variables have moved to their own file
+
+. Open `handlers/main.yml` — the Apache restart handler lives here instead of at the bottom of a playbook.
+
+. Check the `vars/` or `defaults/` directory for your variable definitions (`user_name`, `package_name`, `apache_service_name`).
+
+. If there is a `templates/` directory, confirm it contains `motd.j2`.
+=====
+======
+
+
+======
+.☑️ Task 3 - Understand the difference
+[%collapsible]
+=====
+
+=====
+.Playbook vs Role — where did everything go?
+[%collapsible]
+====
+[cols="1,1,1", options="header"]
+|===
+| Playbook Section | Role Location | Why
+
+| `hosts: all`, `become: true`
+| Removed (set by calling playbook)
+| Roles are host-agnostic — the playbook that imports the role decides where to run it
+
+| `vars:`
+| `vars/main.yml` or `defaults/main.yml`
+| Separated so callers can override values without editing the role
+
+| `tasks:`
+| `tasks/main.yml`
+| The core automation, isolated for clarity
+
+| `handlers:`
+| `handlers/main.yml`
+| Handlers are role-scoped — they only trigger from tasks in this role
+
+| `templates/motd.j2`
+| `templates/motd.j2`
+| Same location, but now the `ansible.builtin.template` module finds it relative to the role
+|===
+====
+=====
+
+The key insight: a role is not new automation — it is the *same automation reorganized* so it can be reused, shared, and maintained independently.
+=====
+======
+
+
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* What an Ansible role is and why roles exist
+* How to use the coding assistant to convert a playbook into a role
+* How a role's directory structure maps to playbook sections
+* The difference between `vars/` (role-specific) and `defaults/` (overridable) variables
+* How roles make automation reusable across different playbooks and projects
+
+
+== Embracing the Next Challenge
+
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you have completed the tasks, press the image:next.png[Next, 50] button to proceed to the wrap-up.
+
+* The image:next.png[Next, 50] button will validate that a role structure exists in your workspace.
+* You can also click image:solve.png[Solve, 55] to auto-complete the challenge.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+05-generate-roles[Writing your first playbook repository^].
+=====
+======

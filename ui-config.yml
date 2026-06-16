@@ -5,15 +5,21 @@ antora:
   dir: www
   modules:
     - name: 01-playbook-inventory
-      label: Meet Ansible Lightspeed
+      label: Meet the Coding Assistant
       solveButton: true
     - name: 02-generate-comprehensive-playbook
       label: Generate a Comprehensive Playbook
       solveButton: true
-    - name: 03-playbook-run-it
+    - name: 03-understand-the-playbook
+      label: Understand Your Playbook
+      solveButton: false
+    - name: 04-playbook-run-it
       label: Run and Verify
       solveButton: true
-    - name: 04-wrap-up
+    - name: 05-generate-roles
+      label: Convert to a Role
+      solveButton: true
+    - name: 06-wrap-up
       label: Wrap-Up and Next Steps
       solveButton: false
 

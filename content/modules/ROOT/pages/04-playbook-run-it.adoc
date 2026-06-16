@@ -1,5 +1,5 @@
 :sectnums:
-= 1.2 - Run and Verify the Playbook
+= 1.3 - Run and Verify the Playbook
 
 In this challenge, you will run the comprehensive playbook generated in the previous module using *ansible-navigator*, verify that every component worked correctly across multiple hosts, and discover one of Ansible's most important concepts: *idempotency*.
 
@@ -264,6 +264,6 @@ Once you have completed the tasks, press the image:next.png[Next, 50] button to 
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+03-playbook-run-it[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+04-playbook-run-it[Writing your first playbook repository^].
 =====
 ======

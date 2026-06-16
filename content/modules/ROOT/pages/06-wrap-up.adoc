@@ -1,5 +1,5 @@
 :sectnums:
-= 1.3 - Wrap-Up and Next Steps
+= 1.5 - Wrap-Up and Next Steps
 
 Congratulations! You have successfully used *Ansible Lightspeed* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
 
@@ -10,10 +10,11 @@ In this lab, you:
 * Explored the *Red Hat Ansible VS Code extension* and its Automation Coding Assistant feature
 * Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, loops, and templates
 * Generated a complete playbook in one shot using the Ansible VS Code extension's coding assistant
-* Created a Jinja2 template for dynamic configuration file deployment
+* Understood each component of the playbook — play headers, variables, tasks, conditionals, templates, and handlers
 * Ran the playbook with `ansible-navigator` across multiple inventory groups
 * Verified user creation, package installation, service configuration, and template rendering
 * Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
+* Converted the playbook into a reusable *Ansible role* using the coding assistant's role generation feature
 
 Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of the coding assistant's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
 
@@ -24,7 +25,7 @@ The *Red Hat Ansible VS Code extension* and its Automation Coding Assistant tran
 
 * *Faster iteration* — generate a working playbook in seconds instead of writing YAML by hand
 * *Fewer syntax errors* — the assistant produces valid YAML and uses correct module parameters
-* *Learning from examples* — use the Explain feature to understand patterns and best practices
+* *Role generation* — convert playbooks into reusable roles with a single click
 * *Content source tracing* — see which Ansible Galaxy content informed each suggestion
 * *Integrated development* — syntax highlighting, linting, and debugging all in one extension
 
@@ -56,37 +57,17 @@ AI coding assistants are trained on Galaxy content, so the playbooks they genera
 
 
 =====
-.📦 Learn About Ansible Roles
+.📦 Take Roles Further
 [%collapsible]
 ====
-As your automation grows, playbooks become difficult to manage. *Roles* solve this by organizing tasks, variables, handlers, templates, and files into a reusable directory structure:
+In the previous module, you converted your playbook into a role using the coding assistant. To continue developing your role skills:
 
-----
-roles/
-  webserver/
-    tasks/
-      main.yml          # Tasks to run
-    handlers/
-      main.yml          # Handlers triggered by tasks
-    templates/
-      httpd.conf.j2     # Jinja2 templates
-    vars/
-      main.yml          # Role-specific variables
-    defaults/
-      main.yml          # Default variable values
-----
+* *Publish to Galaxy* — share your role at https://galaxy.ansible.com so others can reuse it
+* *Add role dependencies* — list other roles yours depends on in `meta/main.yml`
+* *Use `defaults/` vs `vars/`* — put values users should override in `defaults/main.yml`, and values that should stay fixed in `vars/main.yml`
+* *Test with Molecule* — use Ansible Molecule to write automated tests for your roles
 
-A role can be applied to any playbook with:
-
-[source,yaml]
-----
-- name: Configure web servers
-  hosts: web
-  roles:
-    - webserver
-----
-
-You can prompt the coding assistant to generate roles as well, not just standalone playbooks.
+Roles are how production Ansible teams organize their automation. The coding assistant can generate roles directly, or convert existing playbooks into roles as you did in this lab.
 ====
 =====
 
@@ -113,7 +94,7 @@ Combining AI coding assistants (for playbook generation) with version control (f
 The Automation Coding Assistant is one of many AI-powered tools for automation. As you continue your journey, you can also:
 
 * *Use Claude Code or ChatGPT* to generate Ansible playbooks from natural language descriptions
-* *Ask AI tools to explain complex playbooks* you find in production or open source projects
+* *Ask AI tools to break down complex playbooks* you find in production or open source projects
 * *Generate Jinja2 templates* by describing what dynamic configuration you need
 * *Debug playbook errors* by pasting error messages into AI assistants for suggestions
 
@@ -152,6 +133,6 @@ Thank you for completing this lab. Now go automate something!
 .🐛 Encountered an issue?
 [%collapsible]
 =====
-If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+04-wrap-up[Writing your first playbook repository^].
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+06-wrap-up[Writing your first playbook repository^].
 =====
 ======

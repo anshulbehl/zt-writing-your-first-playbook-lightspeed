@@ -361,6 +361,83 @@ The bundled vsix at `setup-automation/ansible-26.6.0.vsix` is already patched.
 
 ---
 
+## Content Instruction Updates (June 2026)
+
+### Overview
+Updated all four module instruction files to align with actual lab behavior and correct mismatches between what students are told to do vs what actually happens during provisioning and validation.
+
+### Key Content Changes
+
+#### 1. Terminology Updates
+**Changed**: All references to "Lightspeed" in user-facing content
+**To**: "Automation Coding Assistant" or "Red Hat Ansible VS Code extension"
+**Reason**: Product rebranding; emphasized that this lab is about the Ansible VS Code extension
+
+**Files affected**:
+- `content/modules/ROOT/pages/01-playbook-inventory.adoc`
+- `content/modules/ROOT/pages/02-generate-comprehensive-playbook.adoc`
+- `content/modules/ROOT/pages/03-playbook-run-it.adoc`
+- `content/modules/ROOT/pages/04-wrap-up.adoc`
+
+#### 2. Pre-Configuration Accuracy
+**Issue**: Module 01 Task 1 told students to "Connect to Lightspeed" via Command Palette
+**Reality**: `setup-control.sh` lines 130-156 pre-configure Lightspeed with LiteMaaS endpoint, no manual connection needed
+**Fix**: Changed to verify extension is installed (check left sidebar) instead of connecting
+
+#### 3. Prescriptive Prompts for Validation
+**Issue**: Module 02 Task 1 provided a "starter prompt" students could customize
+**Problem**: `validation.yml` checks for exact string matches like `when: inventory_hostname in groups['web']` and `handlers:`
+**Result**: Students could generate functionally correct playbooks that fail validation due to wording differences
+**Fix**: Made the prompt prescriptive ("Use this prompt" instead of "Example starter prompt") with explicit requirements:
+- Exact conditional syntax: `when: inventory_hostname in groups['web']`
+- Handler requirement explicitly stated
+- Module family preference: `ansible.builtin`
+
+#### 4. Removed Duplicate Template Creation
+**Issue**: Module 02 Task 3 instructed students to create `templates/motd.j2`
+**Reality**: File already exists at `ansible-files/templates/motd.j2` (created during setup)
+**Fix**: Removed entire task, renumbered subsequent tasks
+
+#### 5. Verification Command Alignment
+**Issue**: Module 03 Task 3 used `ssh node3 systemctl is-active httpd` to verify httpd not on database server
+**Reality**: `validation.yml` uses `rpm -q httpd` to check if package is installed
+**Mismatch**: `systemctl is-active` checks if service is running; `rpm -q` checks if package exists
+**Fix**: Changed verification command to `ssh node3 rpm -q httpd` to match validation
+
+#### 6. Removed Redundant Explanation Steps
+**Issue**: Module 03 Task 5 told students to use Lightspeed Explain on entire playbook to learn about idempotency
+**Problem**: The collapsible "What is idempotency?" section already explains the concept well
+**Fix**: Removed the "explain playbook again" substep; students see idempotency in action by running playbook twice
+
+#### 7. Completed TODO Placeholder
+**Issue**: Module 04 had incomplete section: "🤖 TODO: Add content about Claude skills here"
+**Fix**: Replaced with content about using other AI tools (Claude Code, ChatGPT) for Ansible automation, transferring prompting skills learned in this lab
+
+#### 8. Fixed AsciiDoc Formatting Issues
+**Issue**: Module 03 Task 5 had incorrect delimiter nesting (`===` inside `====`)
+**Issue**: Module 04 "Use Other AI Tools" collapsible had wrong delimiter level
+**Fix**: Corrected to proper AsciiDoc collapsible syntax
+
+### UI Workflow Updates (Glossed Over)
+Minor updates to reflect actual extension panel workflow:
+- Extension verification via sidebar instead of status bar
+- Using extension panel buttons instead of Command Palette where applicable
+- Updated "Explain" workflow to match extension UI
+
+### Validation Compatibility
+All instruction changes ensure student-generated content passes existing validation scripts:
+- `runtime-automation/01-playbook-inventory/validation.yml` - inventory structure checks
+- `runtime-automation/02-generate-comprehensive-playbook/validation.yml` - playbook structure and required sections
+- `runtime-automation/03-playbook-run-it/validation.yml` - user creation, httpd installation, motd deployment
+
+### Impact
+- Students can now follow instructions exactly and pass validation without confusion
+- Prescriptive prompts produce predictable AI output that matches validation expectations
+- No manual configuration steps for already-configured features
+- Consistent terminology throughout (Automation Coding Assistant, Red Hat Ansible VS Code extension)
+
+---
+
 ## Files Reference
 
 **Key files to understand**:

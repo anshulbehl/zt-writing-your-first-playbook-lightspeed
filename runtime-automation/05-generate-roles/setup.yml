@@ -1,0 +1,13 @@
+---
+- name: Setup module 05 - Verify playbook exists for role conversion
+  hosts: controller
+  tasks:
+    - name: Verify system_setup.yml exists
+      ansible.builtin.stat:
+        path: /home/rhel/ansible-files/system_setup.yml
+      register: playbook_file
+
+    - name: Warn if playbook missing
+      ansible.builtin.debug:
+        msg: "system_setup.yml not found — use the Solve button on Module 02 first"
+      when: not playbook_file.stat.exists

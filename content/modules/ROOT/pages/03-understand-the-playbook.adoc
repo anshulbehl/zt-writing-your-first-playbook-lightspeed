@@ -1,0 +1,185 @@
+:sectnums:
+= 1.2 - Understand Your Playbook
+
+Before running your playbook, take a moment to understand what each section does. Open `system_setup.yml` in the *VS Code* tab and follow along as we walk through each component.
+
+== Playbook Anatomy
+
+======
+.☑️ Task 1 - The play header
+[%collapsible]
+=====
+[NOTE]
+====
+Switch to the *VS Code* tab and open `system_setup.yml`.
+====
+
+Look at the top of your playbook:
+
+[source,yaml]
+----
+---
+- name: Basic System Setup
+  hosts: all
+  become: true
+----
+
+* `name:` is a human-readable label. It appears in the output when you run the playbook, making it easier to follow what is happening.
+* `hosts: all` tells Ansible to run this play against every host in your inventory — that includes `node1`, `node2`, and `node3` across the `web` and `database` groups.
+* `become: true` enables privilege escalation. Ansible will use `sudo` to run tasks as root, which is required for installing packages, creating users, and modifying system files.
+=====
+======
+
+
+======
+.☑️ Task 2 - Variables
+[%collapsible]
+=====
+Find the `vars:` section in your playbook:
+
+[source,yaml]
+----
+  vars:
+    user_name: padawan
+    package_name: httpd
+    apache_service_name: httpd
+----
+
+Variables let you define values once and reference them throughout the playbook using `{{ variable_name }}` syntax. If you need to change a username or package name later, you update it in one place instead of editing every task.
+
+In this playbook:
+
+* `user_name` is used by the user creation task
+* `package_name` and `apache_service_name` are used by the package installation and service management tasks
+
+This pattern — defining all configurable values at the top — is a best practice that makes playbooks easier to maintain and reuse across different environments.
+=====
+======
+
+
+======
+.☑️ Task 3 - Tasks and conditionals
+[%collapsible]
+=====
+The `tasks:` section is the core of the playbook — each task is an action Ansible performs on the managed hosts. Tasks run *in order*, top to bottom.
+
+Look at the first task:
+
+[source,yaml]
+----
+    - name: Install security updates for the kernel
+      ansible.builtin.dnf:
+        name: kernel
+        state: latest
+        security: true
+        update_only: true
+      when: inventory_hostname in groups['web']
+----
+
+Each task has:
+
+* `name:` — a description that appears in the output
+* A *module* (`ansible.builtin.dnf`) — the tool Ansible uses to perform the action
+* *Parameters* (`name`, `state`, `security`) — configuration for that module
+* `when:` — a *conditional* that controls whether the task runs
+
+The `when: inventory_hostname in groups['web']` conditional means this task only runs on hosts that belong to the `web` group in your inventory (`node1` and `node2`). Tasks without a `when:` conditional — like the user creation task — run on all hosts.
+
+[TIP]
+====
+The `ansible.builtin` prefix means the module is part of Ansible's core library. Using fully qualified module names is a best practice that avoids ambiguity when multiple collections are installed.
+====
+=====
+======
+
+
+======
+.☑️ Task 4 - Templates
+[%collapsible]
+=====
+Find the template task near the bottom of your playbook:
+
+[source,yaml]
+----
+    - name: Update MOTD from Jinja2 Template
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd
+----
+
+The `ansible.builtin.template` module takes a *Jinja2 template file* and renders it with real values before copying it to each host. Open `templates/motd.j2` in VS Code to see the template:
+
+[source,jinja2]
+----
+Welcome to {{ ansible_hostname }}.
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+Architecture: {{ ansible_architecture }}
+----
+
+The `{{ }}` placeholders are replaced with *Ansible facts* — information Ansible automatically collects from each host during the "Gathering Facts" step. Because each host has different facts, the same template produces different output on each node:
+
+* On `node1`: "Welcome to node1. OS: RedHat 9.6 ..."
+* On `node3`: "Welcome to node3. OS: RedHat 9.6 ..."
+
+This is the power of templates: one source file, customized output per host.
+=====
+======
+
+
+======
+.☑️ Task 5 - Handlers
+[%collapsible]
+=====
+Look at the `handlers:` section at the bottom of your playbook:
+
+[source,yaml]
+----
+  handlers:
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: "{{ apache_service_name }}"
+        state: restarted
+----
+
+Handlers are special tasks that only run when *notified* by another task. A task notifies a handler using the `notify:` keyword — for example, when a configuration file changes, the task can notify the "Restart Apache" handler to restart the service.
+
+Handlers have two important properties:
+
+* They only run when notified — if no task triggers them, they are skipped entirely
+* They run *once at the end of the play*, even if multiple tasks notify the same handler
+
+This makes handlers ideal for service restarts: you do not want to restart Apache after every single configuration change. Instead, all changes are applied first, and the service restarts once at the end.
+=====
+======
+
+
+== Learning Outcomes
+
+By completing this module, you now understand:
+
+* How a play header defines the target hosts and privilege escalation
+* How `vars:` lets you define reusable values in one place
+* How tasks run in order and use modules with parameters
+* How `when:` conditionals target specific inventory groups
+* How Jinja2 templates render host-specific configuration files using Ansible facts
+* How handlers run only when notified, and only once at the end of the play
+
+
+== Embracing the Next Challenge
+
+======
+.✅ Next Challenge
+[%collapsible]
+=====
+Once you have reviewed each section, press the image:next.png[Next, 50] button to proceed to the next challenge where you will run this playbook and see it in action.
+=====
+======
+
+
+======
+.🐛 Encountered an issue?
+[%collapsible]
+=====
+If you have encountered an issue or noticed something not quite right, please open an issue on the https://github.com/redhat-gpte-devopsautomation/zt-writing-your-first-playbook/issues/new?labels=content+error&title=Issue+with+:+03-understand-the-playbook[Writing your first playbook repository^].
+=====
+======
