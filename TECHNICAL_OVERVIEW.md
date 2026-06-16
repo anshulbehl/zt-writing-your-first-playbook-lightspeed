@@ -151,11 +151,12 @@ config/
   firewall.yaml           # Kubernetes NetworkPolicy rules
 
 setup-automation/
-  main.yml                # Orchestrator: inventory → setup scripts → SSH keys
-  setup-control.sh        # Control VM: diagnostics, SSH config, ansible-files, code-server
+  main.yml                # Orchestrator: inventory → setup scripts → SSH keys → vsix copy
+  setup-control.sh        # Control VM: diagnostics, SSH config, ansible-files, Lightspeed, code-server
   setup-node1.sh          # Node1: Satellite registration
   setup-node2.sh          # Node2: Satellite registration
   setup-node3.sh          # Node3: Satellite registration
+  ansible-26.6.0.vsix     # Patched Ansible extension (ms-python.vscode-python-envs removed)
 
 runtime-automation/
   main.yml                # Dispatcher for solve/validation
@@ -213,16 +214,23 @@ The Ansible VS Code extension's Lightspeed features (playbook generation, Explai
    - `ansible.lightspeed.apiEndpoint` — the LiteMaaS base URL
    - `ansible.lightspeed.apiKey` — the pre-provisioned API key
    - `ansible.lightspeed.modelName` — the model name
-5. `setup-control.sh` installs the bundled Ansible extension v26.6.0 (`setup-automation/ansible-26.6.0.vsix`) via `code-server --install-extension` before starting code-server
-6. On first activation, the extension auto-migrates these into its internal storage (globalState + secrets) and scrubs the API key from settings.json
+5. `setup-control.sh` installs the patched Ansible extension v26.6.0 (`setup-automation/ansible-26.6.0.vsix`) via `code-server --install-extension --force` before starting code-server. The `--force` flag is needed to replace the older v25.7.0 pre-installed on the devtools-ansible image.
+6. On first activation, the extension reads the `rhcustom` provider config and uses the pre-provisioned API key directly — no Red Hat SSO OAuth required
 
-### Why bundle the extension vsix
+### Why bundle a patched extension vsix
 
-The `rhcustom` provider was added in v26.3.4, but settings.json migration support for `rhcustom` was only added in **v26.6.0**. The devtools-ansible image ships an older version without this support. The vsix (9.7MB) is bundled at `setup-automation/ansible-26.6.0.vsix` to avoid network downloads during provisioning.
+The `rhcustom` provider was added in v26.3.4. The devtools-ansible image ships v25.7.0 which doesn't support `rhcustom` — it only knows `wca` and `google` providers, and always demands Red Hat SSO OAuth login ("You must be logged in to use Ansible Lightspeed").
 
-### Known issue: auth redirect
+However, every Ansible extension version from v26.3.0+ adds `ms-python.vscode-python-envs` as an `extensionDependency`, which is not compatible with code-server 1.99.3 on the devtools-ansible image ("Cannot activate the 'Ansible' extension because it depends on the 'Python Environments' extension").
 
-The extension may still prompt a Red Hat SSO login redirect even with `rhcustom` configured. This appears to be a higher-level auth gate in the extension that fires regardless of provider type. The redirect fails with "Mismatching redirect URI" because code-server's callback URL isn't registered in Red Hat SSO. **This is an open issue being investigated.**
+**Solution**: The bundled vsix (`setup-automation/ansible-26.6.0.vsix`, 9.7MB) is a **patched** v26.6.0 with `ms-python.vscode-python-envs` removed from `extensionDependencies` in `extension/package.json`. This dependency is for Python environment detection, not core Lightspeed/rhcustom functionality — Lightspeed works correctly without it.
+
+To re-patch if updating the extension version:
+```bash
+unzip -q ansible-XX.Y.Z.vsix -d vsix-contents
+# Remove "ms-python.vscode-python-envs" from extensionDependencies in vsix-contents/extension/package.json
+cd vsix-contents && zip -qr ../ansible-XX.Y.Z.vsix .
+```
 
 ### Graceful degradation
 
@@ -251,3 +259,5 @@ The API key in `config/secrets.yaml` is encrypted with vault ID `ansiblebu_vault
 7. **`set -e` in setup scripts is dangerous** — diagnostic commands (ip addr, grep, ping) return non-zero on benign conditions. The node scripts use `|| true` guards instead. setup-control.sh has no `set -e`.
 
 8. **Satellite registration retry pattern** — `grep -c katello` returns exit code 1 when count is zero. Must use `|| true` to prevent script death.
+
+9. **Ansible extension vsix must be patched** — Every version with `rhcustom` support (v26.3.0+) depends on `ms-python.vscode-python-envs`, which is incompatible with code-server 1.99.3. The bundled vsix has this dependency removed. If updating the extension version, you must re-patch the vsix (see "Ansible Lightspeed / LiteMaaS Integration" section above).

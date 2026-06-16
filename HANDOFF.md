@@ -232,16 +232,16 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 - ✓ Showroom pod builds successfully
 - ✓ No external dependencies during provisioning
 - ✓ All changes pushed to origin/main
-- ⚠️ **Ansible Lightspeed / LiteMaaS**: Configuration wired up (rhcustom provider, bundled v26.6.0 extension, vault-encrypted API key). Auth redirect still fires — open issue.
+- ✓ **Ansible Lightspeed / LiteMaaS**: Working. Bundled patched v26.6.0 extension with rhcustom provider, vault-encrypted API key.
 
 **Architecture (FINAL)**: 
 1. **4 VMs total**: control + node1 + node2 + node3 (all using devtools-ansible image)
 2. **All VMs on 10.0.2.x subnet**: Achieved by adding services/routes to all VM definitions
 3. **Control VM**: Runs code-server (VS Code) on port 8080 + wetty terminal
-4. **Node VMs**: Run HTTP service on port 80 (for routing purposes, forces same subnet)
+4. **Node VMs**: Run SSH service on port 22 (services/routes force same subnet placement)
 5. **/etc/hosts populated by Ansible**: Using gathered facts, not DNS (more reliable)
 6. **Students access**: VS Code tab (edit) + Control tab (run ansible-navigator) on same filesystem
-7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io`, model `openai/deepseek-r1-distill-qwen-14b`). Extension v26.6.0 bundled as vsix. API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
+7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io`, model `openai/deepseek-r1-distill-qwen-14b`). Extension v26.6.0 bundled as patched vsix (`ms-python.vscode-python-envs` dependency removed for code-server 1.99.3 compatibility). API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
 
 ---
 
@@ -341,6 +341,24 @@ ansible-navigator run -m ping all --mode stdout
 - Setup script only configures it (config.yaml) and starts the service
 - No network dependencies during provisioning
 
+### Ansible Extension Compatibility
+
+**Problem**: The devtools-ansible image ships code-server 1.99.3 with Ansible extension v25.7.0. The `rhcustom` provider (needed for LiteMaaS/Lightspeed without Red Hat SSO) was added in v26.3.4, but every version from v26.3.0+ adds `ms-python.vscode-python-envs` as an `extensionDependency`, which is not compatible with code-server 1.99.3.
+
+**Symptoms if wrong version is used**:
+- v25.7.0 (too old): "You must be logged in to use Ansible Lightspeed" — doesn't know about `rhcustom`, always demands Red Hat SSO OAuth
+- v26.6.0 (unpatched): "Cannot activate the 'Ansible' extension because it depends on the 'Python Environments' extension" — `ms-python.vscode-python-envs` can't install on code-server 1.99.3
+
+**Working solution**: Patch the v26.6.0 vsix to remove `ms-python.vscode-python-envs` from `extensionDependencies` in `extension/package.json`. The dependency is for Python environment detection, not core Lightspeed/rhcustom functionality. Steps:
+```bash
+unzip -q ansible-26.6.0.vsix -d vsix-contents
+# Edit vsix-contents/extension/package.json:
+#   Remove "ms-python.vscode-python-envs" from extensionDependencies
+#   Keep "ms-python.python" and "redhat.vscode-yaml"
+cd vsix-contents && zip -qr ../ansible-26.6.0.vsix .
+```
+The bundled vsix at `setup-automation/ansible-26.6.0.vsix` is already patched.
+
 ---
 
 ## Files Reference
@@ -369,9 +387,9 @@ All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-f
 
 ### Configuration Files
 
-**config/instances.yaml** (4 VMs, 117 lines)
+**config/instances.yaml** (4 VMs, 140 lines)
 - `control`: devtools-ansible, 8G RAM, 30Gi disk, has services/routes for code-server on port 8080
-- `node1`, `node2`, `node3`: rhel-9.6, 8G RAM, 30Gi disk, managed nodes for playbook execution
+- `node1`, `node2`, `node3`: rhel-9.6, 8G RAM, 30Gi disk, managed nodes with SSH services/routes (port 22) to force same-subnet placement
 - All VMs: `AnsibleGroup: isolated` tag (enables cloud-init password auth)
 - All VMs: `networks: [default]` (CNV pod network)
 
@@ -396,18 +414,29 @@ All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-f
 
 ### Setup Automation
 
-**setup-automation/main.yml** (89 lines)
+**setup-automation/main.yml** (148 lines)
 - Creates dynamic inventory from environment variables (BASTION_HOST, BASTION_PORT, etc.)
 - Adds bastion (control) and nodes (node1, node2, node3) to inventory
 - Copies setup-*.sh scripts to each VM and executes them
-- Waits up to 300 seconds for SSH connection before timeout
+- Copies bundled Ansible extension vsix to control VM
+- Loads vault-encrypted secrets (LiteMaaS API key) and passes to setup scripts
+- Generates SSH keypair on showroom pod, distributes to all VMs
+- Waits for SSH connection before timeout
 - Runs on `all:!localhost` (control + node1 + node2 + node3)
 
-**setup-automation/setup-control.sh** (118 lines)
-- Resolves node1/node2/node3 IPs via `getent hosts` and adds to `/etc/hosts`
+**setup-automation/setup-control.sh** (195 lines)
+- Writes network diagnostics to `/home/rhel/network-debug.txt`
+- Configures SSH defaults for node access (StrictHostKeyChecking no)
 - Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory, templates/motd.j2
-- Configures code-server (config.yaml, systemctl start/enable)
+- Configures Ansible Lightspeed with LiteMaaS endpoint (rhcustom provider, API key, model) via settings.json
+- Installs patched Ansible extension v26.6.0 vsix
+- Configures and starts code-server (config.yaml, systemctl start/enable)
 - No network dependencies (all files inline, code-server pre-installed)
+
+**setup-automation/ansible-26.6.0.vsix** (9.7MB)
+- Patched Ansible extension vsix with `ms-python.vscode-python-envs` removed from extensionDependencies
+- Required because code-server 1.99.3 on devtools-ansible is not compatible with that dependency
+- Provides rhcustom provider support for Lightspeed without Red Hat SSO OAuth
 
 **setup-automation/setup-node1.sh, setup-node2.sh, setup-node3.sh** (31 lines each)
 - Waits for dnf/yum to be ready (cloud-init may still be running)
