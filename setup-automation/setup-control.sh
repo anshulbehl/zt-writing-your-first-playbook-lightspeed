@@ -113,30 +113,11 @@ mkdir -p /home/rhel/.logs
 chown -R rhel:rhel /home/rhel/ansible-files
 chown -R rhel:rhel /home/rhel/.logs
 
-# Configure code-server (VS Code in browser)
-echo "Configuring code-server..."
-
-# Stop code-server if already running
-systemctl stop code-server || true
-
-# Backup existing config if present
-[ -f /home/rhel/.config/code-server/config.yaml ] && \
-  mv /home/rhel/.config/code-server/config.yaml /home/rhel/.config/code-server/config.bk.yaml || true
-
-# Create code-server configuration
-mkdir -p /home/rhel/.config/code-server
-cat > /home/rhel/.config/code-server/config.yaml << 'EOF'
-bind-addr: 0.0.0.0:8080
-auth: none
-cert: false
-EOF
-chown -R rhel:rhel /home/rhel/.config/code-server
-
-# Start code-server service
-systemctl start code-server
-systemctl enable code-server
-
 # Configure Ansible Lightspeed to use LiteMaaS endpoint
+# MUST happen BEFORE code-server starts — the extension runs migration on first
+# activation and sets a flag that prevents re-migration. If settings.json is
+# written after code-server starts, the migration already ran with no config
+# and defaults to WCA (which triggers a Red Hat OAuth redirect).
 LITEMAAS_BASE_URL="https://maas-rhdp.apps.maas.redhatworkshops.io"
 LITEMAAS_MODEL_NAME="openai/deepseek-r1-distill-qwen-14b"
 
@@ -144,9 +125,6 @@ if [ -n "${LITEMAAS_API_KEY}" ]; then
   echo "Configuring Ansible Lightspeed with LiteMaaS endpoint..."
 
   # code-server user-level settings
-  # The extension migration code accepts "rhcustom" even though the docs say
-  # the settings.json enum only includes "wca" and "google". On first activation
-  # the extension migrates these to internal storage and scrubs the API key.
   mkdir -p /home/rhel/.local/share/code-server/User
   cat > /home/rhel/.local/share/code-server/User/settings.json << EOSETTINGS
 {
@@ -176,6 +154,31 @@ EOSETTINGS
 else
   echo "WARNING: LITEMAAS_API_KEY not set — Ansible Lightspeed will not be configured"
 fi
+
+# Configure and start code-server (VS Code in browser)
+# Settings.json must already exist before this point so the Ansible extension
+# picks up the rhcustom provider config on first activation.
+echo "Configuring code-server..."
+
+# Stop code-server if already running
+systemctl stop code-server || true
+
+# Backup existing config if present
+[ -f /home/rhel/.config/code-server/config.yaml ] && \
+  mv /home/rhel/.config/code-server/config.yaml /home/rhel/.config/code-server/config.bk.yaml || true
+
+# Create code-server configuration
+mkdir -p /home/rhel/.config/code-server
+cat > /home/rhel/.config/code-server/config.yaml << 'EOF'
+bind-addr: 0.0.0.0:8080
+auth: none
+cert: false
+EOF
+chown -R rhel:rhel /home/rhel/.config/code-server
+
+# Start code-server service
+systemctl start code-server
+systemctl enable code-server
 
 echo "Control node setup complete (ansible-files + code-server + lightspeed)"
 echo "Node IP mappings:"
