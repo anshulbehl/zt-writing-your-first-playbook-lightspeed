@@ -50,7 +50,7 @@ In this lab, *you will use Lightspeed to generate every playbook*. Your job is t
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Verify Lightspeed is connected
+.☑️ Task 1 - Verify Lightspeed is ready
 [%collapsible]
 =====
 [NOTE]
@@ -58,20 +58,13 @@ In this lab, *you will use Lightspeed to generate every playbook*. Your job is t
 Switch to the *VS Code* tab at the top of the screen.
 ====
 
-. Look at the bottom *status bar* of VS Code. You should see the Ansible Lightspeed icon — a small AI or lightning indicator. Green means connected and ready.
+. Look at the bottom *status bar* of VS Code. You should see the Ansible Lightspeed icon — a small AI or lightning indicator. It should already be connected and ready to use.
 
-. Open the *Command Palette* with `Ctrl+Shift+P` and type:
-+
-[source,role="execute"]
-----
-Ansible: Connect to Lightspeed
-----
-
-Select the option and confirm the connection succeeds. A notification in the bottom-right corner of VS Code confirms it.
+. Lightspeed is pre-configured in this lab and connected automatically when VS Code starts. You can confirm it's working by looking for the Lightspeed status indicator in the bottom status bar.
 
 [TIP]
 ====
-Lightspeed is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in or provide any credentials; the API key is already set up for you.
+Lightspeed is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
 ====
 =====
 ======

@@ -130,7 +130,7 @@ ssh node2 systemctl is-active httpd
 +
 [source,role="execute"]
 ----
-ssh node3 systemctl is-active httpd 2>&1 || echo "httpd not installed (expected)"
+ssh node3 rpm -q httpd 2>&1 || echo "httpd not installed (expected)"
 ----
 +
 .Expected output
@@ -223,7 +223,7 @@ ansible-navigator run system_setup.yml
 +
 image::idem-output.png[Second run showing ok status and changed=0 in PLAY RECAP,link=self,window=blank,width=700,title="Idempotent second run"]
 
-. Switch to the *VS Code* tab, open *system_setup.yml*, select all the content, right-click, and choose *Ansible Lightspeed → Explain*. Read the explanation and look for mentions of idempotency and state checking.
+. This demonstrates idempotency in action: running the same playbook twice produces the same result. Ansible checked the current state before every task and skipped changes because everything was already configured correctly.
 
 [IMPORTANT]
 ====

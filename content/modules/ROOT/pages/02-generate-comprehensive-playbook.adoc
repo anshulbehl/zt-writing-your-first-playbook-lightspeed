@@ -59,7 +59,7 @@ Your prompt should request a playbook that:
 When specifying conditionals, tell Lightspeed to use `when: inventory_hostname in groups['web']` to target only the web servers.
 ====
 
-*Example starter prompt* (expand on this):
+*Use this prompt* (copy it exactly):
 
 ----
 Create an Ansible playbook named "Basic System Setup" that targets all hosts and uses privilege escalation.
@@ -67,24 +67,24 @@ Create an Ansible playbook named "Basic System Setup" that targets all hosts and
 Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
 
 Include these tasks in order:
-1. Install security updates for the kernel package, but only on hosts in the web group
+1. Install security updates for the kernel package, but only on hosts in the web group using the conditional: when: inventory_hostname in groups['web']
 2. Create a user with the name from user_name variable, ensuring a home directory is created
-3. Install the package from package_name variable, only on the web group
-4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group
+3. Install the package from package_name variable, only on the web group using the same conditional
+4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group using the same conditional
 5. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
+
+Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
 ----
 
 [IMPORTANT]
 ====
-*Before you submit this prompt to Lightspeed*, make sure you have:
+Copy the prompt above exactly as shown. Lightspeed works best with specific, detailed prompts that include:
 
-* Specified the inventory target (`all` hosts)
-* Included `become: true` for privilege escalation
-* Listed all three variables with their values
-* Described each task clearly, including which group it targets
-* Referenced the template path and destination
+* The exact conditional syntax to use (`when: inventory_hostname in groups['web']`)
+* Module family preference (`ansible.builtin` modules)
+* Handler requirements
 
-The more complete your prompt, the more accurate Lightspeed's output will be.
+This ensures the generated playbook matches what the validation system expects.
 ====
 =====
 ======
@@ -123,7 +123,7 @@ Ansible Lightspeed: Create a playbook with Ansible Lightspeed
 
 [NOTE]
 ====
-If Lightspeed's output is missing a section or has an error, don't manually edit it yet. Instead, refine your prompt to be more explicit about what's missing and regenerate. This trains you to write better prompts.
+If Lightspeed's output is missing a required section (vars, handlers, conditionals, or template task), you can click the image:solve.png[Solve, 55] button to get a working version, then compare it to what you generated to understand what was different.
 ====
 =====
 ======

@@ -106,14 +106,29 @@ Combining Lightspeed (for playbook generation) with version control (for change 
 
 
 =====
-.🤖 TODO: Add content about Claude skills here
+.🤖 Use AI Tools Beyond Lightspeed
 [%collapsible]
 ====
-*Placeholder for Claude skills and custom automation content.*
+Ansible Lightspeed is one of many AI-powered tools for automation. As you continue your journey, you can also:
 
-[NOTE]
+* *Use Claude Code or ChatGPT* to generate Ansible playbooks from natural language descriptions
+* *Ask AI tools to explain complex playbooks* you find in production or open source projects
+* *Generate Jinja2 templates* by describing what dynamic configuration you need
+* *Debug playbook errors* by pasting error messages into AI assistants for suggestions
+
+The skills you learned in this lab — writing clear, specific prompts with all necessary context — transfer directly to using any LLM-assisted development tool.
+
+[TIP]
 ====
-This section is reserved for discussing how to extend this lab with Claude Code skills, custom workflows, or advanced LLM-assisted automation patterns.
+When prompting any AI tool for Ansible automation, always specify:
+
+* Target hosts and inventory groups
+* Required privilege escalation
+* Specific modules to use (`ansible.builtin.*`)
+* Variables and their purposes
+* Conditionals and when they should apply
+
+The more specific your prompt, the better the output.
 ====
 ====
 =====
