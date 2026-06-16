@@ -1,0 +1,375 @@
+- application [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e8]:
+      - toolbar [ref=e16]:
+        - button "Go Back (⌃-)" [disabled] [ref=e17]: 
+        - button "Go Forward (⌃⇧-)" [disabled] [ref=e18]: 
+        - toolbar [ref=e21] [cursor=pointer]:
+          - button "ansible-files" [ref=e22]:
+            - generic [ref=e23]: 
+            - generic [ref=e24]: ansible-files
+        - button "Use AI Features with Copilot for free..." [ref=e25] [cursor=pointer]:
+          - button "Use AI Features with Copilot for free..." [ref=e26]: 
+        - generic "More..." [ref=e30] [cursor=pointer]: 
+      - toolbar "Title actions" [ref=e35]:
+        - button "Customize Layout..." [ref=e36] [cursor=pointer]: 
+        - checkbox "Toggle Primary Side Bar (⌘B)" [checked] [ref=e37] [cursor=pointer]: 
+        - checkbox "Toggle Panel (⌘J)" [ref=e38] [cursor=pointer]: 
+        - checkbox "Toggle Secondary Side Bar (⌥⌘B)" [ref=e39] [cursor=pointer]: 
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - menubar [ref=e47]:
+          - menuitem "Application Menu" [ref=e48]:
+            - generic [ref=e49] [cursor=pointer]: 
+        - tablist "Active View Switcher" [ref=e52]:
+          - tab "Explorer (⇧⌘E)" [ref=e53] [cursor=pointer]:
+            - generic "Explorer (⇧⌘E)" [ref=e54]: 
+          - tab "Search (⇧⌘F)" [ref=e55] [cursor=pointer]:
+            - generic "Search (⇧⌘F)" [ref=e56]: 
+          - tab "Source Control (⌃⇧G)" [ref=e57] [cursor=pointer]:
+            - generic "Source Control (⌃⇧G)" [ref=e58]: 
+          - tab "Run and Debug (⇧⌘D)" [ref=e59] [cursor=pointer]:
+            - generic "Run and Debug (⇧⌘D)" [ref=e60]: 
+          - tab "Extensions (⇧⌘X) - 1 requires update" [ref=e61] [cursor=pointer]:
+            - generic "Extensions (⇧⌘X) - 1 requires update" [ref=e62]: 
+            - generic "Extensions (⇧⌘X) - 1 requires update" [ref=e63]:
+              - generic [ref=e64]: "1"
+          - tab "Testing" [ref=e65] [cursor=pointer]:
+            - generic "Testing" [ref=e66]: 
+          - tab "Ansible" [expanded] [selected] [ref=e67] [cursor=pointer]:
+            - generic "Ansible" [ref=e68]
+        - toolbar "Manage" [ref=e71]:
+          - button "Accounts - Sign in requested" [ref=e72] [cursor=pointer]:
+            - generic "Accounts - Sign in requested" [ref=e73]: 
+            - generic "Accounts - Sign in requested" [ref=e74]:
+              - generic [ref=e75]: "1"
+          - button "Manage" [ref=e76] [cursor=pointer]:
+            - generic "Manage" [ref=e77]: 
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - heading "Ansible" [level=2] [ref=e81]
+          - toolbar "Ansible actions" [ref=e85]:
+            - generic "Views and More Actions..." [ref=e88] [cursor=pointer]: 
+          - generic:
+            - generic:
+              - generic:
+                - toolbar
+        - generic [ref=e97]:
+          - button "Ansible Development Tools Section" [expanded] [ref=e100] [cursor=pointer]:
+            - generic [ref=e101]: 
+            - heading "Ansible Development Tools" [level=3] [ref=e102]
+            - generic:
+              - generic:
+                - generic:
+                  - toolbar "Ansible Development Tools actions"
+          - button "Ansible Lightspeed Section" [expanded] [ref=e106] [cursor=pointer]:
+            - generic [ref=e107]: 
+            - heading "Ansible Lightspeed" [level=3] [ref=e108]
+            - toolbar "Ansible Lightspeed actions" [ref=e112]:
+              - 'button "Ansible Lightspeed: Refresh explorer view" [ref=e113]': 
+          - button "Ansible Lightspeed Feedback Section" [expanded] [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]: 
+            - heading "Ansible Lightspeed Feedback" [level=3] [ref=e119]
+            - generic:
+              - generic:
+                - generic:
+                  - toolbar "Ansible Lightspeed Feedback actions"
+      - main [ref=e128]:
+        - generic [ref=e136]:
+          - generic [ref=e138] [cursor=pointer]:
+            - tablist [ref=e139]:
+              - 'tab "Walkthrough: Setup VS Code Web, preview" [selected] [ref=e140]':
+                - 'generic "Walkthrough: Setup VS Code Web" [ref=e141]':
+                  - generic [ref=e143]: "Walkthrough: Setup VS Code Web"
+                - toolbar "Tab actions" [ref=e146]:
+                  - button "Close (⌘W)" [ref=e147]: 
+            - toolbar "Editor actions" [ref=e151]:
+              - button "Split Editor Right (⌘\\) [⌥] Split Editor Down" [ref=e152]: 
+              - generic "More Actions..." [ref=e155]: 
+          - document "Overview of how to get up to speed with your editor." [ref=e158]:
+            - generic [ref=e159]:
+              - generic [ref=e161]:
+                - generic [ref=e162]:
+                  - heading "code-server" [level=1] [ref=e163]
+                  - paragraph [ref=e164]: Editing evolved
+                - generic [ref=e165]:
+                  - generic [ref=e166]:
+                    - heading "Start" [level=2] [ref=e167]
+                    - list [ref=e168]:
+                      - listitem [ref=e169]:
+                        - button " New File..." [ref=e170] [cursor=pointer]:
+                          - generic [ref=e171]: 
+                          - text: New File...
+                      - listitem [ref=e172]:
+                        - button " Open File..." [ref=e173] [cursor=pointer]:
+                          - generic [ref=e174]: 
+                          - text: Open File...
+                  - generic [ref=e175]:
+                    - heading "Recent" [level=2] [ref=e176]
+                    - list [ref=e177]:
+                      - generic [ref=e178]:
+                        - text: You have no recent folders,
+                        - button "open a folder" [ref=e179] [cursor=pointer]
+                        - text: to start.
+                - generic [ref=e180]:
+                  - generic [ref=e181]:
+                    - heading "Next Up" [level=2] [ref=e182]
+                    - link "Deploy code-server for your team Provision software development environments on your infrastructure with Coder. Coder is a self-service portal which provisions via Terraform—Linux, macOS, Windows, x86, ARM, and, of course, Kubernetes based infrastructure. Get started " [ref=e183] [cursor=pointer]:
+                      - /url: https://cdr.co/code-server-to-coder
+                      - button "Deploy code-server for your team Provision software development environments on your infrastructure with Coder. Coder is a self-service portal which provisions via Terraform—Linux, macOS, Windows, x86, ARM, and, of course, Kubernetes based infrastructure. Get started " [disabled] [ref=e184]:
+                        - heading "Deploy code-server for your team" [level=3] [ref=e185]
+                        - paragraph [ref=e186]: Provision software development environments on your infrastructure with Coder.
+                        - paragraph [ref=e187]: Coder is a self-service portal which provisions via Terraform—Linux, macOS, Windows, x86, ARM, and, of course, Kubernetes based infrastructure.
+                        - paragraph [ref=e188]:
+                          - text: Get started
+                          - generic [ref=e189]: 
+                        - img
+                  - generic [ref=e190]:
+                    - heading "Walkthroughs" [level=2] [ref=e191]
+                    - list [ref=e192]:
+                      - button " Get Started with VS Code for the Web Customize your editor, learn the basics, and start coding" [disabled] [ref=e193]:
+                        - generic [ref=e195]: 
+                        - heading "Get Started with VS Code for the Web" [level=3] [ref=e197]
+                        - generic [ref=e198]: Customize your editor, learn the basics, and start coding
+                      - button " Learn the Fundamentals" [disabled] [ref=e199]:
+                        - generic [ref=e200]:
+                          - generic [ref=e201]: 
+                          - heading "Learn the Fundamentals" [level=3] [ref=e202]
+                - paragraph [ref=e204]:
+                  - checkbox "When checked, this page will be shown on startup." [checked] [ref=e205] [cursor=pointer]: 
+                  - generic [ref=e206] [cursor=pointer]: Show welcome page on startup
+              - generic [ref=e207]:
+                - button " Welcome" [ref=e208] [cursor=pointer]:
+                  - generic [ref=e209]: 
+                  - text: Welcome
+                - generic [ref=e210]:
+                  - generic [ref=e212]:
+                    - heading "Get Started with VS Code for the Web" [level=2] [ref=e213]
+                    - paragraph [ref=e215]: Customize your editor, learn the basics, and start coding
+                  - list [ref=e216]:
+                    - generic [ref=e217]:
+                      - button "Inspect this in the accessible view (Option+F2). Choose your theme" [expanded] [ref=e218]:
+                        - 'checkbox "Checkbox for Step Choose your theme: Not completed" [ref=e219] [cursor=pointer]': 
+                        - generic [ref=e220]:
+                          - heading "Choose your theme" [level=3] [ref=e221]
+                          - generic [ref=e222]:
+                            - paragraph [ref=e223]: The right theme helps you focus on your code, is easy on your eyes, and is simply more fun to use.
+                            - button "Browse Color Themes" [ref=e225] [cursor=pointer]:
+                              - generic [ref=e226]: Browse Color Themes
+                            - generic [ref=e227]:
+                              - text: "Tip: Use keyboard shortcut"
+                              - generic "Command+K Command+T" [ref=e228]:
+                                - generic [ref=e229]: ⌘
+                                - generic [ref=e230]: K
+                                - generic [ref=e232]: ⌘
+                                - generic [ref=e233]: T
+                      - 'button "Checkbox for Step Just the right amount of UI: Not completed Just the right amount of UI" [ref=e234]':
+                        - 'checkbox "Checkbox for Step Just the right amount of UI: Not completed" [ref=e235]': 
+                        - heading "Just the right amount of UI" [level=3] [ref=e237]
+                      - 'button "Checkbox for Step Rich support for all your languages: Not completed Rich support for all your languages" [ref=e238]':
+                        - 'checkbox "Checkbox for Step Rich support for all your languages: Not completed" [ref=e239]': 
+                        - heading "Rich support for all your languages" [level=3] [ref=e241]
+                      - 'button "Checkbox for Step Unlock productivity with the Command Palette : Not completed Unlock productivity with the Command Palette" [ref=e242]':
+                        - 'checkbox "Checkbox for Step Unlock productivity with the Command Palette : Not completed" [ref=e243]': 
+                        - heading "Unlock productivity with the Command Palette" [level=3] [ref=e245]
+                      - 'button "Checkbox for Step Quickly navigate between your files: Not completed Quickly navigate between your files" [ref=e246]':
+                        - 'checkbox "Checkbox for Step Quickly navigate between your files: Not completed" [ref=e247]': 
+                        - heading "Quickly navigate between your files" [level=3] [ref=e249]
+                    - generic [ref=e250]:
+                      - button " Mark Done" [ref=e251] [cursor=pointer]:
+                        - generic [ref=e252]: 
+                        - text: Mark Done
+                      - button "Next Section " [ref=e253] [cursor=pointer]:
+                        - text: Next Section
+                        - generic [ref=e254]: 
+                  - iframe [ref=e256]:
+                    - document [active] [ref=f15e1]:
+                      - iframe [ref=f15e2]:
+                        - document [active] [ref=f17e1]:
+                          - generic [ref=f17e2]:
+                            - generic [ref=f17e3]:
+                              - generic [ref=f17e4]:
+                                - generic [ref=f17e5] [cursor=pointer]:
+                                  - img [ref=f17e6]
+                                  - text: Dark Modern
+                                - generic [ref=f17e7] [cursor=pointer]:
+                                  - img [ref=f17e8]
+                                  - text: Light Modern
+                              - generic [ref=f17e9]:
+                                - generic [ref=f17e10] [cursor=pointer]:
+                                  - img [ref=f17e11]
+                                  - text: Dark High Contrast
+                                - generic [ref=f17e12] [cursor=pointer]:
+                                  - img [ref=f17e13]
+                                  - text: Light High Contrast
+                            - generic [ref=f17e14] [cursor=pointer]: See More Themes...
+    - status [ref=e258]:
+      - generic [ref=e259]:
+        - generic "remote" [ref=e260]:
+          - button "remote" [ref=e261] [cursor=pointer]:
+            - generic [ref=e262]: 
+        - generic "No Problems" [ref=e263]:
+          - button "No Problems" [ref=e264] [cursor=pointer]:
+            - generic [ref=e265]: 
+            - text: "0"
+            - generic [ref=e266]: 
+            - text: "0"
+        - generic "No Ports Forwarded" [ref=e267]:
+          - button "No Ports Forwarded" [ref=e268] [cursor=pointer]:
+            - generic [ref=e269]: 
+            - text: "0"
+      - generic [ref=e270]:
+        - generic "Notifications" [ref=e271]:
+          - button "Notifications" [ref=e272] [cursor=pointer]:
+            - generic [ref=e273]: 
+        - 'generic "Layout: U.S." [ref=e274]':
+          - 'button "Layout: U.S." [ref=e275] [cursor=pointer]'
+  - generic:
+    - alert
+    - alert
+  - iframe [ref=e277]:
+    - document [active] [ref=f18e1]:
+      - iframe [ref=f18e2]:
+        - document [active] [ref=f24e1]:
+          - generic [ref=f24e3]:
+            - heading "LAUNCH" [level=3] [ref=f24e4]
+            - heading " Getting Started" [level=3] [ref=f24e6]:
+              - link " Getting Started" [ref=f24e7] [cursor=pointer]:
+                - /url: command:ansible.content-creator.menu
+                - generic [ref=f24e8]: 
+                - text: Getting Started
+            - heading " Ansible code bot" [level=3] [ref=f24e10]:
+              - link " Ansible code bot" [ref=f24e11] [cursor=pointer]:
+                - /url: https://docs.redhat.com/en/documentation/red_hat_ansible_lightspeed_with_ibm_watsonx_code_assistant/2.x_latest/html-single/red_hat_ansible_lightspeed_with_ibm_watsonx_code_assistant_user_guide/index#using-code-bot-for-suggestions_lightspeed-user-guide
+                - generic [ref=f24e12]: 
+                - text: Ansible code bot
+            - heading " Documentation" [level=3] [ref=f24e14]:
+              - link " Documentation" [ref=f24e15] [cursor=pointer]:
+                - /url: https://ansible.readthedocs.io/projects/dev-tools/
+                - generic [ref=f24e16]: 
+                - text: Documentation
+            - heading " Settings" [level=3] [ref=f24e18]:
+              - link " Settings" [ref=f24e19] [cursor=pointer]:
+                - /url: command:ansible.extension-settings.open
+                - generic [ref=f24e20]: 
+                - text: Settings
+            - heading "INITIALIZE" [level=3] [ref=f24e21]
+            - paragraph [ref=f24e22]: Initialize a new Ansible project
+            - heading " Collection project" [level=3] [ref=f24e24]:
+              - link " Collection project" [ref=f24e25] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-ansible-collection
+                - generic [ref=f24e26]: 
+                - text: Collection project
+            - heading " Execution environment project NEW" [level=3] [ref=f24e28]:
+              - link " Execution environment project NEW" [ref=f24e29] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-execution-env-file
+                - generic [ref=f24e30]: 
+                - text: Execution environment project
+                - generic [ref=f24e31]: NEW
+            - heading " Playbook project" [level=3] [ref=f24e33]:
+              - link " Playbook project" [ref=f24e34] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-ansible-project
+                - generic [ref=f24e35]: 
+                - text: Playbook project
+            - heading "ADD" [level=3] [ref=f24e36]
+            - paragraph [ref=f24e37]: Add resources to an existing Ansible project
+            - heading " Collection plugin NEW" [level=3] [ref=f24e39]:
+              - link " Collection plugin NEW" [ref=f24e40] [cursor=pointer]:
+                - /url: command:ansible.content-creator.add-plugin
+                - generic [ref=f24e41]: 
+                - text: Collection plugin
+                - generic [ref=f24e42]: NEW
+            - heading " Devcontainer NEW" [level=3] [ref=f24e44]:
+              - link " Devcontainer NEW" [ref=f24e45] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-devcontainer
+                - generic [ref=f24e46]: 
+                - text: Devcontainer
+                - generic [ref=f24e47]: NEW
+            - heading " Devfile NEW" [level=3] [ref=f24e49]:
+              - link " Devfile NEW" [ref=f24e50] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-devfile
+                - generic [ref=f24e51]: 
+                - text: Devfile
+                - generic [ref=f24e52]: NEW
+            - heading " Execution environment template NEW" [level=3] [ref=f24e54]:
+              - link " Execution environment template NEW" [ref=f24e55] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-execution-env-file
+                - generic [ref=f24e56]: 
+                - text: Execution environment template
+                - generic [ref=f24e57]: NEW
+            - heading " Role NEW" [level=3] [ref=f24e59]:
+              - link " Role NEW" [ref=f24e60] [cursor=pointer]:
+                - /url: command:ansible.content-creator.create-role
+                - generic [ref=f24e61]: 
+                - text: Role
+                - generic [ref=f24e62]: NEW
+            - heading " Playbook (powered by Ansible Lightspeed)" [level=3] [ref=f24e64]:
+              - link " Playbook (powered by Ansible Lightspeed)" [ref=f24e65] [cursor=pointer]:
+                - /url: command:ansible.lightspeed.playbookGeneration
+                - generic [ref=f24e66]: 
+                - text: Playbook
+                - img "(powered by Ansible Lightspeed)" [ref=f24e67]
+            - heading " Playbook template" [level=3] [ref=f24e69]:
+              - link " Playbook template" [ref=f24e70] [cursor=pointer]:
+                - /url: command:ansible.create-empty-playbook
+                - generic [ref=f24e71]: 
+                - text: Playbook template
+  - iframe [ref=e279]:
+    - document [active] [ref=f19e1]:
+      - iframe [ref=f19e2]:
+        - document [active] [ref=f26e1]:
+          - generic [ref=f26e2]:
+            - text: Experience smarter automation using Ansible Lightspeed with watsonx Code Assistant solutions for your playbook.
+            - link "Learn more" [ref=f26e3] [cursor=pointer]:
+              - /url: https://www.redhat.com/en/engage/project-wisdom
+            - button "Connect" [ref=f26e8] [cursor=pointer]:
+              - generic [ref=f26e9]:
+                - generic: Connect
+  - iframe [ref=e281]:
+    - document [active] [ref=f20e1]:
+      - iframe [ref=f20e2]:
+        - document [active] [ref=f25e1]:
+          - generic [ref=f25e2]:
+            - generic [ref=f25e3]:
+              - heading "How was your experience?" [level=3] [ref=f25e4]
+              - generic [ref=f25e6] [cursor=pointer]:
+                - radio "😞" [ref=f25e7]
+                - generic [ref=f25e8]: 😞
+                - radio "🙁" [ref=f25e9]
+                - generic [ref=f25e10]: 🙁
+                - radio "😐" [ref=f25e11]
+                - generic [ref=f25e12]: 😐
+                - radio "🙂" [ref=f25e13]
+                - generic [ref=f25e14]: 🙂
+                - radio "😀" [ref=f25e15]
+                - generic [ref=f25e16]: 😀
+            - generic [ref=f25e17]:
+              - paragraph [ref=f25e18]: Tell us why? *
+              - generic "Text area" [ref=f25e19]:
+                - textbox "Text area" [ref=f25e20]
+            - generic [ref=f25e21]:
+              - checkbox "I understand that feedback is shared with Red Hat and IBM." [ref=f25e22]
+              - text: I understand that feedback is shared with Red Hat and IBM.
+            - button "Send" [disabled] [ref=f25e25]:
+              - generic [ref=f25e26]:
+                - generic: Send
+            - separator [ref=f25e27]
+            - generic [ref=f25e28]:
+              - heading "Tell us more" [level=3] [ref=f25e29]
+              - combobox [ref=f25e31]:
+                - generic [ref=f25e33] [cursor=pointer]:
+                  - generic [ref=f25e34]: Select Issue type
+                  - img [ref=f25e37]
+                - generic: Select Issue type
+                - generic: Bug report
+                - generic: Feature request
+                - generic: Suggestion feedback
+  - dialog "Info" [ref=e284]:
+    - generic [ref=e286]:
+      - button "Cancel" [ref=e287] [cursor=pointer]
+      - button "Allow" [active] [ref=e288] [cursor=pointer]
+    - generic [ref=e289]:
+      - generic "Info" [ref=e290]: 
+      - generic [ref=e292]: The extension 'Ansible' wants to sign in using Ansible Lightspeed.
+    - toolbar [ref=e296]:
+      - button "Close Dialog" [ref=e297] [cursor=pointer]: 

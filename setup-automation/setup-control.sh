@@ -156,8 +156,8 @@ else
 fi
 
 # Configure and start code-server (VS Code in browser)
-# Settings.json must already exist before this point so the Ansible extension
-# picks up the rhcustom provider config on first activation.
+# Settings.json and the extension vsix must already exist before code-server
+# starts — the Ansible extension runs a one-time migration on first activation.
 echo "Configuring code-server..."
 
 # Stop code-server if already running
@@ -175,6 +175,17 @@ auth: none
 cert: false
 EOF
 chown -R rhel:rhel /home/rhel/.config/code-server
+
+# Install Ansible extension v26.6.0+ (supports rhcustom provider via settings.json)
+# The devtools-ansible image ships an older version without rhcustom support.
+VSIX_PATH="/tmp/setup-scripts/ansible-26.6.0.vsix"
+if [ -f "${VSIX_PATH}" ]; then
+  echo "Installing Ansible extension v26.6.0..."
+  sudo -u rhel code-server --install-extension "${VSIX_PATH}" --force 2>&1 || \
+    echo "WARNING: Failed to install Ansible extension vsix"
+else
+  echo "WARNING: ${VSIX_PATH} not found — using pre-installed extension version"
+fi
 
 # Start code-server service
 systemctl start code-server

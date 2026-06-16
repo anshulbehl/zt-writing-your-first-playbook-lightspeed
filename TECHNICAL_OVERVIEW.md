@@ -206,18 +206,23 @@ The Ansible VS Code extension's Lightspeed features (playbook generation, Explai
 
 1. The LiteMaaS base URL (`https://maas-rhdp.apps.maas.redhatworkshops.io`) and model (`openai/deepseek-r1-distill-qwen-14b`) are hardcoded in `setup-control.sh`
 2. The API key is stored in `config/secrets.yaml`, encrypted with Ansible Vault (vault ID: `ansiblebu_vault`)
-3. `setup-automation/main.yml` loads the secrets via `include_vars` and passes the key to `setup-control.sh`
+3. `setup-automation/main.yml` loads the secrets via `include_vars` and passes the key to `setup-control.sh`. It also copies the bundled extension vsix to the control VM.
 4. `setup-control.sh` writes VS Code `settings.json` files (user-level and workspace-level) with:
    - `ansible.lightspeed.enabled: true`
    - `ansible.lightspeed.provider: "rhcustom"` — selects the Red Hat AI (OpenAI-compatible) provider
    - `ansible.lightspeed.apiEndpoint` — the LiteMaaS base URL
    - `ansible.lightspeed.apiKey` — the pre-provisioned API key
    - `ansible.lightspeed.modelName` — the model name
-5. On first activation, the extension auto-migrates these into its internal storage (globalState + secrets) and scrubs the API key from settings.json
+5. `setup-control.sh` installs the bundled Ansible extension v26.6.0 (`setup-automation/ansible-26.6.0.vsix`) via `code-server --install-extension` before starting code-server
+6. On first activation, the extension auto-migrates these into its internal storage (globalState + secrets) and scrubs the API key from settings.json
 
-### Why settings.json with "rhcustom"
+### Why bundle the extension vsix
 
-The extension docs say the `ansible.lightspeed.provider` enum only includes `wca` and `google`. However, the actual migration code in `llmProviderSettings.ts` accepts any string and the provider factory includes `rhcustom` as a supported provider. Setting `provider: "rhcustom"` in settings.json triggers a correct migration to the Red Hat AI provider with OpenAI-compatible `/v1/chat/completions` endpoint support.
+The `rhcustom` provider was added in v26.3.4, but settings.json migration support for `rhcustom` was only added in **v26.6.0**. The devtools-ansible image ships an older version without this support. The vsix (9.7MB) is bundled at `setup-automation/ansible-26.6.0.vsix` to avoid network downloads during provisioning.
+
+### Known issue: auth redirect
+
+The extension may still prompt a Red Hat SSO login redirect even with `rhcustom` configured. This appears to be a higher-level auth gate in the extension that fires regardless of provider type. The redirect fails with "Mismatching redirect URI" because code-server's callback URL isn't registered in Red Hat SSO. **This is an open issue being investigated.**
 
 ### Graceful degradation
 

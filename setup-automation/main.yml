@@ -58,6 +58,15 @@
       src: "./setup-{{ ansible_host }}.sh"
       dest: "/tmp/setup-scripts/setup-{{ ansible_host }}.sh"
 
+  - name: Copy Ansible extension vsix to control VM
+    ansible.builtin.copy:
+      src: ./ansible-26.6.0.vsix
+      dest: /tmp/setup-scripts/ansible-26.6.0.vsix
+      mode: '0644'
+    when: inventory_hostname == bastion_host
+    vars:
+      bastion_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+
   - name: Include secrets
     ansible.builtin.include_vars: ../config/secrets.yaml
 

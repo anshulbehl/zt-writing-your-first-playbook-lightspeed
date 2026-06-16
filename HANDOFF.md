@@ -232,6 +232,7 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 - ✓ Showroom pod builds successfully
 - ✓ No external dependencies during provisioning
 - ✓ All changes pushed to origin/main
+- ⚠️ **Ansible Lightspeed / LiteMaaS**: Configuration wired up (rhcustom provider, bundled v26.6.0 extension, vault-encrypted API key). Auth redirect still fires — open issue.
 
 **Architecture (FINAL)**: 
 1. **4 VMs total**: control + node1 + node2 + node3 (all using devtools-ansible image)
@@ -240,6 +241,7 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 4. **Node VMs**: Run HTTP service on port 80 (for routing purposes, forces same subnet)
 5. **/etc/hosts populated by Ansible**: Using gathered facts, not DNS (more reliable)
 6. **Students access**: VS Code tab (edit) + Control tab (run ansible-navigator) on same filesystem
+7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io`, model `openai/deepseek-r1-distill-qwen-14b`). Extension v26.6.0 bundled as vsix. API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
 
 ---
 
