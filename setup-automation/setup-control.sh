@@ -136,6 +136,47 @@ chown -R rhel:rhel /home/rhel/.config/code-server
 systemctl start code-server
 systemctl enable code-server
 
-echo "Control node setup complete (ansible-files + code-server)"
+# Configure Ansible Lightspeed to use LiteMaaS endpoint
+LITEMAAS_BASE_URL="https://maas-rhdp.apps.maas.redhatworkshops.io"
+LITEMAAS_MODEL_NAME="openai/deepseek-r1-distill-qwen-14b"
+
+if [ -n "${LITEMAAS_API_KEY}" ]; then
+  echo "Configuring Ansible Lightspeed with LiteMaaS endpoint..."
+
+  # code-server user-level settings
+  # The extension migration code accepts "rhcustom" even though the docs say
+  # the settings.json enum only includes "wca" and "google". On first activation
+  # the extension migrates these to internal storage and scrubs the API key.
+  mkdir -p /home/rhel/.local/share/code-server/User
+  cat > /home/rhel/.local/share/code-server/User/settings.json << EOSETTINGS
+{
+  "ansible.lightspeed.enabled": true,
+  "ansible.lightspeed.provider": "rhcustom",
+  "ansible.lightspeed.apiEndpoint": "${LITEMAAS_BASE_URL}",
+  "ansible.lightspeed.apiKey": "${LITEMAAS_API_KEY}",
+  "ansible.lightspeed.modelName": "${LITEMAAS_MODEL_NAME}"
+}
+EOSETTINGS
+  chown -R rhel:rhel /home/rhel/.local/share/code-server
+
+  # Workspace-level settings (fallback)
+  mkdir -p /home/rhel/ansible-files/.vscode
+  cat > /home/rhel/ansible-files/.vscode/settings.json << EOSETTINGS
+{
+  "ansible.lightspeed.enabled": true,
+  "ansible.lightspeed.provider": "rhcustom",
+  "ansible.lightspeed.apiEndpoint": "${LITEMAAS_BASE_URL}",
+  "ansible.lightspeed.apiKey": "${LITEMAAS_API_KEY}",
+  "ansible.lightspeed.modelName": "${LITEMAAS_MODEL_NAME}"
+}
+EOSETTINGS
+  chown -R rhel:rhel /home/rhel/ansible-files/.vscode
+
+  echo "Ansible Lightspeed configured: ${LITEMAAS_BASE_URL} (model: ${LITEMAAS_MODEL_NAME})"
+else
+  echo "WARNING: LITEMAAS_API_KEY not set — Ansible Lightspeed will not be configured"
+fi
+
+echo "Control node setup complete (ansible-files + code-server + lightspeed)"
 echo "Node IP mappings:"
 grep -E "node[123]" /etc/hosts || echo "No nodes found in /etc/hosts"

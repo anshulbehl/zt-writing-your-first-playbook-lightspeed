@@ -198,6 +198,37 @@ site.yml                  # Antora site config
 
 ---
 
+## Ansible Lightspeed / LiteMaaS Integration
+
+The Ansible VS Code extension's Lightspeed features (playbook generation, Explain) are backed by a **LiteMaaS** endpoint — Red Hat AI's Model-as-a-Service platform built on LiteLLM. LiteMaaS provides OpenAI-compatible `/v1/chat/completions` endpoints.
+
+### How it works
+
+1. The LiteMaaS base URL (`https://maas-rhdp.apps.maas.redhatworkshops.io`) and model (`openai/deepseek-r1-distill-qwen-14b`) are hardcoded in `setup-control.sh`
+2. The API key is stored in `config/secrets.yaml`, encrypted with Ansible Vault (vault ID: `ansiblebu_vault`)
+3. `setup-automation/main.yml` loads the secrets via `include_vars` and passes the key to `setup-control.sh`
+4. `setup-control.sh` writes VS Code `settings.json` files (user-level and workspace-level) with:
+   - `ansible.lightspeed.enabled: true`
+   - `ansible.lightspeed.provider: "rhcustom"` — selects the Red Hat AI (OpenAI-compatible) provider
+   - `ansible.lightspeed.apiEndpoint` — the LiteMaaS base URL
+   - `ansible.lightspeed.apiKey` — the pre-provisioned API key
+   - `ansible.lightspeed.modelName` — the model name
+5. On first activation, the extension auto-migrates these into its internal storage (globalState + secrets) and scrubs the API key from settings.json
+
+### Why settings.json with "rhcustom"
+
+The extension docs say the `ansible.lightspeed.provider` enum only includes `wca` and `google`. However, the actual migration code in `llmProviderSettings.ts` accepts any string and the provider factory includes `rhcustom` as a supported provider. Setting `provider: "rhcustom"` in settings.json triggers a correct migration to the Red Hat AI provider with OpenAI-compatible `/v1/chat/completions` endpoint support.
+
+### Graceful degradation
+
+If `LITEMAAS_API_KEY` is empty (e.g. vault decryption fails or secrets not loaded), the setup script skips Lightspeed configuration and logs a warning. The lab content and exercises still work — students just won't get AI-generated suggestions.
+
+### Vault setup
+
+The API key in `config/secrets.yaml` is encrypted with vault ID `ansiblebu_vault` — the standard vault ID for RHDP Ansible BU labs. The RHDP platform provides this vault password automatically at runtime.
+
+---
+
 ## Known Constraints and Gotchas
 
 1. **devtools-ansible libcrypto is broken** — cannot generate or use SSH keys on the control VM. Keys must be generated on the showroom pod and copied over.

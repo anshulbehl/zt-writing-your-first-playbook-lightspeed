@@ -71,7 +71,7 @@ Select the option and confirm the connection succeeds. A notification in the bot
 
 [TIP]
 ====
-Lightspeed is pre-configured in this lab to use a local AI proxy. You do not need to log in or provide any credentials.
+Lightspeed is pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in or provide any credentials; the API key is already set up for you.
 ====
 =====
 ======
