@@ -58,6 +58,25 @@ authors:
   - RHDP Lab
 EOF
 
+# Create README.md (required by Ansible Galaxy for collections)
+cat > /home/rhel/ansible-files/README.md << 'EOF'
+# lab.system_automation
+
+Lab collection for the Writing Your First Playbook workshop.
+
+This file is required by Ansible Galaxy. Below is a quick reference for the files in this workspace.
+
+| File | Purpose |
+|------|---------|
+| `ansible.cfg` | Ansible configuration (inventory path, SSH settings) |
+| `inventory` | Hosts and groups for this lab (web, database) |
+| `ansible-navigator.yml` | ansible-navigator settings (execution environment, logging) |
+| `system_setup.yml` | Playbook generated during the lab |
+| `templates/motd.j2` | Jinja2 template for the message of the day |
+| `galaxy.yml` | Collection metadata — enables the Generate Role feature |
+| `roles/` | Roles generated during the lab |
+EOF
+
 chown -R rhel:rhel /home/rhel/ansible-files
 
 # Create ansible.cfg
