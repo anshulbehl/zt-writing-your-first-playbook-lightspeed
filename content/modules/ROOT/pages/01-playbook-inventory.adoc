@@ -13,7 +13,7 @@ Before we begin, a few tips to improve your lab experience:
 
 . In the left sidebar you will find the different sections. Each chapter has an introduction and related tasks below. Sections can be collapsed and expanded by clicking on them.
 +
-image::collasped.png[Collasped section in the sidebar,link=self,window=blank,width=700,title="Collapsing sidebar sections"]
+image::showing-dropdown.png[Collapsible sections in the Showroom sidebar,link=self,window=blank,width=700,title="Collapsible sidebar sections"]
 
 . When we refer to the *VS Code* or *Control* tabs, we mean the tabs at the top of the screen. *VS Code* is where you write and generate playbooks. *Control* is a terminal for running commands.
 +
@@ -85,7 +85,7 @@ Your lab environment already has an inventory file ready. An *inventory* tells A
 
 . In the VS Code file explorer on the left, open the *ansible-files* directory and click the *inventory* file to open it.
 +
-image::vscode_inventory.png[Inventory file open in VS Code editor,link=self,window=blank,width=700,title="Pre-created inventory file"]
+image::showing-inventory.png[VS Code file explorer showing the ansible-files directory with the inventory file,link=self,window=blank,width=700,title="Ansible workspace in VS Code"]
 
 . The file contains:
 +
