@@ -67,6 +67,15 @@
     vars:
       bastion_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
 
+  - name: Copy system prompt patch script to control VM
+    ansible.builtin.copy:
+      src: ./patch_prompts.py
+      dest: /tmp/setup-scripts/patch_prompts.py
+      mode: '0644'
+    when: inventory_hostname == bastion_host
+    vars:
+      bastion_host: "{{ lookup('ansible.builtin.env', 'BASTION_HOST') }}"
+
   - name: Include secrets
     ansible.builtin.include_vars: ../config/secrets.yaml
 

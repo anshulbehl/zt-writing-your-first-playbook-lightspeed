@@ -183,6 +183,13 @@ if [ -f "${VSIX_PATH}" ]; then
   echo "Installing Ansible extension v26.6.0..."
   sudo -u rhel code-server --install-extension "${VSIX_PATH}" --force 2>&1 || \
     echo "WARNING: Failed to install Ansible extension vsix"
+
+  # Patch LLM system prompts to use dnf (RHEL) instead of apt (Debian)
+  EXT_JS=$(find /home/rhel/.local/share/code-server/extensions/ -path "*/redhat.ansible-*/dist/extension/extension.js" 2>/dev/null | head -1)
+  if [ -n "${EXT_JS}" ]; then
+    python3 /tmp/setup-scripts/patch_prompts.py "${EXT_JS}" 2>&1 || \
+      echo "WARNING: Failed to patch LLM system prompts"
+  fi
 else
   echo "WARNING: ${VSIX_PATH} not found — using pre-installed extension version"
 fi
