@@ -152,7 +152,7 @@ chown -R rhel:rhel /home/rhel/.logs
 # written after code-server starts, the migration already ran with no config
 # and defaults to WCA (which triggers a Red Hat OAuth redirect).
 LITEMAAS_BASE_URL="https://maas-rhdp.apps.maas.redhatworkshops.io"
-LITEMAAS_MODEL_NAME="openai/deepseek-r1-distill-qwen-14b"
+LITEMAAS_MODEL_NAME="gpt-oss-120b"
 
 if [ -n "${LITEMAAS_API_KEY}" ]; then
   echo "Configuring Ansible Lightspeed with LiteMaaS endpoint..."

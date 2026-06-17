@@ -3,11 +3,20 @@ import sys
 with open(sys.argv[1], 'rb') as f:
     content = f.read()
 
-DNF_INSTRUCTION = b'Always use ansible.builtin.dnf for package management. Never use apt modules. Always end YAML files with a trailing newline.'
+LINT_RULES = (
+    b'Always use ansible.builtin.dnf for package management. Never use apt modules. '
+    b'Always use state: present, NEVER state: latest even for security updates. '
+    b'Always set mode: on file, template, and copy tasks (e.g. mode: "0644"). '
+    b'Use human-readable handler names like "Restart Apache", not snake_case. '
+    b'Use true/false for booleans, never yes/no. '
+    b'Only include parameters explicitly requested. Do not add extra parameters like groups, shell, or home path. '
+    b'When a task should trigger a handler, include notify: with the exact handler name. '
+    b'Always end YAML files with a trailing newline.'
+)
 
 # Playbook prompt: backtick-terminated string, ends with: playbook.`;
 old_playbook = b'You answer with just an Ansible playbook.`;'
-new_playbook = b'You answer with just an Ansible playbook.\\n' + DNF_INSTRUCTION + b'`;'
+new_playbook = b'You answer with just an Ansible playbook.\\n' + LINT_RULES + b'`;'
 assert old_playbook in content, "Playbook prompt not found"
 content = content.replace(old_playbook, new_playbook, 1)
 
@@ -25,7 +34,7 @@ old_role_prompt = (
 )
 new_role_prompt = (
     b'You are an ansible expert optimized to generate Ansible roles.\n'
-    + DNF_INSTRUCTION + b'\n'
+    + LINT_RULES + b'\n'
     b'Output a YAML mapping with exactly three top-level keys: tasks, handlers, vars.\n'
     b'tasks: a YAML array of tasks, each starting with "- name:".\n'
     b'handlers: a YAML array of handlers for notify triggers.\n'
