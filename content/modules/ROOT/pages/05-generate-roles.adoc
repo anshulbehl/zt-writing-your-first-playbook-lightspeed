@@ -64,7 +64,7 @@ Switch to the *VS Code* tab.
 . When prompted, paste this prompt — it is similar to the one you used to generate your playbook:
 +
 ----
-Create an Ansible role called "system_setup" that performs basic system configuration.
+Create an Ansible role that performs basic system configuration.
 
 Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
 
@@ -78,9 +78,11 @@ Include these tasks in order:
 Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
 ----
 
-. The coding assistant will generate the role structure. *Review the suggested steps* to confirm they match your prompt, then click *"Create Role"* to save it.
+. The coding assistant will analyze your prompt and show you a *role name* field and a step outline. Set the role name to *system_setup*, review the steps, then click *"Continue"*.
 
-. When asked to select a collection, choose *lab.system_automation* — this is the collection pre-configured in your workspace. The role will be created under the `roles/` directory.
+. On the next page, review the generated files. When asked to select a collection, choose *lab.system_automation*, then click *"Save files"*.
+
+. The role will be created under `roles/system_setup/` in your workspace.
 
 [TIP]
 ====
@@ -99,7 +101,7 @@ Notice how the prompt is almost identical to the one you used for playbook gener
 Stay in the *VS Code* tab.
 ====
 
-. In the VS Code file explorer, expand the `roles/` directory that was just created. You should see a subdirectory (e.g., `system_setup/`) with several folders inside.
+. In the VS Code file explorer, expand the `roles/system_setup/` directory that was just created. You should see several folders inside.
 
 . Open `tasks/main.yml` — this contains the tasks, similar to what you see in your `system_setup.yml` playbook. But notice what is *missing*:
 +
