@@ -110,7 +110,7 @@ Stay in the *VS Code* tab.
 
 . Open `handlers/main.yml` — the Apache restart handler lives here instead of at the bottom of a playbook.
 
-. Check the `vars/` or `defaults/` directory for your variable definitions (`user_name`, `package_name`, `apache_service_name`).
+. Check the `vars/` or `defaults/` directory for your variable definitions (the user name, package name, and service name values you specified in the prompt).
 
 . If there is a `templates/` directory, confirm it contains `motd.j2`.
 =====

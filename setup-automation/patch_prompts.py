@@ -11,6 +11,7 @@ LINT_RULES = (
     b'Use true/false for booleans, never yes/no. '
     b'Only include parameters explicitly requested. Do not add extra parameters like groups, shell, or home path. '
     b'When a task should trigger a handler, include notify: with the exact handler name. '
+    b'Prefix all variable names with the role name (e.g. system_setup_user_name, not user_name). '
     b'Always end YAML files with a trailing newline.'
 )
 
@@ -77,6 +78,25 @@ new_files_block = (
 )
 assert old_files_block in content, "Role files block not found"
 content = content.replace(old_files_block, new_files_block, 1)
+
+# Outline generation: handle YAML mapping format (tasks/handlers/vars)
+# so the step review on page 2 of the wizard shows task names.
+old_outline = (
+    b'if (!parsed || !Array.isArray(parsed)) {\n'
+    b'      return "";\n'
+    b'    }\n'
+    b'    const tasks2 = [];\n'
+    b'    for (const task of parsed) {'
+)
+new_outline = (
+    b'if (!parsed) { return ""; }\n'
+    b'    const _tArr = Array.isArray(parsed) ? parsed : (parsed.tasks && Array.isArray(parsed.tasks) ? parsed.tasks : null);\n'
+    b'    if (!_tArr) { return ""; }\n'
+    b'    const tasks2 = [];\n'
+    b'    for (const task of _tArr) {'
+)
+assert old_outline in content, "Outline generation block not found"
+content = content.replace(old_outline, new_outline, 1)
 
 # Role generation: skip the "File already exists" check so re-generating
 # a role with the same name overwrites silently instead of spamming errors.

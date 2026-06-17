@@ -28,35 +28,34 @@
           - name: Install security updates for the kernel
             ansible.builtin.dnf:
               name: kernel
-              state: latest
-              security: true
-              update_only: true
+              state: present
             when: inventory_hostname in groups['web']
 
-          - name: Create a new user
+          - name: Create a user
             ansible.builtin.user:
-              name: "{% raw %}{{ user_name }}{% endraw %}"
-              state: present
+              name: "{% raw %}{{ system_setup_user_name }}{% endraw %}"
               create_home: true
+              state: present
 
-          - name: Install Apache on web servers
+          - name: Install the Apache package
             ansible.builtin.dnf:
-              name: "{% raw %}{{ package_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_package_name }}{% endraw %}"
               state: present
             when: inventory_hostname in groups['web']
 
           - name: Ensure Apache is running and enabled
             ansible.builtin.service:
-              name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_apache_service_name }}{% endraw %}"
               state: started
               enabled: true
             when: inventory_hostname in groups['web']
             notify: Restart Apache
 
-          - name: Update MOTD from Jinja2 Template
+          - name: Deploy MOTD template
             ansible.builtin.template:
               src: motd.j2
               dest: /etc/motd
+              mode: "0644"
         dest: "{{ ROLE_DIR }}/tasks/main.yml"
         owner: "{{ USER }}"
         group: "{{ USER }}"
@@ -68,7 +67,7 @@
           ---
           - name: Restart Apache
             ansible.builtin.service:
-              name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_apache_service_name }}{% endraw %}"
               state: restarted
         dest: "{{ ROLE_DIR }}/handlers/main.yml"
         owner: "{{ USER }}"
@@ -79,9 +78,9 @@
       ansible.builtin.copy:
         content: |
           ---
-          user_name: padawan
-          package_name: httpd
-          apache_service_name: httpd
+          system_setup_user_name: padawan
+          system_setup_package_name: httpd
+          system_setup_apache_service_name: httpd
         dest: "{{ ROLE_DIR }}/vars/main.yml"
         owner: "{{ USER }}"
         group: "{{ USER }}"
@@ -91,11 +90,9 @@
       ansible.builtin.copy:
         content: |
           ---
-          # Default values for system_setup role
-          # These can be overridden by the calling playbook
-          user_name: padawan
-          package_name: httpd
-          apache_service_name: httpd
+          system_setup_user_name: padawan
+          system_setup_package_name: httpd
+          system_setup_apache_service_name: httpd
         dest: "{{ ROLE_DIR }}/defaults/main.yml"
         owner: "{{ USER }}"
         group: "{{ USER }}"
