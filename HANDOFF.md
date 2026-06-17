@@ -14,14 +14,13 @@ This session focused on fixing provisioning failures for the zt-writing-your-fir
 - **Content delivery**: Showroom
 
 ### Infrastructure (config/instances.yaml)
-- **5 VMs total**:
-  - `control` - RHEL 9.6, where ansible-navigator runs, hosts the ansible-files workspace
-  - `node1`, `node2`, `node3` - RHEL 9.6 managed nodes
-  - `vscode` - devtools-ansible image, hosts VS Code (code-server) on port 8080
+- **4 VMs total**:
+  - `control` - devtools-ansible image, runs code-server (VS Code) on port 8080 + wetty terminal, hosts the ansible-files workspace
+  - `node1`, `node2`, `node3` - RHEL 9.6 managed nodes (SSH only, no UI tabs)
 
 ### Student Workflow
 Students interact with two tabs in the Showroom UI:
-1. **VS Code tab** → code-server running on vscode VM at port 8080
+1. **VS Code tab** → code-server running on control VM at port 8080
    - Students write/edit playbooks here
    - Ansible Lightspeed extension generates code
    - File explorer shows `/home/rhel/ansible-files/`
@@ -30,7 +29,13 @@ Students interact with two tabs in the Showroom UI:
    - Students run `ansible-navigator` commands here
    - Reads from `/home/rhel/ansible-files/` on control VM
 
-**Critical requirement**: Files edited in VS Code (vscode VM) must appear in Control terminal (control VM). This requires file sharing between the two VMs.
+Both tabs access the same filesystem on the same VM — no file sharing needed.
+
+### LLM Backend
+- **Endpoint**: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` (LiteMaaS)
+- **Model**: `gpt-oss-120b` (120B parameters, 33k context window)
+- **API key**: Vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`, password: `4ns1bl3v4ult!`)
+- **Previous model**: `openai/deepseek-r1-distill-qwen-14b` (14B) — too small, produced non-compliant YAML
 
 ---
 
@@ -155,7 +160,7 @@ nav:
 Earlier in the session (before compaction), we created `common.yaml`, `dev.yaml`, `description.adoc` which broke provisioning. These files were removed.
 
 **Why**: Zero-touch labs inherit from zero-touch-base-rhel and only need:
-- config/ (instances.yaml, networks.yaml, firewall.yaml)
+- config/ (instances.yaml, networks.yaml, firewall.yaml, secrets.yaml)
 - content/ (Showroom AsciiDoc)
 - setup-automation/
 - runtime-automation/
@@ -213,15 +218,11 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
    - Now just a comment explaining /etc/hosts is handled by main.yml
    - Simpler, cleaner script (back to ~109 lines)
 
-4. **ui-config.yml** - Added wetty tabs for direct node access
-   - Students can now SSH directly to node1, node2, node3 via web terminal
-   - Useful for debugging connectivity issues
-
-5. **ansible-files/ansible.cfg** - Added SSH connection parameters (retained from earlier fix)
+4. **ansible-files/ansible.cfg** - Added SSH connection parameters (retained from earlier fix)
    - `[ssh_connection]` section with 10-second timeout
    - Prevents SSH from hanging on unreachable hosts
 
-6. **ansible-files/inventory** - Added explicit connection variables (retained from earlier fix)
+5. **ansible-files/inventory** - Added explicit connection variables (retained from earlier fix)
    - `[all:vars]` section with `ansible_user=rhel` and SSH args
    - Documents authentication method for students
 
@@ -235,25 +236,120 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 - ✓ **Ansible Lightspeed / LiteMaaS**: Working. Bundled patched v26.6.0 extension with rhcustom provider, vault-encrypted API key.
 
 **Architecture (FINAL)**: 
-1. **4 VMs total**: control + node1 + node2 + node3 (all using devtools-ansible image)
+1. **4 VMs total**: control + node1 + node2 + node3 (control uses devtools-ansible, nodes use rhel-9.6)
 2. **All VMs on 10.0.2.x subnet**: Achieved by adding services/routes to all VM definitions
 3. **Control VM**: Runs code-server (VS Code) on port 8080 + wetty terminal
-4. **Node VMs**: Run SSH service on port 22 (services/routes force same subnet placement)
+4. **Node VMs**: Run SSH service on port 22 (services/routes force same subnet placement), no UI tabs
 5. **/etc/hosts populated by Ansible**: Using gathered facts, not DNS (more reliable)
 6. **Students access**: VS Code tab (edit) + Control tab (run ansible-navigator) on same filesystem
-7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io`, model `openai/deepseek-r1-distill-qwen-14b`). Extension v26.6.0 bundled as patched vsix (`ms-python.vscode-python-envs` dependency removed for code-server 1.99.3 compatibility). API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
+7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io/v1`, model `gpt-oss-120b`). Extension v26.6.0 bundled as patched vsix (`ms-python.vscode-python-envs` dependency removed for code-server 1.99.3 compatibility). API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
+
+---
+
+## Ansible Extension Patching (setup-automation/patch_prompts.py)
+
+The extension's bundled JavaScript is patched at provisioning time to customize LLM behavior and fix compatibility issues. The patch script applies 5 modifications:
+
+### Patch 1: Playbook prompt lint rules
+Appends ansible-lint compliance rules to the playbook generation system prompt (after `You answer with just an Ansible playbook.`).
+
+### Patch 2: Role prompt rewrite
+Replaces the default role prompt (which only generates `tasks/main.yml`) with a comprehensive prompt that produces a YAML mapping with three top-level keys: `tasks`, `handlers`, `vars`. Includes the same lint rules.
+
+### Patch 3: Multi-file role parser
+Replaces the single-file builder (`files = [{file_type: "task"}]`) with a regex splitter that parses the YAML mapping output into separate files (`tasks/main.yml`, `handlers/main.yml`, `vars/main.yml`). Falls back to tasks-only if the LLM ignores the mapping format.
+
+**Key insight**: `cleanAnsibleOutput()` does `yaml.load()` then `yaml.dump()` — this strips YAML comments (so `### FILE:` markers won't work) but preserves mapping structure. The YAML mapping approach survives this processing.
+
+### Patch 4: Outline generation fix
+The `generateOutlineFromRole` function expects a YAML array but receives a mapping. Patched to extract `parsed.tasks` when the input is a mapping, so the step review on wizard page 2 shows task names.
+
+### Patch 5: File-exists check disabled
+`if (await fileExists(fileUri))` → `if (false && fileExists(fileUri))` — prevents "File already exists" error spam when re-generating roles with the same name.
+
+### Lint rules (LINT_RULES constant)
+- Always use `ansible.builtin.dnf`, never apt
+- Always use `state: present`, never `state: latest`
+- Always set `mode:` on file/template/copy tasks
+- Human-readable handler names ("Restart Apache", not snake_case)
+- `true`/`false` booleans, never `yes`/`no`
+- Only include explicitly requested parameters
+- Include `notify:` with exact handler name
+- Prefix variable names with role name (e.g. `system_setup_user_name`)
+- Trailing newline on YAML files
+
+---
+
+## Content Structure (6 Modules)
+
+| # | Slug | Title | solveButton | Validation |
+|---|------|-------|-------------|------------|
+| 01 | `01-playbook-inventory` | Meet Your Automation Coding Assistant | true | No-op (introductory) |
+| 02 | `02-generate-comprehensive-playbook` | Generate a Comprehensive Playbook | true | Checks system_setup.yml structure |
+| 03 | `03-understand-the-playbook` | Understand Your Playbook | false | No-op (informational) |
+| 04 | `04-playbook-run-it` | Run and Verify the Playbook | true | Checks user, httpd, MOTD on nodes |
+| 05 | `05-generate-roles` | Convert Your Playbook to a Role | true | Checks roles/ dir exists |
+| 06 | `06-wrap-up` | Wrap-Up and Next Steps | false | No-op (informational) |
+
+### Collection for Role Generation
+The extension's `CollectionFinder` requires a `galaxy.yml` to provide a target for "Generate a Role". Created at provisioning time by `setup-control.sh`:
+- `ansible-files/galaxy.yml` — namespace: `lab`, name: `system_automation`
+- `ansible-files/README.md` — required by Galaxy, brief file listing
+- `ansible-files/roles/` — empty directory for generated roles
+
+---
+
+## Runtime Automation
+
+### Dispatch Architecture
+
+**runtime-automation/main.yml** (47 lines)
+- Dispatcher pattern: receives `module_dir` and `module_stage` as extra vars from the Showroom platform
+- Play 1: Creates inventory from env vars (BASTION_HOST, etc.)
+- Play 2: Runs on `localhost`, calls `ansible-playbook ./{{ module_dir }}/{{ module_stage }}.yml`
+
+**runtime-automation/NN-module-name/** (6 modules)
+- Each module has: `setup.yml`, `solve.yml`, `validate.yml`
+- `module_stage` values sent by the platform: `setup`, `solve`, `validate`
+
+### KNOWN ISSUE: Validation not triggering on "Next" button press
+
+**Status**: UNRESOLVED. Setup and solve work correctly, but pressing "Next" does not trigger validation.
+
+**Investigation findings**:
+- The standard RHDP zero-touch pattern (zt-satellite-basics, zt-openscap, etc.) uses shell scripts named `{stage}-{hostname}.sh` (e.g., `solve-satellite.sh`, `validate-rhel.sh`)
+- The standard `main.yml` dispatcher runs on `all:!localhost`, SSHes into each host, and executes `./{{ module_dir }}/{{ module_stage }}-{{ config_host }}.sh`
+- This lab's `main.yml` runs on `localhost` and calls `ansible-playbook` as a subprocess — unconventional but works for setup/solve
+- Files were renamed from `validation.yml` → `validate.yml` to match the platform's `module_stage=validate` value — this alone did not fix the issue
+- The remaining theory: the platform runner may expect play 2 to target a remote host (`all:!localhost`), not `localhost`. When the play runs on localhost, the runner may not report results back to the UI correctly for the validate stage.
+
+**Possible fix**: Rewrite `main.yml` to match the standard dispatcher structure — play 2 on `all:!localhost` (the bastion host), running a thin shell wrapper that calls `ansible-playbook` on the remote host. The Ansible playbooks themselves would stay unchanged.
+
+**Alternative**: Create thin shell script wrappers (e.g., `validate-control.sh`) that call `ansible-playbook` against the existing playbooks, and use the standard `main.yml` dispatcher pattern.
+
+### Grading Details
+
+**Module 01** — No-op validation (introductory, no deliverables)
+**Module 02** — Validates `system_setup.yml` exists and contains required sections (hosts, become, vars, user_name, when conditional, handlers, template task)
+**Module 03** — No-op (informational walkthrough)
+**Module 04** — Most comprehensive validation:
+- Play 1 (`hosts: all`): checks user `padawan` exists, MOTD contains hostname
+- Play 2 (`hosts: web`): checks httpd installed and running
+- Play 3 (`hosts: database`): checks httpd is NOT installed (conditional verification)
+**Module 05** — Checks `roles/` directory exists with at least one subdirectory
+**Module 06** — No-op (wrap-up)
 
 ---
 
 ## Design Philosophy Insights
 
 ### What This Lab Is
-- **Ansible Lightspeed tutorial**: Students learn to generate playbooks using AI in VS Code
+- **Ansible Lightspeed tutorial**: Students learn to generate playbooks and roles using AI in VS Code
 - **Two-environment workflow**: Edit in GUI (VS Code), run in CLI (Control terminal)
 - **Zero-touch RHDP lab**: Babylon CNV, Showroom content delivery, auto-provisioning
 
 ### What Students Need
-1. Pre-populated workspace with inventory, ansible.cfg, templates
+1. Pre-populated workspace with inventory, ansible.cfg, templates, galaxy.yml
 2. Ability to edit files in VS Code and see changes when running playbooks
 3. Fast provisioning (students waiting in workshop session)
 4. Reliable provisioning (can't depend on external network)
@@ -263,6 +359,7 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 - Zero-touch base config provides wetty terminal, but unclear which VM it targets
 - SSHFS requires fuse-sshfs package (network dependency)
 - Students can't manually sync files between VMs
+- Extension's "Explain Playbook" feature uses `createWebviewPanel` with `ViewColumn.Beside`, which doesn't work in code-server 1.99.3 — removed from all modules
 
 ---
 
@@ -364,7 +461,7 @@ The bundled vsix at `setup-automation/ansible-26.6.0.vsix` is already patched.
 ## Content Instruction Updates (June 2026)
 
 ### Overview
-Updated all four module instruction files to align with actual lab behavior and correct mismatches between what students are told to do vs what actually happens during provisioning and validation.
+Updated all module instruction files to align with actual lab behavior and correct mismatches between what students are told to do vs what actually happens during provisioning and validation.
 
 ### Key Content Changes
 
@@ -373,189 +470,110 @@ Updated all four module instruction files to align with actual lab behavior and 
 **To**: "Automation Coding Assistant" or "Red Hat Ansible VS Code extension"
 **Reason**: Product rebranding; emphasized that this lab is about the Ansible VS Code extension
 
-**Files affected**:
-- `content/modules/ROOT/pages/01-playbook-inventory.adoc`
-- `content/modules/ROOT/pages/02-generate-comprehensive-playbook.adoc`
-- `content/modules/ROOT/pages/03-playbook-run-it.adoc`
-- `content/modules/ROOT/pages/04-wrap-up.adoc`
-
 #### 2. Pre-Configuration Accuracy
 **Issue**: Module 01 Task 1 told students to "Connect to Lightspeed" via Command Palette
-**Reality**: `setup-control.sh` lines 130-156 pre-configure Lightspeed with LiteMaaS endpoint, no manual connection needed
+**Reality**: `setup-control.sh` pre-configures Lightspeed with LiteMaaS endpoint, no manual connection needed
 **Fix**: Changed to verify extension is installed (check left sidebar) instead of connecting
 
 #### 3. Prescriptive Prompts for Validation
 **Issue**: Module 02 Task 1 provided a "starter prompt" students could customize
-**Problem**: `validation.yml` checks for exact string matches like `when: inventory_hostname in groups['web']` and `handlers:`
+**Problem**: `validate.yml` checks for exact string matches like `when: inventory_hostname in groups['web']` and `handlers:`
 **Result**: Students could generate functionally correct playbooks that fail validation due to wording differences
-**Fix**: Made the prompt prescriptive ("Use this prompt" instead of "Example starter prompt") with explicit requirements:
+**Fix**: Made the prompt prescriptive with explicit requirements:
 - Exact conditional syntax: `when: inventory_hostname in groups['web']`
 - Handler requirement explicitly stated
 - Module family preference: `ansible.builtin`
 
-#### 4. Removed Duplicate Template Creation
-**Issue**: Module 02 Task 3 instructed students to create `templates/motd.j2`
-**Reality**: File already exists at `ansible-files/templates/motd.j2` (created during setup)
-**Fix**: Removed entire task, renumbered subsequent tasks
+#### 4. Removed Explain Feature References
+**Issue**: Extension's "Explain Playbook" uses `createWebviewPanel` with `ViewColumn.Beside`, which doesn't work in code-server 1.99.3
+**Fix**: Removed all Explain tasks from modules 01 and 02. Replaced with Module 03 (hand-written walkthrough) for the same educational purpose.
 
-#### 5. Verification Command Alignment
-**Issue**: Module 03 Task 3 used `ssh node3 systemctl is-active httpd` to verify httpd not on database server
-**Reality**: `validation.yml` uses `rpm -q httpd` to check if package is installed
-**Mismatch**: `systemctl is-active` checks if service is running; `rpm -q` checks if package exists
-**Fix**: Changed verification command to `ssh node3 rpm -q httpd` to match validation
+#### 5. Added Module 03: Understand Your Playbook
+New informational module that walks through the generated `system_setup.yml` section by section — play header, variables, tasks/conditionals, templates, handlers. No solve/validate needed.
 
-#### 6. Removed Redundant Explanation Steps
-**Issue**: Module 03 Task 5 told students to use Lightspeed Explain on entire playbook to learn about idempotency
-**Problem**: The collapsible "What is idempotency?" section already explains the concept well
-**Fix**: Removed the "explain playbook again" substep; students see idempotency in action by running playbook twice
+#### 6. Added Module 05: Convert Your Playbook to a Role
+New hands-on module using the extension's Generate Role feature. Students provide a prompt, set the role name to `system_setup`, select the `lab.system_automation` collection, and review the generated role structure.
 
-#### 7. Completed TODO Placeholder
-**Issue**: Module 04 had incomplete section: "🤖 TODO: Add content about Claude skills here"
-**Fix**: Replaced with content about using other AI tools (Claude Code, ChatGPT) for Ansible automation, transferring prompting skills learned in this lab
-
-#### 8. Fixed AsciiDoc Formatting Issues
-**Issue**: Module 03 Task 5 had incorrect delimiter nesting (`===` inside `====`)
-**Issue**: Module 04 "Use Other AI Tools" collapsible had wrong delimiter level
-**Fix**: Corrected to proper AsciiDoc collapsible syntax
-
-### UI Workflow Updates (Glossed Over)
-Minor updates to reflect actual extension panel workflow:
-- Extension verification via sidebar instead of status bar
-- Using extension panel buttons instead of Command Palette where applicable
-- Updated "Explain" workflow to match extension UI
+#### 7. Module renumbering
+- Original: 01 (inventory) → 02 (generate) → 03 (run) → 04 (wrap-up)
+- Current: 01 (inventory) → 02 (generate) → 03 (understand) → 04 (run) → 05 (roles) → 06 (wrap-up)
 
 ### Validation Compatibility
 All instruction changes ensure student-generated content passes existing validation scripts:
-- `runtime-automation/01-playbook-inventory/validation.yml` - inventory structure checks
-- `runtime-automation/02-generate-comprehensive-playbook/validation.yml` - playbook structure and required sections
-- `runtime-automation/03-playbook-run-it/validation.yml` - user creation, httpd installation, motd deployment
-
-### Impact
-- Students can now follow instructions exactly and pass validation without confusion
-- Prescriptive prompts produce predictable AI output that matches validation expectations
-- No manual configuration steps for already-configured features
-- Consistent terminology throughout (Automation Coding Assistant, Red Hat Ansible VS Code extension)
+- `runtime-automation/02-generate-comprehensive-playbook/validate.yml` - playbook structure and required sections
+- `runtime-automation/04-playbook-run-it/validate.yml` - user creation, httpd installation, motd deployment
+- `runtime-automation/05-generate-roles/validate.yml` - role directory exists
 
 ---
 
 ## Files Reference
 
-**Key files to understand**:
-- `/Users/asergiso/Documents/zt-writing-your-first-playbook/setup-automation/setup-control.sh`
-- `/Users/asergiso/Documents/zt-writing-your-first-playbook/setup-automation/setup-vscode.sh`
-- `/Users/asergiso/Documents/zt-writing-your-first-playbook/config/instances.yaml`
-- `/Users/asergiso/Documents/zt-writing-your-first-playbook/ui-config.yml`
-- `/Users/asergiso/Documents/zt-writing-your-first-playbook/content/antora.yml`
-
-**Comparison reference**:
-- `/Users/asergiso/Documents/working-playbook-lab/` (provisioning works, but file sharing mechanism unclear)
-
-**Ansible files that need to exist**:
-- ansible-files/ansible.cfg (3 lines)
-- ansible-files/ansible-navigator.yml (19 lines)
-- ansible-files/inventory (11 lines)
-- ansible-files/templates/motd.j2 (4 lines)
-
-All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-first-playbook/ansible-files/`
-
----
-
-## File Inventory and Purpose
-
 ### Configuration Files
 
-**config/instances.yaml** (4 VMs, 140 lines)
+**config/instances.yaml** (4 VMs, ~140 lines)
 - `control`: devtools-ansible, 8G RAM, 30Gi disk, has services/routes for code-server on port 8080
 - `node1`, `node2`, `node3`: rhel-9.6, 8G RAM, 30Gi disk, managed nodes with SSH services/routes (port 22) to force same-subnet placement
-- All VMs: `AnsibleGroup: isolated` tag (enables cloud-init password auth)
-- All VMs: `networks: [default]` (CNV pod network)
 
-**config/networks.yaml** (3 lines)
-- Single network: `default` (CNV pod network)
-- No secondary network (doesn't work in CNV)
+**config/networks.yaml** (3 lines) — Single network: `default` (CNV pod network)
 
-**config/firewall.yaml** (20 lines)
-- Egress: allows TCP 80, 443 (for downloading EE container images)
-- Ingress: allows TCP 8080 (for code-server web UI)
-- Platform defaults: SSH (22), DNS (5353), VM-to-VM traffic
+**config/firewall.yaml** (20 lines) — Egress TCP 80/443, Ingress TCP 8080
 
-**ui-config.yml** (27 lines)
-- Defines 4 content modules (01-04) with solve buttons
+**config/secrets.yaml** — Vault-encrypted LiteMaaS API key for gpt-oss-120b
+
+**ui-config.yml** (~33 lines)
+- Defines 6 content modules with solve buttons
 - Tab 1: VS Code → `https://vscode-${guid}.${domain}/` (code-server on control:8080)
-- Tab 2: Control → `/wetty` (terminal provided by zero-touch-base-rhel, connects to control VM)
+- Tab 2: Control → `/wetty` (terminal, connects to control VM)
+- Node tabs removed (students SSH into nodes from Control tab, no direct access needed)
 
-**site.yml** (21 lines)
-- Antora site configuration for Showroom content
-- Points to content/ directory for AsciiDoc modules
-- Uses nookbag-bundle UI theme
+**site.yml** (21 lines) — Antora site config, nookbag-bundle v0.0.3 UI theme
 
 ### Setup Automation
 
-**setup-automation/main.yml** (148 lines)
-- Creates dynamic inventory from environment variables (BASTION_HOST, BASTION_PORT, etc.)
-- Adds bastion (control) and nodes (node1, node2, node3) to inventory
-- Copies setup-*.sh scripts to each VM and executes them
+**setup-automation/main.yml** (~148 lines)
+- Creates dynamic inventory from environment variables
+- Gathers node IPs via Ansible facts, populates /etc/hosts on control
+- Copies setup scripts to VMs and executes them
 - Copies bundled Ansible extension vsix to control VM
-- Loads vault-encrypted secrets (LiteMaaS API key) and passes to setup scripts
-- Generates SSH keypair on showroom pod, distributes to all VMs
-- Waits for SSH connection before timeout
-- Runs on `all:!localhost` (control + node1 + node2 + node3)
+- Loads vault-encrypted secrets and passes to setup scripts
 
-**setup-automation/setup-control.sh** (195 lines)
-- Writes network diagnostics to `/home/rhel/network-debug.txt`
-- Configures SSH defaults for node access (StrictHostKeyChecking no)
+**setup-automation/setup-control.sh** (~195 lines)
+- Configures SSH defaults for node access
 - Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory, templates/motd.j2
-- Configures Ansible Lightspeed with LiteMaaS endpoint (rhcustom provider, API key, model) via settings.json
+- Creates `galaxy.yml`, `README.md`, and `roles/` directory for collection/role generation
+- Configures Ansible Lightspeed with LiteMaaS endpoint (rhcustom provider, API key, model `gpt-oss-120b`)
 - Installs patched Ansible extension v26.6.0 vsix
-- Configures and starts code-server (config.yaml, systemctl start/enable)
-- No network dependencies (all files inline, code-server pre-installed)
+- Configures and starts code-server
 
-**setup-automation/ansible-26.6.0.vsix** (9.7MB)
-- Patched Ansible extension vsix with `ms-python.vscode-python-envs` removed from extensionDependencies
-- Required because code-server 1.99.3 on devtools-ansible is not compatible with that dependency
-- Provides rhcustom provider support for Lightspeed without Red Hat SSO OAuth
+**setup-automation/patch_prompts.py** (~112 lines)
+- Patches extension.js at provisioning time (5 patches, see "Ansible Extension Patching" section above)
 
-**setup-automation/setup-node1.sh, setup-node2.sh, setup-node3.sh** (31 lines each)
-- Waits for dnf/yum to be ready (cloud-init may still be running)
-- Minimal setup - SSH already configured via cloud-init
-- No package installations (keeps provisioning fast)
+**setup-automation/ansible-26.6.0.vsix** (9.7MB) — Patched Ansible extension vsix
+
+**setup-automation/setup-node{1,2,3}.sh** (31 lines each) — Minimal node setup (wait for dnf)
 
 ### Runtime Automation
 
-**runtime-automation/main.yml** (47 lines)
-- Dispatcher pattern: runs module-specific setup/solve/validation playbooks
-- Uses `ansible-playbook` to execute `./module_dir/module_stage.yml`
-- Reads from `runtime-automation/inventory` (maps controller→control, web→node1/2, database→node3)
+**runtime-automation/main.yml** (47 lines) — Dispatcher (see "Dispatch Architecture" above)
 
-**runtime-automation/NN-module-name/** (4 modules)
-- Each module has: `setup.yml`, `solve.yml`, `validation.yml`
-- Module 01: Verifies inventory exists, teaches ansible-navigator inventory commands
-- Module 02: Students generate system_setup.yml playbook with Lightspeed
-- Module 03: Students run playbook, verify httpd on web group, user on all hosts
-- Module 04: Wrap-up, no validation (informational only)
+**runtime-automation/inventory** — Maps controller→control, web→node1/2, database→node3
 
-### Health Monitoring
-
-**utilities/health-check.sh** (72 lines)
-- Auto-generated by Lab Foundry validate-lab skill
-- Checks SSH connectivity to all VMs (control, node1, node2, node3)
-- Checks code-server HTTP endpoint (https://vscode-${GUID}.${DOMAIN})
-- Checks code-server port on control (8080)
-- Optionally reports to webhook (HEALTH_WEBHOOK_URL)
-- Returns exit code = number of failures
+**runtime-automation/NN-module-name/** (6 modules)
+- Each module has: `setup.yml`, `solve.yml`, `validate.yml`
 
 ### Content
 
-**content/modules/ROOT/pages/** (4 modules, ~800 lines total AsciiDoc)
+**content/modules/ROOT/pages/** (6 modules, ~1200 lines total AsciiDoc)
 - 01-playbook-inventory.adoc: Introduction to inventory, ansible-navigator
 - 02-generate-comprehensive-playbook.adoc: Using Lightspeed to generate playbooks
-- 03-playbook-run-it.adoc: Running playbooks, verifying results, idempotency
-- 04-wrap-up.adoc: Summary and next steps
+- 03-understand-the-playbook.adoc: Hand-written playbook walkthrough
+- 04-playbook-run-it.adoc: Running playbooks, verifying results, idempotency
+- 05-generate-roles.adoc: Using Generate Role feature, role structure
+- 06-wrap-up.adoc: Summary and next steps
 
-**content/modules/ROOT/assets/images/** (9 images)
-- Screenshots of Showroom UI, VS Code, ansible-navigator output
-- Used in content pages to guide students
+### Health Monitoring
 
+**utilities/health-check.sh** (72 lines) — Checks SSH to all VMs, code-server endpoint, port 8080
 
 ---
 
@@ -566,6 +584,7 @@ All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-f
 - [ ] No network downloads in setup scripts (curl, wget, npm, pip)
 - [ ] No `set -e` failures on non-critical commands (use `|| true` or error handling)
 - [ ] setup-automation/main.yml nodes loop matches actual VMs (node1, node2, node3 only)
+- [ ] `config/secrets.yaml` has valid vault-encrypted API key for gpt-oss-120b
 
 ### Post-Provision Validation (if provisioning succeeds)
 
@@ -573,60 +592,42 @@ All four files exist in the repo at `/Users/asergiso/Documents/zt-writing-your-f
 ```bash
 # 1. Check /etc/hosts has node entries
 cat /etc/hosts | grep node
-# Expected: 3 lines with node1, node2, node3 IPs
 
 # 2. Check code-server is running
 systemctl status code-server
 curl -s http://localhost:8080 | head -20
-# Expected: code-server HTML response
 
-# 3. Check ansible-files exists
+# 3. Check ansible-files exists with all required files
 ls -la /home/rhel/ansible-files/
-# Expected: ansible.cfg, ansible-navigator.yml, inventory, templates/
+# Expected: ansible.cfg, ansible-navigator.yml, inventory, templates/, galaxy.yml, README.md, roles/
 
-# 4. Test DNS resolution
-getent hosts node1
-getent hosts node2  
-getent hosts node3
-# Expected: IP addresses returned (10.130.x.x or 10.129.x.x)
-
-# 5. Test ping to nodes
-ping -c 2 node1
-ping -c 2 node2
-ping -c 2 node3
-# Expected: Replies received (if on same subnet) or 100% loss (if cross-subnet but /etc/hosts works)
-
-# 6. Test SSH to nodes
-ssh -o ConnectTimeout=5 rhel@node1 hostname
-# Expected: "node1" returned, password: ansible123!
-
-# 7. Test ansible-navigator
+# 4. Test ansible connectivity
 cd /home/rhel/ansible-files
-ansible-navigator inventory --list
-# Expected: JSON with web, database, nodes groups
+ansible-navigator run -m ping all --mode stdout
+
+# 5. Test Lightspeed model connectivity
+# Open VS Code, create a new .yml file, type "- name: " and check for completions
 ```
 
 **From Showroom UI:**
 - [ ] VS Code tab loads and shows /home/rhel/ansible-files/ in file explorer
 - [ ] Control tab shows wetty terminal prompt
-- [ ] Can edit a file in VS Code and see it in Control terminal: `cat /home/rhel/ansible-files/inventory`
-- [ ] Ansible Lightspeed extension is visible in VS Code extensions panel
+- [ ] Can edit a file in VS Code and see it in Control terminal
+- [ ] Ansible extension is visible in VS Code extensions panel
+- [ ] "Generate a Playbook" button works in Ansible extension panel
+- [ ] "Generate a Role" button works and shows collection selection
 
 ### Known Issues to Watch For
 
 **If provisioning hangs:**
 - Check OpenShift console → showroom pod → init container logs
 - Look for setup script failures in `/tmp/setup-scripts/*.log` on VMs
-- Common culprits: network timeouts, systemctl hangs, package installation failures
 
 **If ansible-navigator can't reach nodes:**
 - Check `/etc/hosts` on control has node IPs
 - Check `ip addr show eth0` on control (should be 10.0.2.x)
-- Check nodes are on 10.130.x.x or 10.129.x.x network
 - Verify ansible-navigator.yml has `container-options: ["--network=host"]`
 
-**If VS Code doesn't load:**
-- Check code-server service: `systemctl status code-server`
-- Check port 8080 is listening: `ss -tlnp | grep 8080`
-- Check route in instances.yaml: vscode-8080 → port 8080
-- Check ui-config.yml: VS Code tab URL matches route host
+**If validation doesn't trigger on Next button:**
+- See "KNOWN ISSUE" in Runtime Automation section
+- Setup and solve work; validate dispatch needs main.yml restructuring

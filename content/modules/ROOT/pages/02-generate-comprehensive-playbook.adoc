@@ -121,6 +121,11 @@ Stay in the *VS Code* tab.
    * Name the file `system_setup.yml`
    * Click *Save*
 
+[IMPORTANT]
+====
+*Always review AI-generated code before using it.* Large language models are powerful tools, but they do not guarantee correct output every time. The generated playbook may contain subtle issues — wrong module parameters, missing options, or logic that doesn't match your intent. Treat LLM output as a *strong first draft* that still requires human review, not as production-ready code.
+====
+
 [NOTE]
 ====
 If the coding assistant's output is missing a required section (vars, handlers, conditionals, or template task), you can click the image:solve.png[Solve, 55] button to get a working version, then compare it to what you generated to understand what was different.
