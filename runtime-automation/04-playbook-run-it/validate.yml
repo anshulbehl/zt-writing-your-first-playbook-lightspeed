@@ -1,5 +1,5 @@
 ---
-- name: Validate module 03 - user and MOTD on all hosts
+- name: Validate module 04 - user and MOTD on all hosts
   hosts: all
   become: true
   tasks:
@@ -26,7 +26,7 @@
         msg: "/etc/motd on {{ inventory_hostname }} does not contain the expected hostname"
       when: r_motd.rc != 0
 
-- name: Validate module 03 - httpd on web group only
+- name: Validate module 04 - httpd on web group only
   hosts: web
   become: true
   tasks:
@@ -54,7 +54,7 @@
         msg: "httpd is not running on {{ inventory_hostname }}"
       when: r_httpd_active.rc != 0
 
-- name: Validate module 03 - httpd must NOT be on database group
+- name: Validate module 04 - httpd must NOT be on database group
   hosts: database
   become: true
   tasks:

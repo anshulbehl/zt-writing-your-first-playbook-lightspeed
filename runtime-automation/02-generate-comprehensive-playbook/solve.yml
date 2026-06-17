@@ -39,10 +39,8 @@
             tasks:
               - name: Install security updates for the kernel
                 ansible.builtin.dnf:
-                  name: 'kernel'
-                  state: latest
-                  security: true
-                  update_only: true
+                  name: kernel
+                  state: present
                 when: inventory_hostname in groups['web']
 
               - name: Create a new user
@@ -63,11 +61,19 @@
                   state: started
                   enabled: true
                 when: inventory_hostname in groups['web']
+                notify: Restart Apache
 
-              - name: Update MOTD from Jinja2 Template
+              - name: Deploy MOTD template
                 ansible.builtin.template:
                   src: templates/motd.j2
                   dest: /etc/motd
+                  mode: "0644"
+
+            handlers:
+              - name: Restart Apache
+                ansible.builtin.service:
+                  name: "{% raw %}{{ apache_service_name }}{% endraw %}"
+                  state: restarted
         dest: /home/{{ USER }}/ansible-files/system_setup.yml
         owner: "{{ USER }}"
         group: "{{ USER }}"

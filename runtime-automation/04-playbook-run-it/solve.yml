@@ -9,10 +9,8 @@
   tasks:
     - name: Install security updates for the kernel
       ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-        update_only: true
+        name: kernel
+        state: present
       when: inventory_hostname in groups['web']
 
     - name: Create user padawan
