@@ -44,6 +44,20 @@ chown -R rhel:rhel /home/rhel/.ssh
 
 # Create ansible-files directory structure
 mkdir -p /home/rhel/ansible-files/templates
+mkdir -p /home/rhel/ansible-files/roles
+
+# Create galaxy.yml so the Ansible extension recognizes this workspace as a
+# collection — required for the "Generate a Role" feature to have a target.
+cat > /home/rhel/ansible-files/galaxy.yml << 'EOF'
+---
+namespace: lab
+name: system_automation
+version: 1.0.0
+description: Lab collection for Writing Your First Playbook
+authors:
+  - RHDP Lab
+EOF
+
 chown -R rhel:rhel /home/rhel/ansible-files
 
 # Create ansible.cfg

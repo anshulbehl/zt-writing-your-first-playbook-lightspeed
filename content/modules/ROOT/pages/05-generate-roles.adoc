@@ -80,11 +80,11 @@ Include a handler to restart Apache when needed, and use ansible.builtin modules
 
 . The coding assistant will generate the role structure. *Review the suggested steps* to confirm they match your prompt, then click *"Create Role"* to save it.
 
-. The role should be created under a `roles/` directory in your workspace.
+. When asked to select a collection, choose *lab.system_automation* — this is the collection pre-configured in your workspace. The role will be created under the `roles/` directory.
 
 [TIP]
 ====
-Notice how the prompt is almost identical to the one you used for playbook generation — but this time the coding assistant organizes the output into the role directory structure instead of a single YAML file.
+Notice how the prompt is almost identical to the one you used for playbook generation — but this time the coding assistant organizes the output into the role directory structure instead of a single YAML file. The extension places roles inside a *collection* (defined by the `galaxy.yml` in your workspace), which is how Ansible organizes reusable content for sharing and distribution.
 ====
 =====
 ======
@@ -119,11 +119,8 @@ Stay in the *VS Code* tab.
 .☑️ Task 3 - Understand the difference
 [%collapsible]
 =====
+Here is where each section of your playbook ended up in the role:
 
-=====
-.Playbook vs Role — where did everything go?
-[%collapsible]
-====
 [cols="1,1,1", options="header"]
 |===
 | Playbook Section | Role Location | Why
@@ -148,8 +145,6 @@ Stay in the *VS Code* tab.
 | `templates/motd.j2`
 | Same location, but now the `ansible.builtin.template` module finds it relative to the role
 |===
-====
-=====
 
 The key insight: a role is not new automation — it is the *same automation reorganized* so it can be reused, shared, and maintained independently.
 =====
