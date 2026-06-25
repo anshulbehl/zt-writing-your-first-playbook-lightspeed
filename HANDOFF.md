@@ -2,7 +2,7 @@
 
 ## Session Context
 
-This session focused on fixing provisioning failures for the zt-writing-your-first-playbook lab on RHDP. Multiple approaches were attempted to solve file sharing between VMs and eliminate network dependencies during provisioning.
+Previous sessions focused on fixing provisioning failures (file sharing between VMs, network dependencies, subnet placement). This session re-themed the lab from a generic "Basic System Setup" to a multi-tier "Web and Database Infrastructure Setup" with tangible deliverables — a deployed HTML status page on web servers (viewable in browser tabs) and MariaDB running on the database server.
 
 ---
 
@@ -16,20 +16,36 @@ This session focused on fixing provisioning failures for the zt-writing-your-fir
 ### Infrastructure (config/instances.yaml)
 - **4 VMs total**:
   - `control` - devtools-ansible image, runs code-server (VS Code) on port 8080 + wetty terminal, hosts the ansible-files workspace
-  - `node1`, `node2`, `node3` - RHEL 9.6 managed nodes (SSH only, no UI tabs)
+  - `node1`, `node2` - RHEL 9.6 web tier (SSH + HTTP services/routes for browser tab access)
+  - `node3` - RHEL 9.6 database tier (SSH service/route only)
 
 ### Student Workflow
-Students interact with two tabs in the Showroom UI:
+Students interact with four tabs in the Showroom UI:
 1. **VS Code tab** → code-server running on control VM at port 8080
    - Students write/edit playbooks here
-   - Ansible Lightspeed extension generates code
+   - Automation Coding Assistant extension generates code
    - File explorer shows `/home/rhel/ansible-files/`
 
 2. **Control tab** → wetty terminal (provided by zero-touch-base-rhel)
    - Students run `ansible-navigator` commands here
    - Reads from `/home/rhel/ansible-files/` on control VM
 
-Both tabs access the same filesystem on the same VM — no file sharing needed.
+3. **node1 Web tab** → HTTP route to node1 port 80 (TLS edge termination)
+   - Shows deployed HTML status page after playbook run in module 04
+   - Blank/error before module 04 (expected — httpd not yet installed)
+
+4. **node2 Web tab** → HTTP route to node2 port 80 (TLS edge termination)
+   - Same status page as node1, but rendered with node2's Ansible facts
+
+VS Code and Control tabs access the same filesystem on the same VM — no file sharing needed.
+
+### Lab Narrative
+The lab is themed as "Multi-Tier Web and Database Infrastructure Setup":
+- **Web tier** (node1, node2): Apache httpd + HTML status page template showing host facts
+- **Database tier** (node3): MariaDB server
+- **All nodes**: User `padawan` + dynamic MOTD template with role-based conditional
+- Students generate a playbook via prescriptive LLM prompt, run it, then see tangible results (status page in browser tabs, MariaDB running on node3)
+- The HTML template (`index.html.j2`) is pre-staged by `setup-control.sh` — the LLM only generates the `ansible.builtin.template` task to deploy it
 
 ### LLM Backend
 - **Endpoint**: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` (LiteMaaS)
@@ -201,10 +217,10 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 **Solution**: Add services/routes to ALL VMs so they all land on the same 10.0.2.x subnet.
 
 **Files changed**:
-1. **config/instances.yaml** - Added HTTP services and routes to node1, node2, node3
-   - Each node now has `services:` section (HTTP port 80)
-   - Each node now has `routes:` section (web access via TLS edge termination)
-   - Forces CNV to provision all nodes on same isolated network as control (10.0.2.x)
+1. **config/instances.yaml** - Added services and routes to all nodes
+   - node1, node2: SSH (port 22) + HTTP (port 80) services/routes — HTTP routes use `node1-http` / `node2-http` host prefixes with TLS edge termination for browser tab access
+   - node3: SSH (port 22) service/route only (MariaDB doesn't need browser access)
+   - All nodes having services/routes forces CNV to provision on same 10.0.2.x isolated network as control
 
 2. **setup-automation/main.yml** - Moved /etc/hosts configuration to Ansible playbook
    - Added `Gather node IP addresses` play to collect Ansible facts from nodes
@@ -239,10 +255,11 @@ The initial assumption was wrong - **VM image type does NOT determine subnet ass
 1. **4 VMs total**: control + node1 + node2 + node3 (control uses devtools-ansible, nodes use rhel-9.6)
 2. **All VMs on 10.0.2.x subnet**: Achieved by adding services/routes to all VM definitions
 3. **Control VM**: Runs code-server (VS Code) on port 8080 + wetty terminal
-4. **Node VMs**: Run SSH service on port 22 (services/routes force same subnet placement), no UI tabs
+4. **Node VMs**: node1/node2 have SSH + HTTP services/routes (browser tab access for status page); node3 has SSH service/route only
 5. **/etc/hosts populated by Ansible**: Using gathered facts, not DNS (more reliable)
-6. **Students access**: VS Code tab (edit) + Control tab (run ansible-navigator) on same filesystem
+6. **Students access**: VS Code tab (edit) + Control tab (run) + node1/node2 Web tabs (verify status page) on Showroom UI
 7. **Ansible Lightspeed**: Backed by LiteMaaS (`https://maas-rhdp.apps.maas.redhatworkshops.io/v1`, model `gpt-oss-120b`). Extension v26.6.0 bundled as patched vsix (`ms-python.vscode-python-envs` dependency removed for code-server 1.99.3 compatibility). API key vault-encrypted in `config/secrets.yaml` (vault ID: `ansiblebu_vault`).
+8. **Firewall layering for HTTP**: Port 80 opened at three levels — RHDP platform (`config/firewall.yaml` ingress), host-level firewalld (provisioning-time `setup-node{1,2}.sh`), and runtime safety net (`runtime-automation/04-playbook-run-it/setup.yml`)
 
 ---
 
@@ -285,9 +302,9 @@ The `generateOutlineFromRole` function expects a YAML array but receives a mappi
 | # | Slug | Title | solveButton | Validation |
 |---|------|-------|-------------|------------|
 | 01 | `01-playbook-inventory` | Meet Your Automation Coding Assistant | true | No-op (introductory) |
-| 02 | `02-generate-comprehensive-playbook` | Generate a Comprehensive Playbook | true | Checks system_setup.yml structure |
+| 02 | `02-generate-comprehensive-playbook` | Generate a Comprehensive Playbook | true | Checks system_setup.yml structure (incl. `groups['database']` conditional) |
 | 03 | `03-understand-the-playbook` | Understand Your Playbook | false | No-op (informational) |
-| 04 | `04-playbook-run-it` | Run and Verify the Playbook | true | Checks user, httpd, MOTD on nodes |
+| 04 | `04-playbook-run-it` | Run and Verify the Playbook | true | User, httpd, status page, MariaDB, MOTD on correct nodes |
 | 05 | `05-generate-roles` | Convert Your Playbook to a Role | true | Checks roles/ dir exists |
 | 06 | `06-wrap-up` | Wrap-Up and Next Steps | false | No-op (informational) |
 
@@ -330,12 +347,14 @@ The extension's `CollectionFinder` requires a `galaxy.yml` to provide a target f
 ### Grading Details
 
 **Module 01** — No-op validation (introductory, no deliverables)
-**Module 02** — Validates `system_setup.yml` exists and contains required sections (hosts, become, vars, user_name, when conditional, handlers, template task)
+**Module 02** — Validates `system_setup.yml` exists and contains required sections:
+- `hosts: all`, `become: true`, `vars:`, `user_name`, `groups['web']`, `groups['database']`, `handlers:`, `ansible.builtin.template`
+- Failure message mentions "web/database conditionals"
 **Module 03** — No-op (informational walkthrough)
 **Module 04** — Most comprehensive validation:
-- Play 1 (`hosts: all`): checks user `padawan` exists, MOTD contains hostname
-- Play 2 (`hosts: web`): checks httpd installed and running
-- Play 3 (`hosts: database`): checks httpd is NOT installed (conditional verification)
+- Play 1 (`hosts: all`): user `padawan` exists, MOTD contains hostname
+- Play 2 (`hosts: web`): httpd installed + running, `/var/www/html/index.html` exists and contains hostname
+- Play 3 (`hosts: database`): httpd NOT installed, mariadb-server installed, mariadb service running
 **Module 05** — Checks `roles/` directory exists with at least one subdirectory
 **Module 06** — No-op (wrap-up)
 
@@ -344,15 +363,17 @@ The extension's `CollectionFinder` requires a `galaxy.yml` to provide a target f
 ## Design Philosophy Insights
 
 ### What This Lab Is
-- **Ansible Lightspeed tutorial**: Students learn to generate playbooks and roles using AI in VS Code
-- **Two-environment workflow**: Edit in GUI (VS Code), run in CLI (Control terminal)
+- **Ansible Automation Coding Assistant tutorial**: Students learn to generate playbooks and roles using the AI coding assistant in the Red Hat Ansible VS Code extension
+- **Multi-tier infrastructure narrative**: Web + database setup with tangible deliverables (browser-viewable status page, running MariaDB)
+- **Two-environment workflow**: Edit in GUI (VS Code), run in CLI (Control terminal), verify in browser (node1/node2 Web tabs)
 - **Zero-touch RHDP lab**: Babylon CNV, Showroom content delivery, auto-provisioning
 
 ### What Students Need
-1. Pre-populated workspace with inventory, ansible.cfg, templates, galaxy.yml
+1. Pre-populated workspace with inventory, ansible.cfg, templates (motd.j2 + index.html.j2), galaxy.yml
 2. Ability to edit files in VS Code and see changes when running playbooks
-3. Fast provisioning (students waiting in workshop session)
-4. Reliable provisioning (can't depend on external network)
+3. Browser tabs to see deployed status page without leaving Showroom UI
+4. Fast provisioning (students waiting in workshop session)
+5. Reliable provisioning (can't depend on external network)
 
 ### Constraints
 - Network during provisioning is unreliable (GitHub, package repos)
@@ -461,48 +482,68 @@ The bundled vsix at `setup-automation/ansible-26.6.0.vsix` is already patched.
 ## Content Instruction Updates (June 2026)
 
 ### Overview
-Updated all module instruction files to align with actual lab behavior and correct mismatches between what students are told to do vs what actually happens during provisioning and validation.
+Two rounds of updates:
+1. **Earlier**: Aligned modules with actual lab behavior, fixed Lightspeed → Automation Coding Assistant terminology, made prompts prescriptive for validation compatibility, removed Explain feature (broken in code-server), added modules 03 and 05.
+2. **This session**: Re-themed from "Basic System Setup" to "Web and Database Infrastructure Setup". Added browser tabs for status page verification. Updated all prompts, code snippets, verification steps, and solve/validate scripts.
 
 ### Key Content Changes
 
-#### 1. Terminology Updates
-**Changed**: All references to "Lightspeed" in user-facing content
-**To**: "Automation Coding Assistant" or "Red Hat Ansible VS Code extension"
-**Reason**: Product rebranding; emphasized that this lab is about the Ansible VS Code extension
+#### 1. Lab Re-Theme: Multi-Tier Web + Database Infrastructure
+**Old narrative**: Generic "Basic System Setup" — create user, install httpd, deploy MOTD. No tangible deliverable.
+**New narrative**: "Web and Database Infrastructure Setup" — students deploy a real multi-tier stack:
+- Web tier (node1, node2): Apache + HTML status page viewable in browser tabs
+- Database tier (node3): MariaDB
+- All nodes: user `padawan` + dynamic MOTD with role-based conditional
 
-#### 2. Pre-Configuration Accuracy
-**Issue**: Module 01 Task 1 told students to "Connect to Lightspeed" via Command Palette
-**Reality**: `setup-control.sh` pre-configures Lightspeed with LiteMaaS endpoint, no manual connection needed
-**Fix**: Changed to verify extension is installed (check left sidebar) instead of connecting
+**New playbook structure** (7 tasks, 5 variables):
+| # | Task | Target | Variable |
+|---|------|--------|----------|
+| 1 | Create user `padawan` | all | `user_name` |
+| 2 | Install httpd | `groups['web']` | `web_package` |
+| 3 | Start/enable httpd | `groups['web']` | `web_service` |
+| 4 | Deploy `index.html.j2` → `/var/www/html/index.html` | `groups['web']` | — |
+| 5 | Install mariadb-server | `groups['database']` | `db_package` |
+| 6 | Start/enable mariadb | `groups['database']` | `db_service` |
+| 7 | Deploy `motd.j2` → `/etc/motd` | all | — |
+| — | Handler: Restart Apache | — | `web_service` |
 
-#### 3. Prescriptive Prompts for Validation
-**Issue**: Module 02 Task 1 provided a "starter prompt" students could customize
-**Problem**: `validate.yml` checks for exact string matches like `when: inventory_hostname in groups['web']` and `handlers:`
-**Result**: Students could generate functionally correct playbooks that fail validation due to wording differences
-**Fix**: Made the prompt prescriptive with explicit requirements:
-- Exact conditional syntax: `when: inventory_hostname in groups['web']`
-- Handler requirement explicitly stated
-- Module family preference: `ansible.builtin`
+**Dropped**: kernel security updates task, firewalld tasks (firewall handled at provisioning/infrastructure level)
 
-#### 4. Removed Explain Feature References
-**Issue**: Extension's "Explain Playbook" uses `createWebviewPanel` with `ViewColumn.Beside`, which doesn't work in code-server 1.99.3
-**Fix**: Removed all Explain tasks from modules 01 and 02. Replaced with Module 03 (hand-written walkthrough) for the same educational purpose.
+#### 2. Pre-Staged Templates
+**`templates/index.html.j2`** — Dark-themed HTML status page with inline CSS, glassmorphism card displaying hostname, IP, OS, architecture, kernel, python version via Ansible facts. Pre-staged by `setup-control.sh` (the LLM only generates the `ansible.builtin.template` task, not the HTML itself).
 
-#### 5. Added Module 03: Understand Your Playbook
-New informational module that walks through the generated `system_setup.yml` section by section — play header, variables, tasks/conditionals, templates, handlers. No solve/validate needed.
+**`templates/motd.j2`** — Updated with Role conditional:
+```
+Welcome to {{ ansible_hostname }}.
+Role: {% if inventory_hostname in groups['web'] %}Web Server{% elif inventory_hostname in groups['database'] %}Database Server{% else %}Server{% endif %}
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+Architecture: {{ ansible_architecture }}
+```
 
-#### 6. Added Module 05: Convert Your Playbook to a Role
-New hands-on module using the extension's Generate Role feature. Students provide a prompt, set the role name to `system_setup`, select the `lab.system_automation` collection, and review the generated role structure.
+#### 3. Browser Tabs for Status Page
+Added "node1 Web" and "node2 Web" tabs to `ui-config.yml`. Students click these in module 04 after running the playbook to see the deployed status page rendered with each node's facts. Required:
+- HTTP services/routes on node1 and node2 in `config/instances.yaml`
+- Port 80 in `config/firewall.yaml` ingress
+- Firewalld HTTP opened at provisioning (`setup-node{1,2}.sh`) and at runtime (`04-playbook-run-it/setup.yml`)
 
-#### 7. Module renumbering
+#### 4. Terminology Updates
+All user-facing references changed: "Lightspeed" → "Automation Coding Assistant" or "Red Hat Ansible VS Code extension"
+
+#### 5. Prescriptive Prompts for Validation
+Module 02 prompt is highly prescriptive (exact conditional syntax, exact variable names, exact task ordering) because:
+- `validate.yml` greps for exact strings like `groups['web']`, `groups['database']`, `handlers:`
+- gpt-oss-120b (120B params) needs prescriptive prompts for deterministic output
+- Solve button available as fallback
+
+#### 6. Module Structure (unchanged from earlier session)
 - Original: 01 (inventory) → 02 (generate) → 03 (run) → 04 (wrap-up)
 - Current: 01 (inventory) → 02 (generate) → 03 (understand) → 04 (run) → 05 (roles) → 06 (wrap-up)
 
 ### Validation Compatibility
-All instruction changes ensure student-generated content passes existing validation scripts:
-- `runtime-automation/02-generate-comprehensive-playbook/validate.yml` - playbook structure and required sections
-- `runtime-automation/04-playbook-run-it/validate.yml` - user creation, httpd installation, motd deployment
-- `runtime-automation/05-generate-roles/validate.yml` - role directory exists
+All instruction changes ensure student-generated content passes validation scripts:
+- `02-generate-comprehensive-playbook/validate.yml` — greps for `hosts: all`, `become: true`, `vars:`, `user_name`, `groups['web']`, `groups['database']`, `handlers:`, `ansible.builtin.template`
+- `04-playbook-run-it/validate.yml` — user padawan, httpd installed/running, status page exists with hostname, mariadb-server installed, mariadb running, httpd NOT on database node
+- `05-generate-roles/validate.yml` — role directory exists
 
 ---
 
@@ -510,21 +551,23 @@ All instruction changes ensure student-generated content passes existing validat
 
 ### Configuration Files
 
-**config/instances.yaml** (4 VMs, ~140 lines)
-- `control`: devtools-ansible, 8G RAM, 30Gi disk, has services/routes for code-server on port 8080
-- `node1`, `node2`, `node3`: rhel-9.6, 8G RAM, 30Gi disk, managed nodes with SSH services/routes (port 22) to force same-subnet placement
+**config/instances.yaml** (4 VMs, ~164 lines)
+- `control`: devtools-ansible, 8G RAM, 30Gi disk, services/routes for code-server on port 8080
+- `node1`, `node2`: rhel-9.6, 8G RAM, 30Gi disk, SSH (port 22) + HTTP (port 80) services/routes — HTTP routes use `node1-http` / `node2-http` host prefixes with TLS edge termination
+- `node3`: rhel-9.6, 8G RAM, 30Gi disk, SSH (port 22) service/route only
 
 **config/networks.yaml** (3 lines) — Single network: `default` (CNV pod network)
 
-**config/firewall.yaml** (20 lines) — Egress TCP 80/443, Ingress TCP 8080
+**config/firewall.yaml** (~20 lines) — Egress TCP 80/443, Ingress TCP 8080 + TCP 80
 
 **config/secrets.yaml** — Vault-encrypted LiteMaaS API key for gpt-oss-120b
 
-**ui-config.yml** (~33 lines)
+**ui-config.yml** (~39 lines)
 - Defines 6 content modules with solve buttons
 - Tab 1: VS Code → `https://vscode-${guid}.${domain}/` (code-server on control:8080)
 - Tab 2: Control → `/wetty` (terminal, connects to control VM)
-- Node tabs removed (students SSH into nodes from Control tab, no direct access needed)
+- Tab 3: node1 Web → `https://node1-http-${guid}.${domain}/` (status page on node1, TLS edge)
+- Tab 4: node2 Web → `https://node2-http-${guid}.${domain}/` (status page on node2, TLS edge)
 
 **site.yml** (21 lines) — Antora site config, nookbag-bundle v0.0.3 UI theme
 
@@ -537,9 +580,11 @@ All instruction changes ensure student-generated content passes existing validat
 - Copies bundled Ansible extension vsix to control VM
 - Loads vault-encrypted secrets and passes to setup scripts
 
-**setup-automation/setup-control.sh** (~195 lines)
+**setup-automation/setup-control.sh** (~320 lines)
 - Configures SSH defaults for node access
-- Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory, templates/motd.j2
+- Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory
+- Creates `templates/motd.j2` (with Role conditional: Web Server / Database Server based on inventory group)
+- Creates `templates/index.html.j2` (dark-themed HTML status page with glassmorphism card showing Ansible facts — hostname, IP, OS, architecture, kernel, python version)
 - Creates `galaxy.yml`, `README.md`, and `roles/` directory for collection/role generation
 - Configures Ansible Lightspeed with LiteMaaS endpoint (rhcustom provider, API key, model `gpt-oss-120b`)
 - Installs patched Ansible extension v26.6.0 vsix
@@ -550,7 +595,9 @@ All instruction changes ensure student-generated content passes existing validat
 
 **setup-automation/ansible-26.6.0.vsix** (9.7MB) — Patched Ansible extension vsix
 
-**setup-automation/setup-node{1,2,3}.sh** (31 lines each) — Minimal node setup (wait for dnf)
+**setup-automation/setup-node{1,2}.sh** (~36 lines each) — Satellite registration + open HTTP in firewalld (`firewall-cmd --add-service=http --permanent`) so status page is accessible after playbook run
+
+**setup-automation/setup-node3.sh** (~31 lines) — Satellite registration only (MariaDB doesn't need browser access)
 
 ### Runtime Automation
 
@@ -563,13 +610,13 @@ All instruction changes ensure student-generated content passes existing validat
 
 ### Content
 
-**content/modules/ROOT/pages/** (6 modules, ~1200 lines total AsciiDoc)
-- 01-playbook-inventory.adoc: Introduction to inventory, ansible-navigator
-- 02-generate-comprehensive-playbook.adoc: Using Lightspeed to generate playbooks
-- 03-understand-the-playbook.adoc: Hand-written playbook walkthrough
-- 04-playbook-run-it.adoc: Running playbooks, verifying results, idempotency
-- 05-generate-roles.adoc: Using Generate Role feature, role structure
-- 06-wrap-up.adoc: Summary and next steps
+**content/modules/ROOT/pages/** (6 modules, ~1400 lines total AsciiDoc)
+- 01-playbook-inventory.adoc: Introduction to inventory (web/database groups), ansible-navigator
+- 02-generate-comprehensive-playbook.adoc: Prescriptive prompt for 7-task web+database playbook (5 variables, both `groups['web']` and `groups['database']` conditionals)
+- 03-understand-the-playbook.adoc: Walkthrough of play header, vars, web/database conditionals, both templates (index.html.j2 + motd.j2), handler
+- 04-playbook-run-it.adoc: Run playbook, verify user, view status page in browser tabs (node1 Web / node2 Web), verify MariaDB on node3, check MOTD with Role line, idempotency
+- 05-generate-roles.adoc: Generate Role with matching prompt, verify role structure includes both templates
+- 06-wrap-up.adoc: Summary mentioning tangible deliverables (status page, MariaDB), "Automation Coding Assistant" terminology
 
 ### Health Monitoring
 
@@ -600,6 +647,8 @@ curl -s http://localhost:8080 | head -20
 # 3. Check ansible-files exists with all required files
 ls -la /home/rhel/ansible-files/
 # Expected: ansible.cfg, ansible-navigator.yml, inventory, templates/, galaxy.yml, README.md, roles/
+ls -la /home/rhel/ansible-files/templates/
+# Expected: motd.j2, index.html.j2
 
 # 4. Test ansible connectivity
 cd /home/rhel/ansible-files
@@ -607,6 +656,10 @@ ansible-navigator run -m ping all --mode stdout
 
 # 5. Test Lightspeed model connectivity
 # Open VS Code, create a new .yml file, type "- name: " and check for completions
+
+# 6. (After running playbook in module 04) Check status page and MariaDB
+curl -s node1 | grep -o '<title>.*</title>'   # Should show: <title>node1 - Status</title>
+ssh node3 systemctl is-active mariadb          # Should show: active
 ```
 
 **From Showroom UI:**
@@ -616,6 +669,8 @@ ansible-navigator run -m ping all --mode stdout
 - [ ] Ansible extension is visible in VS Code extensions panel
 - [ ] "Generate a Playbook" button works in Ansible extension panel
 - [ ] "Generate a Role" button works and shows collection selection
+- [ ] node1 Web tab loads after playbook run (blank/error before module 04 is expected)
+- [ ] node2 Web tab loads with different hostname/IP than node1
 
 ### Known Issues to Watch For
 
@@ -631,3 +686,13 @@ ansible-navigator run -m ping all --mode stdout
 **If validation doesn't trigger on Next button:**
 - See "KNOWN ISSUE" in Runtime Automation section
 - Setup and solve work; validate dispatch needs main.yml restructuring
+
+**If node1/node2 Web tabs show error before module 04:**
+- Expected behavior — httpd is not installed until the student runs the playbook in module 04
+- After playbook run, the status page should appear. If not, check firewalld (`firewall-cmd --list-services` on the node) and httpd status (`systemctl status httpd`)
+
+**If status page doesn't load after playbook run:**
+- Check firewall at all three layers: `config/firewall.yaml` has port 80 ingress, `setup-node{1,2}.sh` opened HTTP in firewalld, `04-playbook-run-it/setup.yml` has safety-net firewalld rule
+- Check the route exists: the Showroom URL pattern is `https://node1-http-${guid}.${domain}/`
+- Check httpd is running: `ssh node1 systemctl status httpd`
+- Check the HTML file was deployed: `ssh node1 cat /var/www/html/index.html`
