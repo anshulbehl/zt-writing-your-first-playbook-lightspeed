@@ -56,11 +56,23 @@ virtualmachines:
             protocol: TCP
             targetPort: 22
             name: ssh
+      - name: node1-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: http
     routes:
       - name: node1-ssh
         host: node1
         service: node1-ssh
         targetPort: 22
+        tls: true
+        tls_termination: Edge
+      - name: node1-http
+        host: node1-http
+        service: node1-http
+        targetPort: 80
         tls: true
         tls_termination: Edge
     userdata: |-
@@ -89,11 +101,23 @@ virtualmachines:
             protocol: TCP
             targetPort: 22
             name: ssh
+      - name: node2-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: http
     routes:
       - name: node2-ssh
         host: node2
         service: node2-ssh
         targetPort: 22
+        tls: true
+        tls_termination: Edge
+      - name: node2-http
+        host: node2-http
+        service: node2-http
+        targetPort: 80
         tls: true
         tls_termination: Edge
     userdata: |-

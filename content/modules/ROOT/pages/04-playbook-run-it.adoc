@@ -102,30 +102,23 @@ All three should show the user exists. This demonstrates that tasks without a `w
 .☑️ Task 3 - View the web server status page
 [%collapsible]
 =====
-[NOTE]
-====
-Stay in the *Control* tab.
-====
+The playbook deployed an HTML status page to the web servers using the `index.html.j2` template. Each web server now has a live page showing its own system information.
 
-The playbook deployed an HTML status page to the web servers using the `index.html.j2` template. Each web server now has a page showing its own system information.
+. Click the *node1 Web* tab at the top of the screen. You should see a styled status page showing node1's hostname, IP address, OS version, and architecture — all rendered from Ansible facts by the Jinja2 template you deployed.
 
-. View the status page on node1:
+. Click the *node2 Web* tab. Notice the hostname and IP address changed to node2's values, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
+
+. Switch back to the *Control* tab and verify from the command line as well:
 +
 [source,role="execute"]
 ----
-curl node1
+curl -s node1 | grep -o '<title>.*</title>'
 ----
 +
-You should see an HTML page containing node1's hostname, IP address, OS version, and architecture. This is the Jinja2 template rendered with node1's specific Ansible facts.
-
-. View the status page on node2:
-+
-[source,role="execute"]
+.Expected output
 ----
-curl node2
+<title>node1 - Status</title>
 ----
-+
-Notice the hostname and IP address changed to node2's values, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
 
 . Verify httpd is running on both web servers:
 +

@@ -30,3 +30,9 @@ tabs:
   - name: Control
     url: /wetty
     external: false
+  - name: node1 Web
+    url: https://node1-http-${guid}.${domain}/
+    external: false
+  - name: node2 Web
+    url: https://node2-http-${guid}.${domain}/
+    external: false

@@ -29,4 +29,8 @@ if [ $? -ne 0 ]; then
     retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
 fi
 
+# Open HTTP in firewalld so the status page is accessible after the student runs the playbook
+firewall-cmd --add-service=http --permanent 2>/dev/null || true
+firewall-cmd --reload 2>/dev/null || true
+
 echo "Node1 setup complete"
