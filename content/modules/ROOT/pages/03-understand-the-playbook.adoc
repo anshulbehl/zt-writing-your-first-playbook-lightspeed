@@ -19,7 +19,7 @@ Look at the top of your playbook:
 [source,yaml]
 ----
 ---
-- name: Basic System Setup
+- name: Web and Database Infrastructure Setup
   hosts: all
   become: true
 ----
@@ -41,16 +41,19 @@ Find the `vars:` section in your playbook:
 ----
   vars:
     user_name: padawan
-    package_name: httpd
-    apache_service_name: httpd
+    web_package: httpd
+    web_service: httpd
+    db_package: mariadb-server
+    db_service: mariadb
 ----
 
-Variables let you define values once and reference them throughout the playbook using `{{ variable_name }}` syntax. If you need to change a username or package name later, you update it in one place instead of editing every task.
+Variables let you define values once and reference them throughout the playbook using `{{ variable_name }}` syntax. If you need to change a package name or service name later, you update it in one place instead of editing every task.
 
 In this playbook:
 
 * `user_name` is used by the user creation task
-* `package_name` and `apache_service_name` are used by the package installation and service management tasks
+* `web_package` and `web_service` manage Apache on web servers
+* `db_package` and `db_service` manage MariaDB on database servers
 
 This pattern — defining all configurable values at the top — is a best practice that makes playbooks easier to maintain and reuse across different environments.
 =====
@@ -63,16 +66,14 @@ This pattern — defining all configurable values at the top — is a best pract
 =====
 The `tasks:` section is the core of the playbook — each task is an action Ansible performs on the managed hosts. Tasks run *in order*, top to bottom.
 
-Look at the first task:
+Look at the Apache installation task:
 
 [source,yaml]
 ----
-    - name: Install security updates for the kernel
+    - name: Install Apache on web servers
       ansible.builtin.dnf:
-        name: kernel
-        state: latest
-        security: true
-        update_only: true
+        name: "{{ web_package }}"
+        state: present
       when: inventory_hostname in groups['web']
 ----
 
@@ -80,10 +81,25 @@ Each task has:
 
 * `name:` — a description that appears in the output
 * A *module* (`ansible.builtin.dnf`) — the tool Ansible uses to perform the action
-* *Parameters* (`name`, `state`, `security`) — configuration for that module
+* *Parameters* (`name`, `state`) — configuration for that module
 * `when:` — a *conditional* that controls whether the task runs
 
-The `when: inventory_hostname in groups['web']` conditional means this task only runs on hosts that belong to the `web` group in your inventory (`node1` and `node2`). Tasks without a `when:` conditional — like the user creation task — run on all hosts.
+The `when: inventory_hostname in groups['web']` conditional means this task only runs on hosts that belong to the `web` group in your inventory (`node1` and `node2`).
+
+Now look at the MariaDB installation task:
+
+[source,yaml]
+----
+    - name: Install MariaDB on database servers
+      ansible.builtin.dnf:
+        name: "{{ db_package }}"
+        state: present
+      when: inventory_hostname in groups['database']
+----
+
+This uses the same pattern but targets the `database` group (`node3`). By using different conditionals, a single playbook that runs against `hosts: all` can apply different configurations to different server groups.
+
+Tasks without a `when:` conditional — like user creation and MOTD deployment — run on *all* hosts.
 
 [TIP]
 ====
@@ -97,14 +113,25 @@ The `ansible.builtin` prefix means the module is part of Ansible's core library.
 .☑️ Task 4 - Templates
 [%collapsible]
 =====
-Find the template task near the bottom of your playbook:
+Find the template tasks in your playbook. There are two:
 
 [source,yaml]
 ----
-    - name: Update MOTD from Jinja2 Template
+    - name: Deploy status page to web servers
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: "0644"
+      when: inventory_hostname in groups['web']
+----
+
+[source,yaml]
+----
+    - name: Deploy MOTD template
       ansible.builtin.template:
         src: templates/motd.j2
         dest: /etc/motd
+        mode: "0644"
 ----
 
 The `ansible.builtin.template` module takes a *Jinja2 template file* and renders it with real values before copying it to each host. Open `templates/motd.j2` in VS Code to see the template:
@@ -112,16 +139,17 @@ The `ansible.builtin.template` module takes a *Jinja2 template file* and renders
 [source,jinja2]
 ----
 Welcome to {{ ansible_hostname }}.
+Role: {% if inventory_hostname in groups['web'] %}Web Server{% elif inventory_hostname in groups['database'] %}Database Server{% endif %}
 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
 Architecture: {{ ansible_architecture }}
 ----
 
 The `{{ }}` placeholders are replaced with *Ansible facts* — information Ansible automatically collects from each host during the "Gathering Facts" step. Because each host has different facts, the same template produces different output on each node:
 
-* On `node1`: "Welcome to node1. OS: RedHat 9.6 ..."
-* On `node3`: "Welcome to node3. OS: RedHat 9.6 ..."
+* On `node1`: "Welcome to node1. Role: Web Server ..."
+* On `node3`: "Welcome to node3. Role: Database Server ..."
 
-This is the power of templates: one source file, customized output per host.
+The `index.html.j2` template works the same way — it produces a status page with each web server's hostname, IP address, and OS information. You will see the result when you run the playbook and use `curl` to view the page.
 =====
 ======
 
@@ -137,11 +165,11 @@ Look at the `handlers:` section at the bottom of your playbook:
   handlers:
     - name: Restart Apache
       ansible.builtin.service:
-        name: "{{ apache_service_name }}"
+        name: "{{ web_service }}"
         state: restarted
 ----
 
-Handlers are special tasks that only run when *notified* by another task. A task notifies a handler using the `notify:` keyword — for example, when a configuration file changes, the task can notify the "Restart Apache" handler to restart the service.
+Handlers are special tasks that only run when *notified* by another task. A task notifies a handler using the `notify:` keyword — for example, when the status page template is deployed, the task notifies the "Restart Apache" handler to restart the web service.
 
 Handlers have two important properties:
 
@@ -160,8 +188,8 @@ By completing this module, you now understand:
 * How a play header defines the target hosts and privilege escalation
 * How `vars:` lets you define reusable values in one place
 * How tasks run in order and use modules with parameters
-* How `when:` conditionals target specific inventory groups
-* How Jinja2 templates render host-specific configuration files using Ansible facts
+* How `when:` conditionals target specific inventory groups (`web` vs `database`)
+* How Jinja2 templates render host-specific content using Ansible facts
 * How handlers run only when notified, and only once at the end of the play
 
 

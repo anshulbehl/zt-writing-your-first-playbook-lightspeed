@@ -26,7 +26,7 @@
         msg: "/etc/motd on {{ inventory_hostname }} does not contain the expected hostname"
       when: r_motd.rc != 0
 
-- name: Validate module 04 - httpd on web group only
+- name: Validate module 04 - httpd and status page on web group
   hosts: web
   become: true
   tasks:
@@ -54,7 +54,28 @@
         msg: "httpd is not running on {{ inventory_hostname }}"
       when: r_httpd_active.rc != 0
 
-- name: Validate module 04 - httpd must NOT be on database group
+    - name: Check that status page exists
+      ansible.builtin.stat:
+        path: /var/www/html/index.html
+      register: r_status_page
+
+    - name: Fail if status page is missing
+      ansible.builtin.fail:
+        msg: "Status page /var/www/html/index.html is missing on {{ inventory_hostname }}"
+      when: not r_status_page.stat.exists
+
+    - name: Check status page contains hostname
+      ansible.builtin.shell: grep -q "{{ ansible_hostname }}" /var/www/html/index.html
+      changed_when: false
+      failed_when: false
+      register: r_page_content
+
+    - name: Fail if status page does not contain hostname
+      ansible.builtin.fail:
+        msg: "Status page on {{ inventory_hostname }} does not contain the expected hostname"
+      when: r_page_content.rc != 0
+
+- name: Validate module 04 - MariaDB on database group, httpd absent
   hosts: database
   become: true
   tasks:
@@ -69,3 +90,27 @@
       ansible.builtin.fail:
         msg: "httpd should not be installed on {{ inventory_hostname }} (database group) — check your conditionals"
       when: r_httpd_db.rc == 0
+
+    - name: Check that MariaDB is installed
+      ansible.builtin.command:
+        cmd: rpm -q mariadb-server
+      changed_when: false
+      failed_when: false
+      register: r_mariadb
+
+    - name: Fail if MariaDB is not installed
+      ansible.builtin.fail:
+        msg: "mariadb-server is not installed on {{ inventory_hostname }}"
+      when: r_mariadb.rc != 0
+
+    - name: Check that MariaDB is running
+      ansible.builtin.command:
+        cmd: systemctl is-active mariadb
+      changed_when: false
+      failed_when: false
+      register: r_mariadb_active
+
+    - name: Fail if MariaDB is not running
+      ansible.builtin.fail:
+        msg: "mariadb is not running on {{ inventory_hostname }}"
+      when: r_mariadb_active.rc != 0

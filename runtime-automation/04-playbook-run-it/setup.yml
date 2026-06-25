@@ -1,5 +1,4 @@
 ---
-# Setup playbook for module 03 - runs at module start
 - name: Setup nodes for comprehensive playbook execution
   hosts: nodes
   become: true
@@ -12,3 +11,10 @@
     - name: Disable SELinux
       ansible.posix.selinux:
         state: disabled
+
+    - name: Ensure firewalld allows HTTP traffic
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true

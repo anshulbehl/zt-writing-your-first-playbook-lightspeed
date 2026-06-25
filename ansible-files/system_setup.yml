@@ -1,21 +1,15 @@
 ---
-- name: Basic System Setup
+- name: Web and Database Infrastructure Setup
   hosts: all
   become: true
   vars:
-    user_name: 'padawan'
-    package_name: httpd
-    apache_service_name: httpd
+    user_name: padawan
+    web_package: httpd
+    web_service: httpd
+    db_package: mariadb-server
+    db_service: mariadb
   tasks:
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: 'kernel'
-        state: latest
-        security: true
-        update_only: true
-      when: inventory_hostname in groups['web']
-
-    - name: Create a new user
+    - name: Create a sysadmin user
       ansible.builtin.user:
         name: "{{ user_name }}"
         state: present
@@ -23,39 +17,46 @@
 
     - name: Install Apache on web servers
       ansible.builtin.dnf:
-        name: "{{ package_name }}"
+        name: "{{ web_package }}"
         state: present
       when: inventory_hostname in groups['web']
 
     - name: Ensure Apache is running and enabled
       ansible.builtin.service:
-        name: "{{ apache_service_name }}"
+        name: "{{ web_service }}"
         state: started
         enabled: true
       when: inventory_hostname in groups['web']
 
-    - name: Ensure firewalld is running
+    - name: Deploy status page to web servers
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: "0644"
+      when: inventory_hostname in groups['web']
+      notify: Restart Apache
+
+    - name: Install MariaDB on database servers
+      ansible.builtin.dnf:
+        name: "{{ db_package }}"
+        state: present
+      when: inventory_hostname in groups['database']
+
+    - name: Ensure MariaDB is running and enabled
       ansible.builtin.service:
-        name: firewalld
+        name: "{{ db_service }}"
         state: started
         enabled: true
-      when: inventory_hostname in groups['web']
+      when: inventory_hostname in groups['database']
 
-    - name: Allow HTTP traffic on web servers
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-      when: inventory_hostname in groups['web']
-      notify: Reload Firewall
-
-    - name: Update MOTD from Jinja2 Template
+    - name: Deploy MOTD template
       ansible.builtin.template:
         src: templates/motd.j2
         dest: /etc/motd
+        mode: "0644"
 
   handlers:
-    - name: Reload Firewall
+    - name: Restart Apache
       ansible.builtin.service:
-        name: firewalld
-        state: reloaded
+        name: "{{ web_service }}"
+        state: restarted

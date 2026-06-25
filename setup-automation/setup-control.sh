@@ -71,8 +71,9 @@ This file is required by Ansible Galaxy. Below is a quick reference for the file
 | `ansible.cfg` | Ansible configuration (inventory path, SSH settings) |
 | `inventory` | Hosts and groups for this lab (web, database) |
 | `ansible-navigator.yml` | ansible-navigator settings (execution environment, logging) |
-| `system_setup.yml` | Playbook generated during the lab |
+| `system_setup.yml` | Playbook for web + database infrastructure setup |
 | `templates/motd.j2` | Jinja2 template for the message of the day |
+| `templates/index.html.j2` | Jinja2 template for the web server status page |
 | `galaxy.yml` | Collection metadata — enables the Generate Role feature |
 | `roles/` | Roles generated during the lab |
 EOF
@@ -135,8 +136,91 @@ EOF
 # Create motd.j2 template
 cat > /home/rhel/ansible-files/templates/motd.j2 << 'EOF'
 Welcome to {{ ansible_hostname }}.
+Role: {% if inventory_hostname in groups['web'] %}Web Server{% elif inventory_hostname in groups['database'] %}Database Server{% else %}Server{% endif %}
+
 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
 Architecture: {{ ansible_architecture }}
+EOF
+
+# Create index.html.j2 template (status page for web servers)
+cat > /home/rhel/ansible-files/templates/index.html.j2 << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ansible_hostname }} - Status</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem 3rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .badge {
+            display: inline-block;
+            background: #e94560;
+            color: #fff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        tr { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        tr:last-child { border-bottom: none; }
+        td { padding: 0.75rem 0; }
+        td:first-child { color: #8a8a9a; width: 45%; font-size: 0.9rem; }
+        td:last-child { color: #fff; font-weight: 500; }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .footer span { color: #e94560; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">Web Server</div>
+        <h1>{{ ansible_hostname }}</h1>
+        <table>
+            <tr><td>IP Address</td><td>{{ ansible_default_ipv4.address }}</td></tr>
+            <tr><td>Operating System</td><td>{{ ansible_distribution }} {{ ansible_distribution_version }}</td></tr>
+            <tr><td>Architecture</td><td>{{ ansible_architecture }}</td></tr>
+            <tr><td>Kernel</td><td>{{ ansible_kernel }}</td></tr>
+            <tr><td>Python</td><td>{{ ansible_python_version }}</td></tr>
+        </table>
+        <div class="footer">Managed by <span>Ansible</span></div>
+    </div>
+</body>
+</html>
 EOF
 
 # Create logs directory for ansible-navigator

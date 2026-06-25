@@ -1,7 +1,7 @@
 :sectnums:
 = 1.5 - Wrap-Up and Next Steps
 
-Congratulations! You have successfully used *Ansible Lightspeed* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
+Congratulations! You have successfully used the *Automation Coding Assistant* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
 
 == What You Accomplished
 
@@ -9,10 +9,11 @@ In this lab, you:
 
 * Explored the *Red Hat Ansible VS Code extension* and its Automation Coding Assistant feature
 * Learned how to construct a *comprehensive LLM prompt* that includes variables, conditionals, loops, and templates
-* Generated a complete playbook in one shot using the Ansible VS Code extension's coding assistant
+* Generated a complete web and database infrastructure playbook in one shot using the Ansible VS Code extension's coding assistant
 * Understood each component of the playbook — play headers, variables, tasks, conditionals, templates, and handlers
 * Ran the playbook with `ansible-navigator` across multiple inventory groups
-* Verified user creation, package installation, service configuration, and template rendering
+* Saw tangible results — a status page served by your web nodes (via `curl`) and a running MariaDB instance on the database server
+* Verified user creation, web server deployment, database configuration, and dynamic template rendering
 * Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
 * Converted the playbook into a reusable *Ansible role* using the coding assistant's role generation feature
 

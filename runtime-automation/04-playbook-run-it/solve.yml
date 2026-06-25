@@ -1,19 +1,15 @@
 ---
-- name: Execute comprehensive setup on all nodes
+- name: Execute web and database infrastructure setup on all nodes
   hosts: all
   become: true
   vars:
-    user_name: 'padawan'
-    package_name: httpd
-    apache_service_name: httpd
+    user_name: padawan
+    web_package: httpd
+    web_service: httpd
+    db_package: mariadb-server
+    db_service: mariadb
   tasks:
-    - name: Install security updates for the kernel
-      ansible.builtin.dnf:
-        name: kernel
-        state: present
-      when: inventory_hostname in groups['web']
-
-    - name: Create user padawan
+    - name: Create a sysadmin user
       ansible.builtin.user:
         name: "{{ user_name }}"
         state: present
@@ -21,21 +17,53 @@
 
     - name: Install Apache on web servers
       ansible.builtin.dnf:
-        name: "{{ package_name }}"
+        name: "{{ web_package }}"
         state: present
       when: inventory_hostname in groups['web']
 
     - name: Ensure Apache is running and enabled
       ansible.builtin.service:
-        name: "{{ apache_service_name }}"
+        name: "{{ web_service }}"
         state: started
         enabled: true
       when: inventory_hostname in groups['web']
 
-    - name: Update MOTD
+    - name: Deploy status page to web servers
+      ansible.builtin.copy:
+        content: |
+          <!DOCTYPE html>
+          <html lang="en">
+          <head><title>{{ ansible_hostname }} - Status</title></head>
+          <body>
+          <h1>{{ ansible_hostname }}</h1>
+          <p>IP: {{ ansible_default_ipv4.address }}</p>
+          <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
+          <p>Architecture: {{ ansible_architecture }}</p>
+          <p>Managed by Ansible</p>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        mode: "0644"
+      when: inventory_hostname in groups['web']
+
+    - name: Install MariaDB on database servers
+      ansible.builtin.dnf:
+        name: "{{ db_package }}"
+        state: present
+      when: inventory_hostname in groups['database']
+
+    - name: Ensure MariaDB is running and enabled
+      ansible.builtin.service:
+        name: "{{ db_service }}"
+        state: started
+        enabled: true
+      when: inventory_hostname in groups['database']
+
+    - name: Deploy MOTD
       ansible.builtin.copy:
         content: |
           Welcome to {{ ansible_hostname }}.
+          Role: {% if inventory_hostname in groups['web'] %}Web Server{% elif inventory_hostname in groups['database'] %}Database Server{% else %}Server{% endif %}
           OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
           Architecture: {{ ansible_architecture }}
         dest: /etc/motd

@@ -1,7 +1,7 @@
 :sectnums:
 = 1.4 - Convert Your Playbook to a Role
 
-You have a working playbook that installs packages, creates users, deploys templates, and manages services. In this module, you will use the coding assistant to convert that playbook into an *Ansible role* — the standard way to organize and reuse automation in production.
+You have a working playbook that sets up web servers with Apache and a status page, configures MariaDB on the database tier, creates users, and deploys templates. In this module, you will use the coding assistant to convert that playbook into an *Ansible role* — the standard way to organize and reuse automation in production.
 
 == Understanding Roles
 
@@ -34,7 +34,7 @@ A playbook that uses a role looks like this:
 [source,yaml]
 ----
 ---
-- name: Configure systems
+- name: Configure infrastructure
   hosts: all
   become: true
   roles:
@@ -64,16 +64,18 @@ Switch to the *VS Code* tab.
 . When prompted, paste this prompt — it is similar to the one you used to generate your playbook:
 +
 ----
-Create an Ansible role that performs basic system configuration.
+Create an Ansible role that sets up web and database infrastructure.
 
-Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
+Define variables for user_name (padawan), web_package (httpd), web_service (httpd), db_package (mariadb-server), and db_service (mariadb).
 
 Include these tasks in order:
-1. Install security updates for the kernel package, but only on hosts in the web group using the conditional: when: inventory_hostname in groups['web']
-2. Create a user with the name from user_name variable, ensuring a home directory is created
-3. Install the package from package_name variable, only on the web group using the same conditional
-4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group using the same conditional
-5. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
+1. Create a user with the name from user_name variable, ensuring a home directory is created
+2. Install the package from web_package variable, only on the web group using the conditional: when: inventory_hostname in groups['web']
+3. Ensure the web service (from web_service) is running and enabled, only on the web group using the same conditional
+4. Deploy a Jinja2 template from templates/index.html.j2 to /var/www/html/index.html, only on the web group using the same conditional
+5. Install the package from db_package variable, only on the database group using the conditional: when: inventory_hostname in groups['database']
+6. Ensure the database service (from db_service) is running and enabled, only on the database group using the same conditional
+7. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
 
 Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
 ----
@@ -110,9 +112,9 @@ Stay in the *VS Code* tab.
 
 . Open `handlers/main.yml` — the Apache restart handler lives here instead of at the bottom of a playbook.
 
-. Check the `vars/` or `defaults/` directory for your variable definitions (the user name, package name, and service name values you specified in the prompt).
+. Check the `vars/` or `defaults/` directory for your variable definitions (the user name, web package, database package, and service names you specified in the prompt).
 
-. If there is a `templates/` directory, confirm it contains `motd.j2`.
+. If there is a `templates/` directory, confirm it contains `motd.j2` and `index.html.j2`.
 =====
 ======
 
@@ -143,9 +145,9 @@ Here is where each section of your playbook ended up in the role:
 | `handlers/main.yml`
 | Handlers are role-scoped — they only trigger from tasks in this role
 
-| `templates/motd.j2`
-| `templates/motd.j2`
-| Same location, but now the `ansible.builtin.template` module finds it relative to the role
+| `templates/motd.j2`, `templates/index.html.j2`
+| `templates/motd.j2`, `templates/index.html.j2`
+| Same files, but now the `ansible.builtin.template` module finds them relative to the role
 |===
 
 The key insight: a role is not new automation — it is the *same automation reorganized* so it can be reused, shared, and maintained independently.

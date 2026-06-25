@@ -1,7 +1,7 @@
 :sectnums:
 = 1.1 - Generate a Comprehensive Playbook with the Coding Assistant
 
-Real-world playbooks handle multiple concerns in a single automation run — user management, package installation, service configuration, and dynamic file deployment. In this challenge, you will use the *Red Hat Ansible VS Code extension's Automation Coding Assistant* to generate a complete, production-ready playbook from a single well-structured prompt.
+Your team manages a set of web servers and a database server. In this challenge, you will use the *Red Hat Ansible VS Code extension's Automation Coding Assistant* to generate a complete playbook that sets up the web tier with Apache and a status page, configures MariaDB on the database tier, and applies common settings across all hosts — all from a single well-structured prompt.
 
 Instead of writing YAML by hand or iterating through multiple attempts, you will learn how to construct a *comprehensive prompt* that gives the coding assistant all the context it needs to generate exactly what you want in one shot.
 
@@ -18,10 +18,9 @@ When prompting the coding assistant to generate a playbook, *specificity and str
 * *Variables to define* — reusable values like usernames, package names, service names
 * *Tasks in logical order* — what to install, configure, start, and verify
 * *Conditionals* — which tasks run only on specific host groups
-* *Loops* — repeating tasks across multiple items (users, packages, files)
 * *Templates* — dynamic configuration files that use Jinja2 and host facts
 
-The more detail you provide, the more accurate Lightspeed's output will be.
+The more detail you provide, the more accurate the coding assistant's output will be.
 ====
 =====
 
@@ -37,41 +36,45 @@ The more detail you provide, the more accurate Lightspeed's output will be.
 Switch to the *VS Code* tab.
 ====
 
-You will construct a prompt that asks the coding assistant to generate a playbook covering all the essentials. Copy and customize the template below, filling in the details where indicated.
-
-Your prompt should request a playbook that:
+You will construct a prompt that asks the coding assistant to generate a playbook covering your team's infrastructure needs. Your prompt should request a playbook that:
 
 . Targets the *`all`* hosts (includes both web and database groups)
 . Uses privilege escalation (`become: true`)
 . Defines these variables:
    * `user_name` — set to `padawan`
-   * `package_name` — set to `httpd`
-   * `apache_service_name` — set to `httpd`
+   * `web_package` — set to `httpd`
+   * `web_service` — set to `httpd`
+   * `db_package` — set to `mariadb-server`
+   * `db_service` — set to `mariadb`
 . Performs these tasks *in order*:
-   .. Install security updates for the kernel package (only on the `web` group)
-   .. Create the user defined in `user_name` with a home directory
-   .. Install the package defined in `package_name` (only on the `web` group)
-   .. Ensure the Apache service is running and enabled (only on the `web` group)
+   .. Create the user defined in `user_name` with a home directory (on all hosts)
+   .. Install the package defined in `web_package` (only on the `web` group)
+   .. Ensure the web service is running and enabled (only on the `web` group)
+   .. Deploy a Jinja2 template from `templates/index.html.j2` to `/var/www/html/index.html` on the web group only
+   .. Install the package defined in `db_package` (only on the `database` group)
+   .. Ensure the database service is running and enabled (only on the `database` group)
    .. Deploy a Jinja2 template from `templates/motd.j2` to `/etc/motd` on all hosts
 
 [TIP]
 ====
-When specifying conditionals, tell the coding assistant to use `when: inventory_hostname in groups['web']` to target only the web servers.
+When specifying conditionals, tell the coding assistant to use `when: inventory_hostname in groups['web']` for web-only tasks and `when: inventory_hostname in groups['database']` for database-only tasks.
 ====
 
 *Use this prompt* (copy it exactly):
 
 ----
-Create an Ansible playbook named "Basic System Setup" that targets all hosts and uses privilege escalation.
+Create an Ansible playbook named "Web and Database Infrastructure Setup" that targets all hosts and uses privilege escalation.
 
-Define variables for user_name (padawan), package_name (httpd), and apache_service_name (httpd).
+Define variables for user_name (padawan), web_package (httpd), web_service (httpd), db_package (mariadb-server), and db_service (mariadb).
 
 Include these tasks in order:
-1. Install security updates for the kernel package, but only on hosts in the web group using the conditional: when: inventory_hostname in groups['web']
-2. Create a user with the name from user_name variable, ensuring a home directory is created
-3. Install the package from package_name variable, only on the web group using the same conditional
-4. Ensure the Apache service (from apache_service_name) is running and enabled, only on the web group using the same conditional
-5. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
+1. Create a user with the name from user_name variable, ensuring a home directory is created
+2. Install the package from web_package variable, only on the web group using the conditional: when: inventory_hostname in groups['web']
+3. Ensure the web service (from web_service) is running and enabled, only on the web group using the same conditional
+4. Deploy a Jinja2 template from templates/index.html.j2 to /var/www/html/index.html, only on the web group using the same conditional
+5. Install the package from db_package variable, only on the database group using the conditional: when: inventory_hostname in groups['database']
+6. Ensure the database service (from db_service) is running and enabled, only on the database group using the same conditional
+7. Deploy a Jinja2 template from templates/motd.j2 to /etc/motd on all hosts
 
 Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
 ----
@@ -80,7 +83,7 @@ Include a handler to restart Apache when needed, and use ansible.builtin modules
 ====
 Copy the prompt above exactly as shown. The coding assistant works best with specific, detailed prompts that include:
 
-* The exact conditional syntax to use (`when: inventory_hostname in groups['web']`)
+* The exact conditional syntax to use (`when: inventory_hostname in groups['web']` and `when: inventory_hostname in groups['database']`)
 * Module family preference (`ansible.builtin` modules)
 * Handler requirements
 
@@ -109,9 +112,9 @@ Stay in the *VS Code* tab.
 
 . The playbook will open in a new tab. Review the output to confirm it includes:
 +
-   * A `vars:` section with `user_name`, `package_name`, and `apache_service_name`
-   * Tasks with `when:` conditionals targeting the `web` group
-   * A `template:` task referencing `templates/motd.j2`
+   * A `vars:` section with `user_name`, `web_package`, `web_service`, `db_package`, and `db_service`
+   * Tasks with `when:` conditionals targeting both the `web` and `database` groups
+   * Two `template:` tasks — one for `index.html.j2` (web servers) and one for `motd.j2` (all hosts)
    * A `handlers:` section for restarting Apache
 
 . Save the file as `system_setup.yml` in the `/home/rhel/ansible-files/` directory:
@@ -141,7 +144,7 @@ By completing this module, you now understand:
 * How to construct a comprehensive LLM prompt that produces accurate, production-ready playbooks
 * Why specificity matters when prompting the coding assistant (variables, conditionals, templates)
 * How to use the coding assistant's generation feature to create a full playbook from a single prompt
-* The structure of a real-world playbook that manages multiple concerns (packages, users, services, configuration files)
+* The structure of a real-world playbook that manages web and database infrastructure across different server groups
 
 
 == Embracing the Next Challenge

@@ -1,7 +1,7 @@
 :sectnums:
 = 1.3 - Run and Verify the Playbook
 
-In this challenge, you will run the comprehensive playbook generated in the previous module using *ansible-navigator*, verify that every component worked correctly across multiple hosts, and discover one of Ansible's most important concepts: *idempotency*.
+In this challenge, you will run the playbook generated in the previous module using *ansible-navigator*, verify that your web and database infrastructure is correctly configured across multiple hosts, and discover one of Ansible's most important concepts: *idempotency*.
 
 == Hands-On Experience
 
@@ -36,11 +36,13 @@ The first run may take a few minutes. ansible-navigator pulls the Execution Envi
 . Watch the output carefully. You should see tasks execute in the order you specified in your prompt:
 +
    * Gathering Facts (automatic)
-   * Install security updates (only on node1 and node2)
-   * Create user padawan (on all nodes)
-   * Install httpd (only on node1 and node2)
-   * Ensure httpd is running (only on node1 and node2)
-   * Deploy motd template (on all nodes)
+   * Create sysadmin user (on all nodes)
+   * Install Apache (only on node1 and node2)
+   * Ensure Apache is running (only on node1 and node2)
+   * Deploy status page (only on node1 and node2)
+   * Install MariaDB (only on node3)
+   * Ensure MariaDB is running (only on node3)
+   * Deploy MOTD template (on all nodes)
 
 . The *PLAY RECAP* at the end summarizes changes made across all hosts:
 +
@@ -48,7 +50,7 @@ image::navigator-output.png[ansible-navigator run output showing task results an
 
 [NOTE]
 ====
-The first task in every run is *Gathering Facts*. Ansible automatically collects system information from each managed node — hostname, OS version, IP addresses, network interfaces, installed packages — before running any tasks. This fact data is what makes templates dynamic (each host renders a different MOTD based on its own hostname and OS).
+The first task in every run is *Gathering Facts*. Ansible automatically collects system information from each managed node — hostname, OS version, IP addresses, network interfaces, installed packages — before running any tasks. This fact data is what makes templates dynamic (each host renders a different status page and MOTD based on its own facts).
 ====
 =====
 ======
@@ -97,7 +99,7 @@ All three should show the user exists. This demonstrates that tasks without a `w
 
 
 ======
-.☑️ Task 3 - Verify httpd is installed and running (web group only)
+.☑️ Task 3 - View the web server status page
 [%collapsible]
 =====
 [NOTE]
@@ -105,9 +107,27 @@ All three should show the user exists. This demonstrates that tasks without a `w
 Stay in the *Control* tab.
 ====
 
-The playbook should have installed and started Apache *only* on the web group (node1 and node2), not on the database server (node3).
+The playbook deployed an HTML status page to the web servers using the `index.html.j2` template. Each web server now has a page showing its own system information.
 
-. Check httpd status on node1:
+. View the status page on node1:
++
+[source,role="execute"]
+----
+curl node1
+----
++
+You should see an HTML page containing node1's hostname, IP address, OS version, and architecture. This is the Jinja2 template rendered with node1's specific Ansible facts.
+
+. View the status page on node2:
++
+[source,role="execute"]
+----
+curl node2
+----
++
+Notice the hostname and IP address changed to node2's values, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
+
+. Verify httpd is running on both web servers:
 +
 [source,role="execute"]
 ----
@@ -119,14 +139,7 @@ ssh node1 systemctl is-active httpd
 active
 ----
 
-. Check httpd status on node2:
-+
-[source,role="execute"]
-----
-ssh node2 systemctl is-active httpd
-----
-
-. Try to check httpd on node3 (the database server):
+. Confirm httpd is NOT on node3 (the database server):
 +
 [source,role="execute"]
 ----
@@ -138,13 +151,13 @@ ssh node3 rpm -q httpd 2>&1 || echo "httpd not installed (expected)"
 httpd not installed (expected)
 ----
 
-This proves the `when: inventory_hostname in groups['web']` conditionals worked correctly — tasks that specified this condition only ran on node1 and node2.
+This proves the `when: inventory_hostname in groups['web']` conditionals worked correctly — web tasks only ran on node1 and node2.
 =====
 ======
 
 
 ======
-.☑️ Task 4 - Verify the dynamic MOTD template
+.☑️ Task 4 - Verify the database server
 [%collapsible]
 =====
 [NOTE]
@@ -152,45 +165,82 @@ This proves the `when: inventory_hostname in groups['web']` conditionals worked 
 Stay in the *Control* tab.
 ====
 
-The playbook deployed a Jinja2 template to `/etc/motd` on all hosts. Each host should have a *different* MOTD because the template uses host-specific facts.
+The playbook installed and started MariaDB on node3, which belongs to the `database` group.
 
-. View the MOTD on node1:
+. Check that MariaDB is running:
++
+[source,role="execute"]
+----
+ssh node3 systemctl is-active mariadb
+----
++
+.Expected output
+----
+active
+----
+
+. Verify MariaDB is installed:
++
+[source,role="execute"]
+----
+ssh node3 rpm -q mariadb-server
+----
++
+You should see the installed package version.
+
+This demonstrates the `when: inventory_hostname in groups['database']` conditional — MariaDB was installed *only* on the database server, not on the web servers.
+=====
+======
+
+
+======
+.☑️ Task 5 - Verify the dynamic MOTD
+[%collapsible]
+=====
+[NOTE]
+====
+Stay in the *Control* tab.
+====
+
+The playbook deployed a Jinja2 template to `/etc/motd` on all hosts. Each host has a different MOTD because the template uses host-specific facts *and* inventory group membership.
+
+. View the MOTD on node1 (a web server):
 +
 [source,role="execute"]
 ----
 ssh node1 cat /etc/motd
 ----
 +
-.Expected output (hostname and architecture will match node1)
+.Expected output
 ----
 Welcome to node1.
-OS: RedHat 9.4
+Role: Web Server
+OS: RedHat 9.6
 Architecture: x86_64
 ----
 
-. View the MOTD on node2:
-+
-[source,role="execute"]
-----
-ssh node2 cat /etc/motd
-----
-+
-Notice the hostname changed to `node2` even though both nodes used the same template file.
-
-. View the MOTD on node3:
+. View the MOTD on node3 (the database server):
 +
 [source,role="execute"]
 ----
 ssh node3 cat /etc/motd
 ----
++
+.Expected output
+----
+Welcome to node3.
+Role: Database Server
+OS: RedHat 9.6
+Architecture: x86_64
+----
 
-Each host rendered a unique MOTD because Ansible substituted each host's facts (`ansible_hostname`, `ansible_distribution`, `ansible_distribution_version`, `ansible_architecture`) into the template at runtime. This is why templates are powerful — one source file generates customized output for every host.
+Notice that node1 shows *Web Server* while node3 shows *Database Server*. The MOTD template uses a Jinja2 conditional (`{% if inventory_hostname in groups['web'] %}`) to display each host's role, reinforcing the inventory groups concept from module 1.
 =====
 ======
 
 
 ======
-.☑️ Task 5 - Discover idempotency
+.☑️ Task 6 - Discover idempotency
 [%collapsible]
 =====
 *Idempotency* means that running an operation once produces the same result as running it many times. An idempotent Ansible task only makes a change when the desired state does not already exist. If the state is already correct, the task reports `ok` and does nothing.
@@ -234,6 +284,7 @@ By completing this module, you now understand:
 * What Gathering Facts does and why Ansible runs it automatically
 * How to verify that tasks executed correctly on the right hosts
 * How conditionals control which tasks run on which inventory groups
+* How a single playbook manages both web and database infrastructure using group conditionals
 * How Jinja2 templates render differently on each host using facts
 * What idempotency means and why it makes Ansible safe for production use
 * How to read a PLAY RECAP to understand what changed (or didn't change) on each run

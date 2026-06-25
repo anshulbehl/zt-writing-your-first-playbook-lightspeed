@@ -4,6 +4,6 @@ version: master
 
 asciidoc:
   attributes:
-    lab_name: "Writing Your First Playbook with Ansible Lightspeed"
+    lab_name: "Writing Your First Playbook with the Ansible VS Code Extension"
     release-version: master
     page-pagination: true

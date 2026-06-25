@@ -103,7 +103,7 @@ web
 database
 ----
 
-. Notice how hosts are organized into groups: `[web]` contains `node1` and `node2`, `[database]` contains `node3`, and `[nodes:children]` groups them all together. This grouping lets you target specific sets of servers — for example, installing a web server only on the `web` group while creating a user on all hosts.
+. Notice how hosts are organized into groups: `[web]` contains `node1` and `node2`, `[database]` contains `node3`, and `[nodes:children]` groups them all together. This grouping lets you target specific sets of servers — for example, installing Apache only on the `web` group, setting up MariaDB only on the `database` group, and creating a user on all hosts.
 =====
 ======
 

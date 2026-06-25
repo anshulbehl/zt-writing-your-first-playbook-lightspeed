@@ -25,31 +25,45 @@
       ansible.builtin.copy:
         content: |
           ---
-          - name: Install security updates for the kernel
-            ansible.builtin.dnf:
-              name: kernel
-              state: present
-            when: inventory_hostname in groups['web']
-
-          - name: Create a user
+          - name: Create a sysadmin user
             ansible.builtin.user:
               name: "{% raw %}{{ system_setup_user_name }}{% endraw %}"
-              create_home: true
               state: present
+              create_home: true
 
-          - name: Install the Apache package
+          - name: Install Apache on web servers
             ansible.builtin.dnf:
-              name: "{% raw %}{{ system_setup_package_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_web_package }}{% endraw %}"
               state: present
             when: inventory_hostname in groups['web']
 
           - name: Ensure Apache is running and enabled
             ansible.builtin.service:
-              name: "{% raw %}{{ system_setup_apache_service_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_web_service }}{% endraw %}"
               state: started
               enabled: true
             when: inventory_hostname in groups['web']
+
+          - name: Deploy status page to web servers
+            ansible.builtin.template:
+              src: index.html.j2
+              dest: /var/www/html/index.html
+              mode: "0644"
+            when: inventory_hostname in groups['web']
             notify: Restart Apache
+
+          - name: Install MariaDB on database servers
+            ansible.builtin.dnf:
+              name: "{% raw %}{{ system_setup_db_package }}{% endraw %}"
+              state: present
+            when: inventory_hostname in groups['database']
+
+          - name: Ensure MariaDB is running and enabled
+            ansible.builtin.service:
+              name: "{% raw %}{{ system_setup_db_service }}{% endraw %}"
+              state: started
+              enabled: true
+            when: inventory_hostname in groups['database']
 
           - name: Deploy MOTD template
             ansible.builtin.template:
@@ -67,7 +81,7 @@
           ---
           - name: Restart Apache
             ansible.builtin.service:
-              name: "{% raw %}{{ system_setup_apache_service_name }}{% endraw %}"
+              name: "{% raw %}{{ system_setup_web_service }}{% endraw %}"
               state: restarted
         dest: "{{ ROLE_DIR }}/handlers/main.yml"
         owner: "{{ USER }}"
@@ -79,8 +93,10 @@
         content: |
           ---
           system_setup_user_name: padawan
-          system_setup_package_name: httpd
-          system_setup_apache_service_name: httpd
+          system_setup_web_package: httpd
+          system_setup_web_service: httpd
+          system_setup_db_package: mariadb-server
+          system_setup_db_service: mariadb
         dest: "{{ ROLE_DIR }}/vars/main.yml"
         owner: "{{ USER }}"
         group: "{{ USER }}"
@@ -91,8 +107,10 @@
         content: |
           ---
           system_setup_user_name: padawan
-          system_setup_package_name: httpd
-          system_setup_apache_service_name: httpd
+          system_setup_web_package: httpd
+          system_setup_web_service: httpd
+          system_setup_db_package: mariadb-server
+          system_setup_db_service: mariadb
         dest: "{{ ROLE_DIR }}/defaults/main.yml"
         owner: "{{ USER }}"
         group: "{{ USER }}"
@@ -104,7 +122,7 @@
           ---
           galaxy_info:
             author: Workshop Student
-            description: Basic system setup role
+            description: Web and database infrastructure setup role
             license: GPL-3.0-or-later
             min_ansible_version: "2.15"
             platforms:
@@ -122,10 +140,57 @@
         content: |
           {% raw %}
           Welcome to {{ ansible_hostname }}.
+          Role: {% if inventory_hostname in groups['web'] %}Web Server{% elif inventory_hostname in groups['database'] %}Database Server{% else %}Server{% endif %}
           OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
           Architecture: {{ ansible_architecture }}
           {% endraw %}
         dest: "{{ ROLE_DIR }}/templates/motd.j2"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "0644"
+
+    - name: Copy index.html.j2 template to role
+      ansible.builtin.copy:
+        content: |
+          {% raw %}
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <title>{{ ansible_hostname }} - Status</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                  .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2.5rem 3rem; max-width: 500px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+                  .badge { display: inline-block; background: #e94560; color: #fff; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem; }
+                  h1 { font-size: 1.75rem; margin-bottom: 1.5rem; color: #fff; }
+                  table { width: 100%; border-collapse: collapse; }
+                  tr { border-bottom: 1px solid rgba(255,255,255,0.06); }
+                  tr:last-child { border-bottom: none; }
+                  td { padding: 0.75rem 0; }
+                  td:first-child { color: #8a8a9a; width: 45%; }
+                  td:last-child { color: #fff; font-weight: 500; }
+                  .footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; font-size: 0.8rem; color: #555; }
+                  .footer span { color: #e94560; }
+              </style>
+          </head>
+          <body>
+              <div class="card">
+                  <div class="badge">Web Server</div>
+                  <h1>{{ ansible_hostname }}</h1>
+                  <table>
+                      <tr><td>IP Address</td><td>{{ ansible_default_ipv4.address }}</td></tr>
+                      <tr><td>Operating System</td><td>{{ ansible_distribution }} {{ ansible_distribution_version }}</td></tr>
+                      <tr><td>Architecture</td><td>{{ ansible_architecture }}</td></tr>
+                      <tr><td>Kernel</td><td>{{ ansible_kernel }}</td></tr>
+                      <tr><td>Python</td><td>{{ ansible_python_version }}</td></tr>
+                  </table>
+                  <div class="footer">Managed by <span>Ansible</span></div>
+              </div>
+          </body>
+          </html>
+          {% endraw %}
+        dest: "{{ ROLE_DIR }}/templates/index.html.j2"
         owner: "{{ USER }}"
         group: "{{ USER }}"
         mode: "0644"
