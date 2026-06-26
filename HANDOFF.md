@@ -510,7 +510,7 @@ Two rounds of updates:
 **Dropped**: kernel security updates task, firewalld tasks (firewall handled at provisioning/infrastructure level)
 
 #### 2. Pre-Staged Templates
-**`templates/index.html.j2`** — Dark-themed HTML status page with inline CSS, glassmorphism card displaying hostname, IP, OS, architecture, kernel, python version via Ansible facts. Pre-staged by `setup-control.sh` (the LLM only generates the `ansible.builtin.template` task, not the HTML itself).
+**`templates/index.html.j2`** — Dark-themed HTML status page with inline CSS, dark-themed page displaying hostname, IP, OS, architecture, kernel, python version via Ansible facts. Pre-staged by `setup-control.sh` (the LLM only generates the `ansible.builtin.template` task, not the HTML itself).
 
 **`templates/motd.j2`** — Updated with Role conditional:
 ```
@@ -584,7 +584,7 @@ All instruction changes ensure student-generated content passes validation scrip
 - Configures SSH defaults for node access
 - Creates `/home/rhel/ansible-files/` with ansible.cfg, ansible-navigator.yml, inventory
 - Creates `templates/motd.j2` (with Role conditional: Web Server / Database Server based on inventory group)
-- Creates `templates/index.html.j2` (dark-themed HTML status page with glassmorphism card showing Ansible facts — hostname, IP, OS, architecture, kernel, python version)
+- Creates `templates/index.html.j2` (dark-themed HTML status page with dark-themed page showing Ansible facts — hostname, IP, OS, architecture, kernel, python version)
 - Creates `galaxy.yml`, `README.md`, and `roles/` directory for collection/role generation
 - Configures Ansible Lightspeed with LiteMaaS endpoint (rhcustom provider, API key, model `gpt-oss-120b`)
 - Installs patched Ansible extension v26.6.0 vsix
