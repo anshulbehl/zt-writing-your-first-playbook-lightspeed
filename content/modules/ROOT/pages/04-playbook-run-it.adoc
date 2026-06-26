@@ -104,9 +104,16 @@ All three should show the user exists. This demonstrates that tasks without a `w
 =====
 The playbook deployed an HTML status page to the web servers using the `index.html.j2` template. Each web server now has a live page showing its own system information.
 
-. Click the *node1 Web* tab at the top of the screen. You should see a styled status page showing node1's hostname, IP address, OS version, and architecture — all rendered from Ansible facts by the Jinja2 template you deployed.
+. Click the *node1 Web* tab at the top of the screen. You should see a status page showing node1's hostname, IP address, OS version, and architecture — all rendered from Ansible facts by the Jinja2 template you deployed.
++
+image::status-page.png[Status page showing node1 system facts,link=self,window=blank,width=500,title="Web server status page"]
 
-. Click the *node2 Web* tab. Notice the hostname and IP address changed to node2's values, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
+. Click the *node2 Web* tab. Notice the hostname changed to node2's value, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
++
+[NOTE]
+====
+Because both web servers run on the same OpenShift cluster network, node1 and node2 share the same IP address (10.0.2.2). The hostname is the key difference between the two pages.
+====
 
 . Switch back to the *Control* tab and verify from the command line as well:
 +
