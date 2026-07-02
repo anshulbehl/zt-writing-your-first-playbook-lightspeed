@@ -49,7 +49,7 @@ One line replaces an entire playbook of tasks, variables, handlers, and template
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Generate a role with the coding assistant
+.☑️ Task 1 - Generate a role with the automation coding assistant
 [%collapsible]
 =====
 [NOTE]
@@ -80,7 +80,7 @@ Include these tasks in order:
 Include a handler to restart Apache when needed, and use ansible.builtin modules throughout.
 ----
 
-. The coding assistant will analyze your prompt and show you a *role name* field and a step outline. Set the role name to *system_setup*, review the steps, then click *"Continue"*.
+. The automation coding assistant will analyze your prompt and show you a *role name* field and a step outline. Set the role name to *system_setup*, review the steps, then click *"Continue"*.
 
 . On the next page, review the generated files. When asked to select a collection, choose *lab.system_automation*, then click *"Save files"*.
 
@@ -88,7 +88,7 @@ Include a handler to restart Apache when needed, and use ansible.builtin modules
 
 [TIP]
 ====
-Notice how the prompt is almost identical to the one you used for playbook generation — but this time the coding assistant organizes the output into the role directory structure instead of a single YAML file. The extension places roles inside a *collection* (defined by the `galaxy.yml` in your workspace), which is how Ansible organizes reusable content for sharing and distribution.
+Notice how the prompt is almost identical to the one you used for playbook generation — but this time the automation coding assistant organizes the output into the role directory structure instead of a single YAML file. The extension places roles inside a *collection* (defined by the `galaxy.yml` in your workspace), which is how Ansible organizes reusable content for sharing and distribution.
 ====
 =====
 ======
@@ -160,7 +160,7 @@ The key insight: a role is not new automation — it is the *same automation reo
 By completing this module, you now understand:
 
 * What an Ansible role is and why roles exist
-* How to use the coding assistant to convert a playbook into a role
+* How to use the automation coding assistant to convert a playbook into a role
 * How a role's directory structure maps to playbook sections
 * The difference between `vars/` (role-specific) and `defaults/` (overridable) variables
 * How roles make automation reusable across different playbooks and projects

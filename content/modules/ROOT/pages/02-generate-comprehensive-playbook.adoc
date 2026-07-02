@@ -108,7 +108,7 @@ Stay in the *VS Code* tab.
 
 . When prompted, paste your comprehensive prompt from Task 1.
 
-. The coding assistant will generate the playbook and show you a preview with suggested tasks. *Review the suggested steps* to confirm they match your prompt, then click *"Create Playbook"* to manually confirm and create the file.
+. The automationcoding assistant will generate the playbook and show you a preview with suggested tasks. *Review the suggested steps* to confirm they match your prompt, then click *"Create Playbook"* to manually confirm and create the file.
 
 . The playbook will open in a new tab. Review the output to confirm it includes:
 +

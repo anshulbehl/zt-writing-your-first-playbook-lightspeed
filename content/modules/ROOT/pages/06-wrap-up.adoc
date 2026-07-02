@@ -1,7 +1,7 @@
 :sectnums:
 = 1.5 - Wrap-Up and Next Steps
 
-Congratulations! You have successfully used the *Automation Coding Assistant* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
+Congratulations! You have successfully used the *automation coding assistant* to generate a production-ready playbook from a single comprehensive prompt, run it across multiple hosts, and verified that every component works correctly.
 
 == What You Accomplished
 
@@ -15,14 +15,14 @@ In this lab, you:
 * Saw tangible results — a status page served by your web nodes (via `curl`) and a running MariaDB instance on the database server
 * Verified user creation, web server deployment, database configuration, and dynamic template rendering
 * Discovered *idempotency* — the property that makes Ansible safe for repeated runs in production
-* Converted the playbook into a reusable *Ansible role* using the coding assistant's role generation feature
+* Converted the playbook into a reusable *Ansible role* using the automation coding assistant's role generation feature
 
-Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of the coding assistant's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
+Most importantly, you learned how to *prompt an LLM effectively* for automation tasks. The specificity and structure of your prompt directly determined the quality of the automation coding assistant's output. This skill transfers to any AI-assisted workflow — the better your prompt, the better your result.
 
 
 == The Power of the Ansible VS Code Extension
 
-The *Red Hat Ansible VS Code extension* and its Automation Coding Assistant transform how you write automation:
+The *Red Hat Ansible VS Code extension* and its automation coding assistant transform how you write automation:
 
 * *Faster iteration* — generate a working playbook in seconds instead of writing YAML by hand
 * *Fewer syntax errors* — the assistant produces valid YAML and uses correct module parameters
@@ -61,14 +61,14 @@ AI coding assistants are trained on Galaxy content, so the playbooks they genera
 .📦 Take Roles Further
 [%collapsible]
 ====
-In the previous module, you converted your playbook into a role using the coding assistant. To continue developing your role skills:
+In the previous module, you converted your playbook into a role using the automation coding assistant. To continue developing your role skills:
 
 * *Publish to Galaxy* — share your role at https://galaxy.ansible.com so others can reuse it
 * *Add role dependencies* — list other roles yours depends on in `meta/main.yml`
 * *Use `defaults/` vs `vars/`* — put values users should override in `defaults/main.yml`, and values that should stay fixed in `vars/main.yml`
 * *Test with Molecule* — use Ansible Molecule to write automated tests for your roles
 
-Roles are how production Ansible teams organize their automation. The coding assistant can generate roles directly, or convert existing playbooks into roles as you did in this lab.
+Roles are how production Ansible teams organize their automation. The automation coding assistant can generate roles directly, or convert existing playbooks into roles as you did in this lab.
 ====
 =====
 
@@ -92,7 +92,7 @@ Combining AI coding assistants (for playbook generation) with version control (f
 .🤖 Use Other AI Tools for Automation
 [%collapsible]
 =====
-The Automation Coding Assistant is one of many AI-powered tools for automation. As you continue your journey, you can also:
+The automation coding assistant is one of many AI-powered tools for automation. As you continue your journey, you can also:
 
 * *Use Claude Code or ChatGPT* to generate Ansible playbooks from natural language descriptions
 * *Ask AI tools to break down complex playbooks* you find in production or open source projects
@@ -119,13 +119,13 @@ The more specific your prompt, the better the output.
 
 == Final Thoughts
 
-The *Red Hat Ansible VS Code extension* and its AI coding assistant are not a replacement for learning Ansible — they are a *force multiplier* that accelerates your work once you understand the fundamentals. The best results come from combining:
+The *Red Hat Ansible VS Code extension* and its automation coding assistant are not a replacement for learning Ansible — they are a *force multiplier* that accelerates your work once you understand the fundamentals. The best results come from combining:
 
 * *Your domain knowledge* — what to automate and why
 * *Ansible's declarative model* — describing desired state instead of scripting steps
 * *The Ansible VS Code extension's AI features* — producing correct YAML faster than manual authoring
 
-As you continue your automation journey, install the Red Hat Ansible extension in your own VS Code environment and keep practicing with the coding assistant. Remember: the quality of your automation depends on the quality of your prompts. Think clearly, describe precisely, and the extension's coding assistant will handle the rest.
+As you continue your automation journey, install the Red Hat Ansible extension in your own VS Code environment and keep practicing with the automation coding assistant. Remember: the quality of your automation depends on the quality of your prompts. Think clearly, describe precisely, and the automation coding assistant will handle the rest.
 
 Thank you for completing this lab. Now go automate something!
 

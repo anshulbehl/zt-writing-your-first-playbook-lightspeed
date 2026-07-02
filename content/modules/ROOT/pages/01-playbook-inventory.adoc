@@ -32,7 +32,7 @@ image::showing-tabs.png[VS Code and Control tabs at the top of the screen,link=s
 .What is the Automation Coding Assistant?
 [%collapsible]
 ====
-The *Automation Coding Assistant* is an AI-powered feature of the *Red Hat Ansible VS Code extension*. This extension transforms Visual Studio Code into a complete Ansible development environment, and the coding assistant takes it further by generating complete, ready-to-run Ansible playbooks from plain-English descriptions — no YAML knowledge required to get started.
+The *automation coding assistant* is an AI-powered feature of the *Red Hat Ansible VS Code extension*. This extension transforms Visual Studio Code into a complete Ansible development environment, and the coding assistant takes it further by generating complete, ready-to-run Ansible playbooks from plain-English descriptions — no YAML knowledge required to get started.
 
 This lab focuses on using the *Ansible VS Code extension's* automation coding assistant to write playbooks faster and learn Ansible patterns as you go.
 
