@@ -106,9 +106,13 @@ The playbook deployed an HTML status page to the web servers using the `index.ht
 
 . Click the *node1 Web* tab at the top of the screen. You should see a status page showing node1's hostname, IP address, OS version, and architecture — all rendered from Ansible facts by the Jinja2 template you deployed.
 +
+If the page shows *"Application is not available"* or a blank screen, click the *reload arrow* (circular arrow icon) next to the tab name to refresh the page. The status page should appear after reloading.
++
 image::status-page.png[Status page showing node1 system facts,link=self,window=blank,width=500,title="Web server status page"]
 
 . Click the *node2 Web* tab. Notice the hostname changed to node2's value, even though both servers used the same template file. This is the power of templates — one source file, customized output per host.
++
+If needed, click the *reload arrow* next to the tab name to refresh this page as well.
 +
 [NOTE]
 ====

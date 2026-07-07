@@ -169,8 +169,9 @@
               </style>
           </head>
           <body>
-              <h1>{{ ansible_hostname }}</h1>
+              <h1>Server: {{ ansible_hostname }}</h1>
               <table>
+                  <tr><td>Hostname</td><td><strong>{{ ansible_hostname }}</strong></td></tr>
                   <tr><td>IP Address</td><td>{{ ansible_default_ipv4.address }}</td></tr>
                   <tr><td>OS</td><td>{{ ansible_distribution }} {{ ansible_distribution_version }}</td></tr>
                   <tr><td>Architecture</td><td>{{ ansible_architecture }}</td></tr>

@@ -35,7 +35,8 @@
           <html lang="en">
           <head><title>{{ ansible_hostname }} - Status</title></head>
           <body>
-          <h1>{{ ansible_hostname }}</h1>
+          <h1>Server: {{ ansible_hostname }}</h1>
+          <p>Hostname: <strong>{{ ansible_hostname }}</strong></p>
           <p>IP: {{ ansible_default_ipv4.address }}</p>
           <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
           <p>Architecture: {{ ansible_architecture }}</p>

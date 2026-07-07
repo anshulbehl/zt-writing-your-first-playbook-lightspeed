@@ -160,8 +160,9 @@ cat > /home/rhel/ansible-files/templates/index.html.j2 << 'EOF'
     </style>
 </head>
 <body>
-    <h1>{{ ansible_hostname }}</h1>
+    <h1>Server: {{ ansible_hostname }}</h1>
     <table>
+        <tr><td>Hostname</td><td><strong>{{ ansible_hostname }}</strong></td></tr>
         <tr><td>IP Address</td><td>{{ ansible_default_ipv4.address }}</td></tr>
         <tr><td>OS</td><td>{{ ansible_distribution }} {{ ansible_distribution_version }}</td></tr>
         <tr><td>Architecture</td><td>{{ ansible_architecture }}</td></tr>
@@ -179,6 +180,12 @@ mkdir -p /home/rhel/.logs
 # Set ownership to rhel user for all created files
 chown -R rhel:rhel /home/rhel/ansible-files
 chown -R rhel:rhel /home/rhel/.logs
+
+# Pre-pull the Execution Environment container image so students don't
+# wait during their first ansible-navigator command
+echo "Pre-pulling Execution Environment container image..."
+sudo -u rhel podman pull quay.io/acme_corp/first_playbook_ee:latest 2>&1 || \
+  echo "WARNING: Failed to pre-pull EE image — it will be pulled on first use"
 
 # Configure Ansible Lightspeed to use LiteMaaS endpoint
 # MUST happen BEFORE code-server starts — the extension runs migration on first

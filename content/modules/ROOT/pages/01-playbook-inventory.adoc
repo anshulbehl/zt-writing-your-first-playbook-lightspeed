@@ -5,7 +5,6 @@
 
 =====
 .Laboratory tips!
-[%collapsible]
 ====
 Before we begin, a few tips to improve your lab experience:
 
@@ -66,7 +65,9 @@ Switch to the *VS Code* tab at the top of the screen.
 
 [TIP]
 ====
-The Ansible extension and its automation coding assistant are pre-configured in this lab to use a *LiteMaaS* model endpoint — Red Hat AI's Model-as-a-Service platform. You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
+The Ansible extension and its automation coding assistant are pre-configured in this lab to use a *LiteMaaS* model endpoint -- Red Hat AI's Model-as-a-Service platform. The configuration is stored in VS Code's `settings.json` (both at the user level and in the workspace's `.vscode/settings.json`). You do not need to log in, authenticate, or provide any credentials; everything is already set up for you.
+
+If you open the extension's *LLM providers* panel and it appears empty, this is expected -- the lab uses settings keys that the panel may not display. The coding assistant will still work correctly.
 ====
 =====
 ======
@@ -123,6 +124,11 @@ Switch to the *Control* tab.
 ----
 cd /home/rhel/ansible-files
 ----
+
+[NOTE]
+====
+The first time you run `ansible-navigator`, it may take a moment to initialize the container-based Execution Environment (EE). Subsequent commands will be much faster.
+====
 
 . List all hosts and groups:
 +

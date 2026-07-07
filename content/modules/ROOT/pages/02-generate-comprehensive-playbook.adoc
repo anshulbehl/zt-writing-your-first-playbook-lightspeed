@@ -28,12 +28,30 @@ The more detail you provide, the more accurate the coding assistant's output wil
 == Hands-On Experience
 
 ======
-.☑️ Task 1 - Construct the comprehensive prompt
+.☑️ Task 1 - Open the Playbook Generator
+[%collapsible]
+=====
+
+[NOTE]
+====
+Switch to the *VS Code* tab at the top of the screen.
+====
+
+. Click on the *Ansible extension icon* image:aa-icon.png[Ansible,25,25] in the left sidebar to open the Ansible extension panel.
+
+. Click the *"Generate a Playbook with Ansible"* button in the extension panel. This opens the playbook generation wizard where you will paste your prompt in the next task.
+
+=====
+======
+
+
+======
+.☑️ Task 2 - Construct and submit the comprehensive prompt
 [%collapsible]
 =====
 [NOTE]
 ====
-Switch to the *VS Code* tab.
+Stay in the *VS Code* tab.
 ====
 
 You will construct a prompt that asks the coding assistant to generate a playbook covering your team's infrastructure needs. Your prompt should request a playbook that:
@@ -62,6 +80,7 @@ When specifying conditionals, tell the coding assistant to use `when: inventory_
 
 *Use this prompt* (copy it exactly):
 
+[source]
 ----
 Create an Ansible playbook named "Web and Database Infrastructure Setup" that targets all hosts and uses privilege escalation.
 
@@ -89,26 +108,13 @@ Copy the prompt above exactly as shown. The coding assistant works best with spe
 
 This ensures the generated playbook matches what the validation system expects.
 ====
-=====
-======
 
+. Paste the prompt above into the playbook generator you opened in Task 1.
 
-======
-.☑️ Task 2 - Generate the playbook with the coding assistant
-[%collapsible]
-=====
 [NOTE]
 ====
-Stay in the *VS Code* tab.
+After you paste the prompt, the coding assistant will show a *simplified version* as a list of suggested steps. This is expected -- the extension summarizes your prompt for its step-by-step review. The generated playbook will still reflect the full detail from your original prompt. Review the suggested steps and click *"Create Playbook"* to proceed.
 ====
-
-. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
-
-. Click the *"Generate a Playbook with Ansible"* button in the extension panel.
-
-. When prompted, paste your comprehensive prompt from Task 1.
-
-. The automationcoding assistant will generate the playbook and show you a preview with suggested tasks. *Review the suggested steps* to confirm they match your prompt, then click *"Create Playbook"* to manually confirm and create the file.
 
 . The playbook will open in a new tab. Review the output to confirm it includes:
 +

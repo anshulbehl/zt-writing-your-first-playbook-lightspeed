@@ -57,6 +57,8 @@ One line replaces an entire playbook of tasks, variables, handlers, and template
 Switch to the *VS Code* tab.
 ====
 
+Before generating a role, the extension needs to know which *collection* to place it in. Your lab workspace already has a `galaxy.yml` file that defines a collection called `lab.system_automation` -- this was pre-created as part of the lab setup. You can view it in the VS Code file explorer at `ansible-files/galaxy.yml`. The extension reads this file to determine where to save generated roles.
+
 . Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
 
 . Click the *"Generate a Role"* button in the extension panel.
@@ -114,7 +116,12 @@ Stay in the *VS Code* tab.
 
 . Check the `vars/` or `defaults/` directory for your variable definitions (the user name, web package, database package, and service names you specified in the prompt).
 
-. If there is a `templates/` directory, confirm it contains `motd.j2` and `index.html.j2`.
+. Notice that the role does *not* contain a `templates/` directory. The automation coding assistant's role generator creates `tasks/`, `handlers/`, and `vars/` files, but does not copy template files into the role. This is fine -- Ansible's `ansible.builtin.template` module searches multiple paths for template files, including the playbook's directory. Since `templates/motd.j2` and `templates/index.html.j2` already exist in your workspace's `ansible-files/templates/` directory (pre-created by the lab), Ansible will find them automatically when the role runs.
++
+[TIP]
+====
+In a production environment, you would typically copy your Jinja2 templates into the role's `templates/` directory to keep the role self-contained and portable. For this lab, the workspace-level templates work because the role runs from the same workspace where the templates live.
+====
 =====
 ======
 
@@ -151,6 +158,50 @@ Here is where each section of your playbook ended up in the role:
 |===
 
 The key insight: a role is not new automation — it is the *same automation reorganized* so it can be reused, shared, and maintained independently.
+=====
+======
+
+
+======
+.☑️ Task 4 - Run the role-based playbook
+[%collapsible]
+=====
+
+[NOTE]
+====
+Switch to the *Control* tab.
+====
+
+Now verify that the role produces the same results as your original `system_setup.yml` playbook.
+
+. Create a simple playbook that uses the role. In the terminal, run:
++
+[source,role="execute"]
+----
+cat > /home/rhel/ansible-files/role_playbook.yml << 'EOF'
+---
+- name: Configure infrastructure using role
+  hosts: all
+  become: true
+  roles:
+    - system_setup
+EOF
+----
+
+. Run the role-based playbook:
++
+[source,role="execute"]
+----
+cd /home/rhel/ansible-files && ansible-navigator run role_playbook.yml
+----
+
+. Compare the output to your earlier `system_setup.yml` run. You should see the same tasks execute in the same order -- the only difference is that Ansible now reads them from the role's directory structure instead of a single playbook file.
++
+[NOTE]
+====
+Because the infrastructure is already configured from the previous module, all tasks should show `ok` (green) with `changed=0`. This confirms the role is functionally identical to the playbook.
+====
+
 =====
 ======
 
