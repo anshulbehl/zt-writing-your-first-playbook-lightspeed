@@ -3,7 +3,7 @@
 
 == Understanding the Lab Environment
 
-=====
+
 .Laboratory tips!
 ====
 Before we begin, a few tips to improve your lab experience:
@@ -14,9 +14,9 @@ Before we begin, a few tips to improve your lab experience:
 +
 image::showing-dropdown.png[Collapsible sections in the Showroom sidebar,link=self,window=blank,width=700,title="Collapsible sidebar sections"]
 
-. When we refer to the *VS Code* or *Control* tabs, we mean the tabs at the top of the screen. *VS Code* is where you write and generate playbooks. *Control* is a terminal for running commands.
+. Everything in this lab happens in the *VS Code* tab. To run terminal commands, open VS Code's integrated terminal by clicking *Terminal → New Terminal* from the menu bar, or press *Ctrl+`* (backtick).
 +
-image::showing-tabs.png[VS Code and Control tabs at the top of the screen,link=self,window=blank,width=700,title="Lab navigation tabs"]
+image::showing-tabs.png[VS Code tab at the top of the screen,link=self,window=blank,width=700,title="Lab navigation tabs"]
 
 . Each code box has a copy-to-clipboard and execute feature — click the icon on the right side of the box to run the command directly in the terminal.
 
@@ -24,7 +24,7 @@ image::showing-tabs.png[VS Code and Control tabs at the top of the screen,link=s
 
 . Use the image:solve.png[Solve, 55] button to auto-complete a challenge if you get stuck.
 ====
-=====
+
 
 
 =====
@@ -115,7 +115,7 @@ database
 =====
 [NOTE]
 ====
-Switch to the *Control* tab.
+Open a terminal in VS Code: click *Terminal → New Terminal* from the menu bar, or press *Ctrl+`*.
 ====
 
 . Change into the *ansible-files* directory:

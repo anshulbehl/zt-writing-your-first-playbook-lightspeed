@@ -37,7 +37,7 @@ The more detail you provide, the more accurate the coding assistant's output wil
 Switch to the *VS Code* tab at the top of the screen.
 ====
 
-. Click on the *Ansible extension icon* image:aa-icon.png[Ansible,25,25] in the left sidebar to open the Ansible extension panel.
+. Click on the *Ansible extension icon* in the left sidebar to open the Ansible extension panel.
 
 . Click the *"Generate a Playbook with Ansible"* button in the extension panel. This opens the playbook generation wizard where you will paste your prompt in the next task.
 

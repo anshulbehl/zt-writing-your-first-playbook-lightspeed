@@ -1,7 +1,7 @@
 :sectnums:
-= 1.4 - Convert Your Playbook to a Role
+= 1.4 - Generate a Role
 
-You have a working playbook that sets up web servers with Apache and a status page, configures MariaDB on the database tier, creates users, and deploys templates. In this module, you will use the coding assistant to convert that playbook into an *Ansible role* — the standard way to organize and reuse automation in production.
+You have a working playbook that sets up web servers with Apache and a status page, configures MariaDB on the database tier, creates users, and deploys templates. In this module, you will use the coding assistant to create a similar setup as an *Ansible role* — the standard way to organize and reuse automation in production.
 
 == Understanding Roles
 
@@ -169,7 +169,7 @@ The key insight: a role is not new automation — it is the *same automation reo
 
 [NOTE]
 ====
-Switch to the *Control* tab.
+Open a terminal in VS Code if you don't have one open: click *Terminal → New Terminal*, or press *Ctrl+`*.
 ====
 
 Now verify that the role produces the same results as your original `system_setup.yml` playbook.

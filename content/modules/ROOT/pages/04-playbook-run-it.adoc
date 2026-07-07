@@ -11,7 +11,7 @@ In this challenge, you will run the playbook generated in the previous module us
 =====
 [NOTE]
 ====
-Switch to the *Control* tab.
+Open a terminal in VS Code: click *Terminal → New Terminal* from the menu bar, or press *Ctrl+`*.
 ====
 
 . Change into the *ansible-files* directory:
@@ -62,7 +62,7 @@ The first task in every run is *Gathering Facts*. Ansible automatically collects
 =====
 [NOTE]
 ====
-Stay in the *Control* tab.
+Stay in the *VS Code terminal*.
 ====
 
 The playbook created the user *padawan* on all hosts (node1, node2, and node3). Verify this worked on each node.
@@ -119,7 +119,7 @@ If needed, click the *reload arrow* next to the tab name to refresh this page as
 Because both web servers run on the same OpenShift cluster network, node1 and node2 share the same IP address (10.0.2.2). The hostname is the key difference between the two pages.
 ====
 
-. Switch back to the *Control* tab and verify from the command line as well:
+. Switch back to the *VS Code terminal* and verify from the command line as well:
 +
 [source,role="execute"]
 ----
@@ -166,7 +166,7 @@ This proves the `when: inventory_hostname in groups['web']` conditionals worked 
 =====
 [NOTE]
 ====
-Stay in the *Control* tab.
+Stay in the *VS Code terminal*.
 ====
 
 The playbook installed and started MariaDB on node3, which belongs to the `database` group.
@@ -203,7 +203,7 @@ This demonstrates the `when: inventory_hostname in groups['database']` condition
 =====
 [NOTE]
 ====
-Stay in the *Control* tab.
+Stay in the *VS Code terminal*.
 ====
 
 The playbook deployed a Jinja2 template to `/etc/motd` on all hosts. Each host has a different MOTD because the template uses host-specific facts *and* inventory group membership.
@@ -253,7 +253,7 @@ This is what separates Ansible from shell scripts: you can safely run a playbook
 
 [NOTE]
 ====
-Switch to the *Control* tab if you aren't already there.
+Switch to the *VS Code terminal* if you aren't already there.
 ====
 
 . Run the playbook a second time:

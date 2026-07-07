@@ -27,9 +27,6 @@ tabs:
   - name: VS Code
     url: https://vscode-${guid}.${domain}/?folder=/home/rhel/ansible-files
     external: false
-  - name: Control
-    url: /wetty
-    external: false
   - name: node1 Web
     url: https://node1-http-${guid}.${domain}/
     external: false
