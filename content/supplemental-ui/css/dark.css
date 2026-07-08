@@ -1,110 +1,49 @@
-/* Dark theme for nookbag bundle */
+/* Mid-gray theme for nookbag bundle */
 
 body.article {
-  background-color: #1f1f1f !important;
-  color: #e0e0e0 !important;
+  background-color: #e0e0e0 !important;
 }
 
 .main-wrapper,
 .main {
-  background-color: #1f1f1f !important;
+  background-color: #e0e0e0 !important;
 }
 
 .toolbar {
-  background-color: #292929 !important;
-  border-bottom-color: #383838 !important;
-  color: #a3a3a3 !important;
-}
-
-.toolbar a,
-.toolbar .edit-this-page a {
-  color: #a3a3a3 !important;
+  background-color: #d0d0d0 !important;
+  border-bottom-color: #b8b8b8 !important;
 }
 
 article.doc {
-  background-color: #1f1f1f !important;
-  color: #e0e0e0 !important;
-}
-
-article.doc h1,
-article.doc h2,
-article.doc h3,
-article.doc h4,
-article.doc h5,
-article.doc h6 {
-  color: #f2f2f2 !important;
-}
-
-article.doc a {
-  color: #6ab0f5 !important;
-}
-
-article.doc a:hover {
-  color: #93c9ff !important;
+  background-color: #e0e0e0 !important;
 }
 
 article.doc pre,
 article.doc .listingblock pre,
 article.doc .literalblock pre {
-  background-color: #292929 !important;
-  border-color: #383838 !important;
-  color: #e0e0e0 !important;
+  background-color: #d0d0d0 !important;
+  border-color: #b8b8b8 !important;
 }
 
 article.doc code {
-  background-color: #292929 !important;
-  color: #e0e0e0 !important;
+  background-color: #d0d0d0 !important;
 }
 
+article.doc .admonitionblock td.content,
 article.doc .admonitionblock {
-  background-color: #292929 !important;
-  border-color: #383838 !important;
-  color: #e0e0e0 !important;
-}
-
-article.doc .admonitionblock td.content {
-  background-color: #292929 !important;
-  color: #e0e0e0 !important;
-}
-
-article.doc table.tableblock {
-  border-color: #383838 !important;
-  color: #e0e0e0 !important;
-}
-
-article.doc table.tableblock th,
-article.doc table.tableblock td {
-  border-color: #383838 !important;
-  background-color: #1f1f1f !important;
-}
-
-article.doc table.tableblock thead th {
-  background-color: #292929 !important;
+  background-color: #d0d0d0 !important;
+  border-color: #b8b8b8 !important;
 }
 
 article.doc .sidebarblock {
-  background-color: #292929 !important;
-  border-color: #383838 !important;
+  background-color: #d0d0d0 !important;
 }
 
-article.doc .exampleblock > .content {
-  background-color: #292929 !important;
-  border-color: #383838 !important;
-}
-
-article.doc .quoteblock,
-article.doc .verseblock {
-  background-color: #292929 !important;
-  border-left-color: #707070 !important;
-  color: #a3a3a3 !important;
+article.doc table.tableblock thead th {
+  background-color: #d0d0d0 !important;
 }
 
 footer {
-  background-color: #292929 !important;
-  color: #a3a3a3 !important;
-  border-top-color: #383838 !important;
-}
-
-footer a {
-  color: #a3a3a3 !important;
+  background-color: #d0d0d0 !important;
+  border-top-color: #b8b8b8 !important;
 }
