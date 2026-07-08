@@ -1,5 +1,4 @@
-@media (prefers-color-scheme: dark) {
-  :root {
+:root {
     --body-background: var(--color-jet-70);
     --panel-background: var(--color-jet-50);
     --panel-border-color: var(--color-jet-20);
@@ -56,5 +55,4 @@
     --footer-background: var(--color-jet-50);
     --footer-font-color: var(--color-gray-10);
     --footer-link-font-color: var(--color-smoke-70);
-  }
 }
