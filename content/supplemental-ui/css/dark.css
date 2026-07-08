@@ -1,58 +1,110 @@
-:root {
-    --body-background: var(--color-jet-70);
-    --panel-background: var(--color-jet-50);
-    --panel-border-color: var(--color-jet-20);
-    --scrollbar-thumb-color: var(--color-gray-70);
+/* Dark theme for nookbag bundle */
 
-    --nav-background: var(--color-jet-50);
-    --nav-border-color: var(--color-jet-20);
-    --nav-heading-font-color: var(--color-smoke-70);
-    --nav-muted-color: var(--color-gray-10);
-    --nav-panel-divider-color: var(--color-jet-20);
-    --nav-secondary-background: var(--color-jet-30);
+body.article {
+  background-color: #1f1f1f !important;
+  color: #e0e0e0 !important;
+}
 
-    --toolbar-background: var(--color-jet-50);
-    --toolbar-border-color: var(--color-jet-20);
-    --toolbar-font-color: var(--color-gray-10);
-    --toolbar-muted-color: var(--color-gray-40);
+.main-wrapper,
+.main {
+  background-color: #1f1f1f !important;
+}
 
-    --toc-font-color: var(--color-gray-10);
-    --toc-heading-font-color: var(--color-smoke-70);
-    --toc-border-color: var(--color-jet-20);
+.toolbar {
+  background-color: #292929 !important;
+  border-bottom-color: #383838 !important;
+  color: #a3a3a3 !important;
+}
 
-    --doc-font-color: var(--color-smoke-70);
-    --heading-font-color: var(--color-smoke-30);
-    --body-font-color: var(--color-smoke-70);
-    --link-font-color: #6ab0f5;
-    --link_hover-font-color: #93c9ff;
+.toolbar a,
+.toolbar .edit-this-page a {
+  color: #a3a3a3 !important;
+}
 
-    --code-background: var(--color-jet-30);
-    --code-font-color: var(--color-smoke-70);
-    --pre-background: var(--color-jet-30);
-    --pre-border-color: var(--color-jet-20);
-    --pre-annotation-font-color: var(--color-gray-40);
+article.doc {
+  background-color: #1f1f1f !important;
+  color: #e0e0e0 !important;
+}
 
-    --admonition-background: var(--color-jet-30);
-    --abstract-background: var(--color-jet-30);
-    --abstract-font-color: var(--color-smoke-70);
-    --abstract-border-color: var(--color-jet-20);
+article.doc h1,
+article.doc h2,
+article.doc h3,
+article.doc h4,
+article.doc h5,
+article.doc h6 {
+  color: #f2f2f2 !important;
+}
 
-    --kbd-background: var(--color-jet-30);
-    --kbd-border-color: var(--color-gray-70);
+article.doc a {
+  color: #6ab0f5 !important;
+}
 
-    --quote-background: var(--color-jet-30);
-    --quote-border-color: var(--color-gray-70);
-    --quote-font-color: var(--color-gray-10);
-    --quote-attribution-font-color: var(--color-gray-40);
+article.doc a:hover {
+  color: #93c9ff !important;
+}
 
-    --sidebar-background: var(--color-jet-30);
-    --table-border-color: var(--color-jet-20);
-    --section-divider-color: var(--color-jet-20);
-    --example-background: var(--color-jet-50);
-    --example-border-color: var(--color-jet-20);
-    --caption-font-color: var(--color-gray-40);
+article.doc pre,
+article.doc .listingblock pre,
+article.doc .literalblock pre {
+  background-color: #292929 !important;
+  border-color: #383838 !important;
+  color: #e0e0e0 !important;
+}
 
-    --footer-background: var(--color-jet-50);
-    --footer-font-color: var(--color-gray-10);
-    --footer-link-font-color: var(--color-smoke-70);
+article.doc code {
+  background-color: #292929 !important;
+  color: #e0e0e0 !important;
+}
+
+article.doc .admonitionblock {
+  background-color: #292929 !important;
+  border-color: #383838 !important;
+  color: #e0e0e0 !important;
+}
+
+article.doc .admonitionblock td.content {
+  background-color: #292929 !important;
+  color: #e0e0e0 !important;
+}
+
+article.doc table.tableblock {
+  border-color: #383838 !important;
+  color: #e0e0e0 !important;
+}
+
+article.doc table.tableblock th,
+article.doc table.tableblock td {
+  border-color: #383838 !important;
+  background-color: #1f1f1f !important;
+}
+
+article.doc table.tableblock thead th {
+  background-color: #292929 !important;
+}
+
+article.doc .sidebarblock {
+  background-color: #292929 !important;
+  border-color: #383838 !important;
+}
+
+article.doc .exampleblock > .content {
+  background-color: #292929 !important;
+  border-color: #383838 !important;
+}
+
+article.doc .quoteblock,
+article.doc .verseblock {
+  background-color: #292929 !important;
+  border-left-color: #707070 !important;
+  color: #a3a3a3 !important;
+}
+
+footer {
+  background-color: #292929 !important;
+  color: #a3a3a3 !important;
+  border-top-color: #383838 !important;
+}
+
+footer a {
+  color: #a3a3a3 !important;
 }

@@ -12,8 +12,7 @@ ui:
   bundle:
     url: https://github.com/rhpds/nookbag-bundle/releases/download/v0.0.3/ui-bundle.zip
     snapshot: true
-  supplemental_files:
-    - path: ./content/supplemental-ui
+  supplemental_files: ./content/supplemental-ui
 
 output:
   dir: ./www/www
