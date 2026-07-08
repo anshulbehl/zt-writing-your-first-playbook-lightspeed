@@ -1,0 +1,60 @@
+@media (prefers-color-scheme: dark) {
+  :root {
+    --body-background: var(--color-jet-70);
+    --panel-background: var(--color-jet-50);
+    --panel-border-color: var(--color-jet-20);
+    --scrollbar-thumb-color: var(--color-gray-70);
+
+    --nav-background: var(--color-jet-50);
+    --nav-border-color: var(--color-jet-20);
+    --nav-heading-font-color: var(--color-smoke-70);
+    --nav-muted-color: var(--color-gray-10);
+    --nav-panel-divider-color: var(--color-jet-20);
+    --nav-secondary-background: var(--color-jet-30);
+
+    --toolbar-background: var(--color-jet-50);
+    --toolbar-border-color: var(--color-jet-20);
+    --toolbar-font-color: var(--color-gray-10);
+    --toolbar-muted-color: var(--color-gray-40);
+
+    --toc-font-color: var(--color-gray-10);
+    --toc-heading-font-color: var(--color-smoke-70);
+    --toc-border-color: var(--color-jet-20);
+
+    --doc-font-color: var(--color-smoke-70);
+    --heading-font-color: var(--color-smoke-30);
+    --body-font-color: var(--color-smoke-70);
+    --link-font-color: #6ab0f5;
+    --link_hover-font-color: #93c9ff;
+
+    --code-background: var(--color-jet-30);
+    --code-font-color: var(--color-smoke-70);
+    --pre-background: var(--color-jet-30);
+    --pre-border-color: var(--color-jet-20);
+    --pre-annotation-font-color: var(--color-gray-40);
+
+    --admonition-background: var(--color-jet-30);
+    --abstract-background: var(--color-jet-30);
+    --abstract-font-color: var(--color-smoke-70);
+    --abstract-border-color: var(--color-jet-20);
+
+    --kbd-background: var(--color-jet-30);
+    --kbd-border-color: var(--color-gray-70);
+
+    --quote-background: var(--color-jet-30);
+    --quote-border-color: var(--color-gray-70);
+    --quote-font-color: var(--color-gray-10);
+    --quote-attribution-font-color: var(--color-gray-40);
+
+    --sidebar-background: var(--color-jet-30);
+    --table-border-color: var(--color-jet-20);
+    --section-divider-color: var(--color-jet-20);
+    --example-background: var(--color-jet-50);
+    --example-border-color: var(--color-jet-20);
+    --caption-font-color: var(--color-gray-40);
+
+    --footer-background: var(--color-jet-50);
+    --footer-font-color: var(--color-gray-10);
+    --footer-link-font-color: var(--color-smoke-70);
+  }
+}
