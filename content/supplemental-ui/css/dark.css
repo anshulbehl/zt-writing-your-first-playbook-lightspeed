@@ -35,6 +35,11 @@ article.doc .admonitionblock {
   border-color: #b8b8b8 !important;
 }
 
+article.doc .exampleblock > .content {
+  background-color: #d0d0d0 !important;
+  border-color: #b8b8b8 !important;
+}
+
 article.doc .sidebarblock {
   background-color: #d0d0d0 !important;
 }
